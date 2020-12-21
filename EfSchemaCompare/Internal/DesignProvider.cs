@@ -11,6 +11,7 @@ using Microsoft.EntityFrameworkCore.SqlServer.Design.Internal;
 using Microsoft.EntityFrameworkCore.Storage;
 using Microsoft.Extensions.DependencyInjection;
 
+#pragma warning disable EF1001 // Internal EF Core API usage.
 namespace EfSchemaCompare.Internal
 {
     /// <summary>

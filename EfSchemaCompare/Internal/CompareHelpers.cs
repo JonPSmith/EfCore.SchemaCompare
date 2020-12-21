@@ -54,18 +54,6 @@ namespace EfSchemaCompare.Internal
             throw new ArgumentOutOfRangeException(nameof(caseComparer));
         }
 
-#if NETSTANDARD2_0
-        public static string CombinedColNames(this IEnumerable<IProperty> properties)
-        {
-            return string.Join(",", properties.Select(x => x.Relational().ColumnName));
-        }
-#elif NETSTANDARD2_1
-        public static string CombinedColNames(this IEnumerable<IProperty> properties)
-        {
-            return string.Join(",", properties.Select(x => x.GetColumnName()));
-        }
-#endif
-
         //The scaffold does not set the correct ValueGenerated for a column that has a sql default value of a computed column
         //see https://github.com/aspnet/EntityFrameworkCore/issues/9323
         public static string ConvertNullableValueGenerated(this ValueGenerated? valGen, string computedColumnSql, string defaultValueSql)

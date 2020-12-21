@@ -20,6 +20,7 @@ namespace EfSchemaCompare.Internal
 
         private readonly IModel _model;
         private readonly string _dbContextName;
+        private readonly string _databaseDefaultScheme;
         private readonly IReadOnlyList<CompareLog> _ignoreList;
         private readonly StringComparer _caseComparer;
         private readonly StringComparison _caseComparison;
@@ -36,6 +37,8 @@ namespace EfSchemaCompare.Internal
             _ignoreList = config?.LogsToIgnore ?? new List<CompareLog>();
             _caseComparer = config?.CaseComparer ?? StringComparer.CurrentCulture;
             _caseComparison = _caseComparer.GetStringComparison();
+
+            _databaseDefaultScheme = (config ?? new CompareEfSqlConfig()).DefaultSchema;
         }
 
 
@@ -99,7 +102,7 @@ namespace EfSchemaCompare.Internal
                     var thisKeyCols = fKeyDict[constraintName].Columns.ToDictionary(x => x.Name, _caseComparer);
                     foreach (var fKeyProp in entityFKeyprops)
                     {
-                        var columnName = fKeyProp.GetColumnName();
+                        var columnName = GetColumnNameTakingIntoAccountSchema( fKeyProp, table);
                         if (!thisKeyCols.ContainsKey(columnName))
                         {
                             logger.NotInDatabase(columnName);
@@ -128,8 +131,8 @@ namespace EfSchemaCompare.Internal
 
             //see https://github.com/aspnet/EntityFrameworkCore/issues/10345#issuecomment-345841191
             if (entityFKey.Properties.All(x => string.Equals(x.DeclaringEntityType.GetTableName(), table.Name, _caseComparison))
-                 && entityFKey.Properties.Select(p => p.GetColumnName())
-                    .SequenceEqual(entityFKey.PrincipalKey.Properties.Select(p => p.GetColumnName())))
+                 && entityFKey.Properties.Select(p => GetColumnNameTakingIntoAccountSchema(p, table))
+                    .SequenceEqual(entityFKey.PrincipalKey.Properties.Select(p => GetColumnNameTakingIntoAccountSchema(p, table))))
                 //If all the declaring entity type of the foreign key are all in this table, then we ignore this (table splitting case)
                 return true;
 
@@ -143,8 +146,10 @@ namespace EfSchemaCompare.Internal
             foreach (var entityIdx in entityType.GetIndexes())
             {
                 var entityIdxprops = entityIdx.Properties;
-                var logger = new CompareLogger(CompareType.Index, entityIdxprops.CombinedColNames(), log.SubLogs, _ignoreList, () => _hasErrors = true);
-                var constraintName = entityIdx.GetName();
+                var allColumnNames = string.Join(",", entityIdxprops
+                    .Select(x => GetColumnNameTakingIntoAccountSchema(x, table)));
+                var logger = new CompareLogger(CompareType.Index, allColumnNames, log.SubLogs, _ignoreList, () => _hasErrors = true);
+                var constraintName = entityIdx.GetDatabaseName();
                 if (indexDict.ContainsKey(constraintName))
                 {
                     //Now check every column in an index
@@ -152,7 +157,7 @@ namespace EfSchemaCompare.Internal
                     var thisIdxCols = indexDict[constraintName].Columns.ToDictionary(x => x.Name, _caseComparer);
                     foreach (var idxProp in entityIdxprops)
                     {
-                        var columnName = idxProp.GetColumnName();
+                        var columnName = GetColumnNameTakingIntoAccountSchema(idxProp, table);
                         if (!thisIdxCols.ContainsKey(columnName))
                         {
                             logger.NotInDatabase(columnName);
@@ -190,23 +195,23 @@ namespace EfSchemaCompare.Internal
             foreach (var property in entityType.GetProperties())
             {
                 var colLogger = new CompareLogger(CompareType.Property, property.Name, log.SubLogs, _ignoreList, () => _hasErrors = true);
-
-                if (columnDict.ContainsKey(property.GetColumnName()))
+                if (columnDict.ContainsKey(GetColumnNameTakingIntoAccountSchema(property, table)))
                 {
                     if (!IgnorePrimaryKeyFoundInOwnedTypes(entityType.DefiningEntityType, table, property, entityType.FindPrimaryKey()))
                     {
-                        var error = ComparePropertyToColumn(colLogger, property, columnDict[property.GetColumnName()]);
+                        var error = ComparePropertyToColumn(colLogger, property, 
+                            columnDict[GetColumnNameTakingIntoAccountSchema(property, table)]);
                         //check for primary key
-                        if (property.IsPrimaryKey() != primaryKeyDict.ContainsKey(property.GetColumnName()))
+                        if (property.IsPrimaryKey() != primaryKeyDict.ContainsKey(GetColumnNameTakingIntoAccountSchema(property, table)))
                         {
-                            if (!primaryKeyDict.ContainsKey(property.GetColumnName()))
+                            if (!primaryKeyDict.ContainsKey(GetColumnNameTakingIntoAccountSchema(property, table)))
                             {
-                                pKeyLogger.NotInDatabase(property.GetColumnName(), CompareAttributes.ColumnName);
+                                pKeyLogger.NotInDatabase(GetColumnNameTakingIntoAccountSchema(property, table), CompareAttributes.ColumnName);
                                 error = true;
                             }
                             else
                             {
-                                pKeyLogger.ExtraInDatabase(property.GetColumnName(), CompareAttributes.ColumnName,
+                                pKeyLogger.ExtraInDatabase(GetColumnNameTakingIntoAccountSchema(property, table), CompareAttributes.ColumnName,
                                     table.PrimaryKey.Name);
                             }
                         }
@@ -214,13 +219,13 @@ namespace EfSchemaCompare.Internal
                         if (!error)
                         {
                             //There were no errors noted, so we mark it as OK
-                            colLogger.MarkAsOk(property.GetColumnName());
+                            colLogger.MarkAsOk(GetColumnNameTakingIntoAccountSchema(property, table));
                         }
                     }
                 }
                 else
                 {
-                    colLogger.NotInDatabase(property.GetColumnName(), CompareAttributes.ColumnName);
+                    colLogger.NotInDatabase(GetColumnNameTakingIntoAccountSchema(property, table), CompareAttributes.ColumnName);
                 }
             }
             if (!pKeyError)
@@ -232,7 +237,7 @@ namespace EfSchemaCompare.Internal
         {
             if (entityTypeDefiningEntityType == null ||
                 !string.Equals(entityTypeDefiningEntityType.GetTableName(), table.Name, _caseComparison))
-                //if not a owned table, or the owned tabl has its own table then carry on
+                //if not a owned table, or the owned table has its own table then carry on
                 return false;
 
             //Now we know that its an owned table, and it has a primary key which matches the table
@@ -276,6 +281,11 @@ namespace EfSchemaCompare.Internal
                 colValGen, CompareAttributes.ValueGenerated, _caseComparison);
         }
 
+        private string GetColumnNameTakingIntoAccountSchema(IProperty property, DatabaseTable table)
+        {
+            var modelSchema = table.Schema == _databaseDefaultScheme ? null : table.Schema;
+            return property.GetColumnName(StoreObjectIdentifier.Table(table.Name, modelSchema));
+        }
 
     }
 }

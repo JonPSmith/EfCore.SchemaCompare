@@ -21,6 +21,7 @@
   - Change DesignProvider to use EF Core constant instead of strings
   - Change DesignProvider: Remove Sqlite??
   - Change DesignProvider execption message to say how to use another database type
+  - Check GetColumnName default - EF Core issue #23301
 
 
 ## 1.0.0-preview001

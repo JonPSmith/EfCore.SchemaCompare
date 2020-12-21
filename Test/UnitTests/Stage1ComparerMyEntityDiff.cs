@@ -14,6 +14,7 @@ using Xunit;
 using Xunit.Abstractions;
 using Xunit.Extensions.AssertExtensions;
 
+#pragma warning disable EF1001 // Internal EF Core API usage.
 namespace Test.UnitTests
 {
     public class Stage1ComparerMyEntityDiff

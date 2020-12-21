@@ -15,6 +15,11 @@ namespace EfSchemaCompare
         private readonly List<CompareLog> _logsToIgnore = new List<CompareLog>();
 
         /// <summary>
+        /// This holds the default schema name used when the Schema is null
+        /// </summary>
+        public string DefaultSchema { get; set; } = "dbo";
+
+        /// <summary>
         /// Set this to StringComparer.CurrentCultureIgnoreCase to change the 
         /// This effects the table, schema, column, primary/index/foreignKey constraint names
         /// </summary>

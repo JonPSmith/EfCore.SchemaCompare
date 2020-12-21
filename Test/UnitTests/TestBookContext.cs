@@ -3,6 +3,7 @@
 
 using System.Linq;
 using DataLayer.BookApp.EfCode;
+using Microsoft.EntityFrameworkCore;
 using Test.EfHelpers;
 using TestSupport.EfHelpers;
 using Xunit;
@@ -25,6 +26,7 @@ namespace Test.UnitTests
 
             //VERIFY
             context.Books.Count().ShouldEqual(4);
+            context.Model.GetDefaultSchema().ShouldEqual(null);
         }
     }
 }
