@@ -18,3 +18,10 @@
   - EF Core 5 = persistant computed column
   - EF Core 5 - Map entity to query
   - EF Core 5 - IPAddress and PhysicalAddress
+  - Change DesignProvider to use EF Core constant instead of strings
+  - Change DesignProvider: Remove Sqlite??
+  - Change DesignProvider execption message to say how to use another database type
+
+
+## 1.0.0-preview001
+
