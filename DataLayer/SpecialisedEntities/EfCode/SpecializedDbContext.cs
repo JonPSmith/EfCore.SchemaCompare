@@ -1,10 +1,11 @@
 ﻿// Copyright (c) 2020 Jon P Smith, GitHub: JonPSmith, web: http://www.thereformedprogrammer.net/
 // Licensed under MIT license. See License.txt in the project root for license information.
 
-using DataLayer.SpecialisedEntities.Configurations;
+using DataLayer.SpecialisedEntities.EfClasses;
+using DataLayer.SpecialisedEntities.EfCode.Configurations;
 using Microsoft.EntityFrameworkCore;
 
-namespace DataLayer.SpecialisedEntities
+namespace DataLayer.SpecialisedEntities.EfCode
 {
     public class SpecializedDbContext : DbContext
     {

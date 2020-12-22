@@ -2,6 +2,7 @@
 // Licensed under MIT license. See License.txt in the project root for license information.
 
 using DataLayer.SpecialisedEntities;
+using DataLayer.SpecialisedEntities.EfCode;
 using EfSchemaCompare;
 using Microsoft.EntityFrameworkCore;
 using TestSupport.EfHelpers;
@@ -13,39 +14,31 @@ namespace Test.UnitTests
 {
     public class ComparerSpecialized
     {
-        private readonly string _connectionString;
-        private readonly DbContextOptions<SpecializedDbContext> _options;
         private readonly ITestOutputHelper _output;
 
         public ComparerSpecialized(ITestOutputHelper output)
         {
             _output = output;
-            _options = this
-                .CreateUniqueClassOptions<SpecializedDbContext>();
-
-            using (var context = new SpecializedDbContext(_options))
-            {
-                _connectionString = context.Database.GetDbConnection().ConnectionString;
-                context.Database.EnsureCreated();
-            }
         }
 
         [Fact]
         public void CompareSpecializedDbContext()
         {
             //SETUP
-            using (var context = new SpecializedDbContext(_options))
-            {
-                var comparer = new CompareEfSql();
+            var options = this.CreateUniqueClassOptions<SpecializedDbContext>();
+            using var context = new SpecializedDbContext(options);
+            context.Database.EnsureClean();
 
-                //ATTEMPT
-                var hasErrors = comparer.CompareEfWithDb(context);
+            var comparer = new CompareEfSql();
 
-                //VERIFY
+            //ATTEMPT
+            var hasErrors = comparer.CompareEfWithDb(context);
 
-                hasErrors.ShouldBeTrue(comparer.GetAllErrors);
-                comparer.GetAllErrors.ShouldEqual("DIFFERENT: BookDetail->Property 'Price', nullability. Expected = NOT NULL, found = NULL");
-            }
+            //VERIFY
+
+            hasErrors.ShouldBeTrue(comparer.GetAllErrors);
+            comparer.GetAllErrors.ShouldEqual(
+                "DIFFERENT: BookDetail->Property 'Price', nullability. Expected = NOT NULL, found = NULL");
         }
 
         [Fact]
@@ -53,17 +46,16 @@ namespace Test.UnitTests
         {
             //SETUP
             var options = this.CreateUniqueMethodOptions<OwnedWithKeyDbContext>();
-            using (var context = new OwnedWithKeyDbContext(options))
-            {
-                context.Database.EnsureCreated();
-                var comparer = new CompareEfSql();
+            using var context = new OwnedWithKeyDbContext(options);
+            context.Database.EnsureClean();
+            
+            var comparer = new CompareEfSql();
 
-                //ATTEMPT
-                var hasErrors = comparer.CompareEfWithDb(context);
+            //ATTEMPT
+            var hasErrors = comparer.CompareEfWithDb(context);
 
-                //VERIFY
-                hasErrors.ShouldBeFalse(comparer.GetAllErrors);
-            }
+            //VERIFY
+            hasErrors.ShouldBeFalse(comparer.GetAllErrors);
         }
     }
 }
