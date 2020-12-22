@@ -1,3 +1,6 @@
+// Copyright (c) 2020 Jon P Smith, GitHub: JonPSmith, web: http://www.thereformedprogrammer.net/
+// Licensed under MIT license. See License.txt in the project root for license information.
+
 using DataLayer.SpecialisedEntities;
 using EfSchemaCompare;
 using Microsoft.EntityFrameworkCore;
@@ -10,9 +13,10 @@ namespace Test.UnitTests
 {
     public class ComparerSpecialized
     {
-        private readonly ITestOutputHelper _output;
-        private readonly DbContextOptions<SpecializedDbContext> _options;
         private readonly string _connectionString;
+        private readonly DbContextOptions<SpecializedDbContext> _options;
+        private readonly ITestOutputHelper _output;
+
         public ComparerSpecialized(ITestOutputHelper output)
         {
             _output = output;

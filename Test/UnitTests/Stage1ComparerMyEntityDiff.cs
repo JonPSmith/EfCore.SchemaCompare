@@ -1,3 +1,6 @@
+// Copyright (c) 2020 Jon P Smith, GitHub: JonPSmith, web: http://www.thereformedprogrammer.net/
+// Licensed under MIT license. See License.txt in the project root for license information.
+
 using System.Linq;
 using DataLayer.MyEntityDb.EfCompareDbs;
 using EfSchemaCompare;
@@ -19,10 +22,11 @@ namespace Test.UnitTests
 {
     public class Stage1ComparerMyEntityDiff
     {
-        private readonly ITestOutputHelper _output;
         private readonly string _connectionString;
-        private readonly DbContextOptions<MyEntityDbContext> _options;
         private readonly DatabaseModel _databaseModel;
+        private readonly DbContextOptions<MyEntityDbContext> _options;
+        private readonly ITestOutputHelper _output;
+
         public Stage1ComparerMyEntityDiff(ITestOutputHelper output)
         {
             _output = output;
@@ -402,6 +406,5 @@ namespace Test.UnitTests
                     "DIFFERENT: MyEntity->Property 'MyInt', value generated. Expected = Never, found = OnAdd");
             }
         }
-
     }
 }

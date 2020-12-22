@@ -8,6 +8,7 @@
   - Improve EfSchemaCompare by detecting table sharing and account for nullable properties - see [breaking change](https://docs.microsoft.com/en-us/ef/core/what-is-new/ef-core-3.0/breaking-changes#dependent-entities-sharing-the-table-with-the-principal-are-now-optional).
   - EF Core 3 - Owned Type class properties are always nullable.
   - ValueConverters
+  - Alternative keys
   - Support Views
   - Use IRelationalTypeMappingSource for constants - see EF Core #21731
   - EF Core 5 - TPT

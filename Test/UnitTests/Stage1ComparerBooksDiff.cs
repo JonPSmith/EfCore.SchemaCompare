@@ -1,3 +1,6 @@
+// Copyright (c) 2020 Jon P Smith, GitHub: JonPSmith, web: http://www.thereformedprogrammer.net/
+// Licensed under MIT license. See License.txt in the project root for license information.
+
 using DataLayer.BookApp.EfCode;
 using EfSchemaCompare;
 using EfSchemaCompare.Internal;
@@ -13,9 +16,10 @@ namespace Test.UnitTests
 {
     public class Stage1ComparerBooksDiff
     {
-        private readonly ITestOutputHelper _output;
-        private readonly DbContextOptions<BookContext> _options;
         private readonly string _connectionString;
+        private readonly DbContextOptions<BookContext> _options;
+        private readonly ITestOutputHelper _output;
+
         public Stage1ComparerBooksDiff(ITestOutputHelper output)
         {
             _output = output;
@@ -54,6 +58,5 @@ namespace Test.UnitTests
                 hasErrors.ShouldBeFalse();
             }
         }
-
     }
 }

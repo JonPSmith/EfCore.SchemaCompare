@@ -1,3 +1,6 @@
+// Copyright (c) 2020 Jon P Smith, GitHub: JonPSmith, web: http://www.thereformedprogrammer.net/
+// Licensed under MIT license. See License.txt in the project root for license information.
+
 using DataLayer.BookApp.EfCode;
 using EfSchemaCompare.Internal;
 using Microsoft.EntityFrameworkCore;
@@ -20,10 +23,11 @@ namespace Test.UnitTests
 {
     public class TestDesignTimeServiceProvider
     {
+        private readonly string _connectionString;
+        private readonly DbContextOptions<BookContext> _options;
 
         private readonly ITestOutputHelper _output;
-        private readonly DbContextOptions<BookContext> _options;
-        private readonly string _connectionString;
+
         public TestDesignTimeServiceProvider(ITestOutputHelper output)
         {
             _output = output;

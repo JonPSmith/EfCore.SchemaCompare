@@ -1,5 +1,5 @@
-﻿// Copyright (c) 2017 Jon P Smith, GitHub: JonPSmith, web: http://www.thereformedprogrammer.net/
-// Licensed under MIT licence. See License.txt in the project root for license information.
+﻿// Copyright (c) 2020 Jon P Smith, GitHub: JonPSmith, web: http://www.thereformedprogrammer.net/
+// Licensed under MIT license. See License.txt in the project root for license information.
 
 using DataLayer.BookApp.EfCode;
 using EfSchemaCompare.Internal;
@@ -17,8 +17,9 @@ namespace Test.UnitTests
 {
     public class TestScaffolder 
     {
-        private readonly ITestOutputHelper _output;
         private readonly string _connectionString;
+        private readonly ITestOutputHelper _output;
+
         public TestScaffolder(ITestOutputHelper output)
         {
             _output = output;
@@ -49,6 +50,5 @@ namespace Test.UnitTests
             model.ShouldNotBeNull();
             model.DefaultSchema.ShouldEqual("dbo");
         }
-
     }
 }

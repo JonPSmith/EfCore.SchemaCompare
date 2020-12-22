@@ -1,3 +1,6 @@
+// Copyright (c) 2020 Jon P Smith, GitHub: JonPSmith, web: http://www.thereformedprogrammer.net/
+// Licensed under MIT license. See License.txt in the project root for license information.
+
 using System.Collections.Generic;
 using System.Linq;
 using DataLayer.MyEntityDb.EfCompareDbs;
@@ -21,8 +24,9 @@ namespace Test.UnitTests
 {
     public class Stage2ComparerMyEntityDiff
     {
-        private readonly ITestOutputHelper _output;
         private readonly DatabaseModel _databaseModel;
+        private readonly ITestOutputHelper _output;
+
         public Stage2ComparerMyEntityDiff(ITestOutputHelper output)
         {
             _output = output;

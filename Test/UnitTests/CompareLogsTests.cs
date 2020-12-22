@@ -1,3 +1,6 @@
+// Copyright (c) 2020 Jon P Smith, GitHub: JonPSmith, web: http://www.thereformedprogrammer.net/
+// Licensed under MIT license. See License.txt in the project root for license information.
+
 using System.Collections;
 using System.Collections.Generic;
 using EfSchemaCompare;
@@ -37,23 +40,6 @@ namespace Test.UnitTests
             CompareLog.DecodeCompareTextToCompareLog(logStr4).ToString().ShouldEqual(logStr4.Replace("BookDetail->", ""));
         }
 
-        private class CompareIgnoreLogs : IEnumerable<object[]>
-        {
-            private readonly List<object[]> _data = new List<object[]>
-            {
-                new object[] {new CompareLog(CompareType.MatchAnything, CompareState.Different, null), true},
-                new object[] {new CompareLog(CompareType.Column, CompareState.Different, null), true},
-                new object[] {new CompareLog(CompareType.Column, CompareState.Different, "Name"), true},
-                new object[] {new CompareLog(CompareType.Column, CompareState.Different, "DiffName"), false},
-                new object[] {new CompareLog(CompareType.Column, CompareState.Different, "Name", CompareAttributes.ColumnName, "Expected"), true},
-                new object[] {new CompareLog(CompareType.Column, CompareState.Different, "Name", CompareAttributes.ColumnType, "Expected"), false},
-                new object[] {new CompareLog(CompareType.Column, CompareState.Different, "Name", CompareAttributes.ColumnType, "DiffExpected"), false},
-            };
-
-            public IEnumerator<object[]> GetEnumerator() => _data.GetEnumerator();
-            IEnumerator IEnumerable.GetEnumerator() => GetEnumerator();
-        }
-
         [Theory]
         [ClassData(typeof(CompareIgnoreLogs))]
         public void CheckIgnore(CompareLog ignoreItem, bool shouldIgnore)
@@ -74,7 +60,21 @@ namespace Test.UnitTests
 
         }
 
+        private class CompareIgnoreLogs : IEnumerable<object[]>
+        {
+            private readonly List<object[]> _data = new List<object[]>
+            {
+                new object[] {new CompareLog(CompareType.MatchAnything, CompareState.Different, null), true},
+                new object[] {new CompareLog(CompareType.Column, CompareState.Different, null), true},
+                new object[] {new CompareLog(CompareType.Column, CompareState.Different, "Name"), true},
+                new object[] {new CompareLog(CompareType.Column, CompareState.Different, "DiffName"), false},
+                new object[] {new CompareLog(CompareType.Column, CompareState.Different, "Name", CompareAttributes.ColumnName, "Expected"), true},
+                new object[] {new CompareLog(CompareType.Column, CompareState.Different, "Name", CompareAttributes.ColumnType, "Expected"), false},
+                new object[] {new CompareLog(CompareType.Column, CompareState.Different, "Name", CompareAttributes.ColumnType, "DiffExpected"), false},
+            };
 
-
+            public IEnumerator<object[]> GetEnumerator() => _data.GetEnumerator();
+            IEnumerator IEnumerable.GetEnumerator() => GetEnumerator();
+        }
     }
 }

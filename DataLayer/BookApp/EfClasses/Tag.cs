@@ -2,13 +2,16 @@
 // Licensed under MIT license. See License.txt in the project root for license information.
 
 using System.Collections.Generic;
+using System.ComponentModel.DataAnnotations;
 
 namespace DataLayer.BookApp.EfClasses
 {
     public class Tag
     {
+        [Required]
+        [MaxLength(40)]
         public string TagId { get; set; }
-        
+
         public ICollection<Book> Books { get; set; }
     }
 }
