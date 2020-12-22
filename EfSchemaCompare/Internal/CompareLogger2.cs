@@ -7,7 +7,7 @@ using System.Collections.Generic;
 namespace EfSchemaCompare.Internal
 {
 
-    internal class CompareLogger
+    internal class CompareLogger2
     {
         private readonly IList<CompareLog> _compareLogs;
         private readonly string _defaultName;
@@ -15,7 +15,7 @@ namespace EfSchemaCompare.Internal
         private readonly Action _setErrorHasHappened;
         private readonly CompareType _type;
 
-        public CompareLogger(CompareType type, string defaultName, IList<CompareLog> compareLogs, IReadOnlyList<CompareLog> ignoreList, Action setErrorHasHappened)
+        public CompareLogger2(CompareType type, string defaultName, IList<CompareLog> compareLogs, IReadOnlyList<CompareLog> ignoreList, Action setErrorHasHappened)
         {
             _type = type;
             _defaultName = defaultName;

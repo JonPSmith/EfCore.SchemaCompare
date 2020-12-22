@@ -7,6 +7,7 @@ using System.Collections.Immutable;
 using System.Linq;
 using System.Runtime.CompilerServices;
 using Microsoft.EntityFrameworkCore;
+using Microsoft.EntityFrameworkCore.Infrastructure;
 using Microsoft.EntityFrameworkCore.Metadata;
 using Microsoft.EntityFrameworkCore.Scaffolding.Metadata;
 
@@ -24,6 +25,8 @@ namespace EfSchemaCompare.Internal
         private readonly IReadOnlyList<CompareLog> _ignoreList;
         private readonly StringComparer _caseComparer;
         private readonly StringComparison _caseComparison;
+
+        private Dictionary<string, DatabaseTable> tableDict;
         private bool _hasErrors;
 
         private readonly List<CompareLog> _logs;
@@ -44,19 +47,19 @@ namespace EfSchemaCompare.Internal
 
         public bool CompareModelToDatabase(DatabaseModel databaseModel)
         {
-            var dbLogger = new CompareLogger(CompareType.DbContext, _dbContextName, _logs, _ignoreList, () => _hasErrors = true);
+            var dbLogger = new CompareLogger2(CompareType.DbContext, _dbContextName, _logs, _ignoreList, () => _hasErrors = true);
 
             //Check things about the database, such as sequences
             dbLogger.MarkAsOk(_dbContextName);
             CheckDatabaseOk(_logs.Last(), _model, databaseModel);
 
-            var tableDict = databaseModel.Tables.ToDictionary(x => x.FormSchemaTable(databaseModel.DefaultSchema), _caseComparer);
+            tableDict = databaseModel.Tables.ToDictionary(x => x.FormSchemaTable(databaseModel.DefaultSchema), _caseComparer);
             var dbQueries = _model.GetEntityTypes().Where(x => x.FindPrimaryKey() == null).ToList();
             if (dbQueries.Any())
                 dbLogger.Warning("EfSchemaCompare does not check read-only types", null, string.Join(", ", dbQueries.Select(x => x.ClrType.Name)));
             foreach (var entityType in _model.GetEntityTypes().Where(x => x.FindPrimaryKey() != null))
             {
-                var logger = new CompareLogger(CompareType.Entity, entityType.ClrType.Name, _logs.Last().SubLogs, _ignoreList, () => _hasErrors = true);
+                var logger = new CompareLogger2(CompareType.Entity, entityType.ClrType.Name, _logs.Last().SubLogs, _ignoreList, () => _hasErrors = true);
                 if (tableDict.ContainsKey(entityType.FormSchemaTable()))
                 {
                     var databaseTable = tableDict[entityType.FormSchemaTable()];
@@ -80,7 +83,7 @@ namespace EfSchemaCompare.Internal
         private void CheckDatabaseOk(CompareLog log, IModel modelRel, DatabaseModel databaseModel)
         {
             //Check sequences
-            //var logger = new CompareLogger(CompareType.Sequence, <sequence name>, _logs);
+            //var logger = new CompareLogger2(CompareType.Sequence, <sequence name>, _logs);
         }
 
 
@@ -92,7 +95,7 @@ namespace EfSchemaCompare.Internal
             {
                 var entityFKeyprops = entityFKey.Properties;
                 var constraintName = entityFKey.GetConstraintName();
-                var logger = new CompareLogger(CompareType.ForeignKey, constraintName, log.SubLogs, _ignoreList, () => _hasErrors = true);
+                var logger = new CompareLogger2(CompareType.ForeignKey, constraintName, log.SubLogs, _ignoreList, () => _hasErrors = true);
                 if (IgnoreForeignKeyIfInSameTable(entityType, entityFKey, table))
                     continue;
                 if (fKeyDict.ContainsKey(constraintName))
@@ -130,9 +133,14 @@ namespace EfSchemaCompare.Internal
                 return true;
 
             //see https://github.com/aspnet/EntityFrameworkCore/issues/10345#issuecomment-345841191
-            if (entityFKey.Properties.All(x => string.Equals(x.DeclaringEntityType.GetTableName(), table.Name, _caseComparison))
-                 && entityFKey.Properties.Select(p => GetColumnNameTakingIntoAccountSchema(p, table))
-                    .SequenceEqual(entityFKey.PrincipalKey.Properties.Select(p => GetColumnNameTakingIntoAccountSchema(p, table))))
+            var fksPropsInOneTable = entityFKey.Properties.All(x =>
+                string.Equals(x.DeclaringEntityType.GetTableName(), table.Name, _caseComparison));
+            var fksPropsColumnNames = entityFKey.Properties.Select(p => GetColumnNameTakingIntoAccountSchema(p, table));
+            var pkPropsColumnNames =
+                entityFKey.PrincipalKey.Properties.Select(p => GetColumnNameTakingIntoAccountSchema(p, 
+                    tableDict[p.DeclaringEntityType.GetTableName()]));
+            
+            if (fksPropsInOneTable && fksPropsColumnNames.SequenceEqual(pkPropsColumnNames))
                 //If all the declaring entity type of the foreign key are all in this table, then we ignore this (table splitting case)
                 return true;
 
@@ -148,7 +156,7 @@ namespace EfSchemaCompare.Internal
                 var entityIdxprops = entityIdx.Properties;
                 var allColumnNames = string.Join(",", entityIdxprops
                     .Select(x => GetColumnNameTakingIntoAccountSchema(x, table)));
-                var logger = new CompareLogger(CompareType.Index, allColumnNames, log.SubLogs, _ignoreList, () => _hasErrors = true);
+                var logger = new CompareLogger2(CompareType.Index, allColumnNames, log.SubLogs, _ignoreList, () => _hasErrors = true);
                 var constraintName = entityIdx.GetDatabaseName();
                 if (indexDict.ContainsKey(constraintName))
                 {
@@ -184,7 +192,7 @@ namespace EfSchemaCompare.Internal
 
             var efPKeyConstraintName = entityType.FindPrimaryKey().GetName();
             bool pKeyError = false;
-            var pKeyLogger = new CompareLogger(CompareType.PrimaryKey, efPKeyConstraintName, log.SubLogs, _ignoreList,
+            var pKeyLogger = new CompareLogger2(CompareType.PrimaryKey, efPKeyConstraintName, log.SubLogs, _ignoreList,
                 () =>
                 {
                     pKeyError = true;  //extra set of pKeyError
@@ -194,7 +202,7 @@ namespace EfSchemaCompare.Internal
                 CompareAttributes.ConstraintName, _caseComparison);
             foreach (var property in entityType.GetProperties())
             {
-                var colLogger = new CompareLogger(CompareType.Property, property.Name, log.SubLogs, _ignoreList, () => _hasErrors = true);
+                var colLogger = new CompareLogger2(CompareType.Property, property.Name, log.SubLogs, _ignoreList, () => _hasErrors = true);
                 if (columnDict.ContainsKey(GetColumnNameTakingIntoAccountSchema(property, table)))
                 {
                     if (!IgnorePrimaryKeyFoundInOwnedTypes(entityType.DefiningEntityType, table, property, entityType.FindPrimaryKey()))
@@ -248,7 +256,7 @@ namespace EfSchemaCompare.Internal
             return true;
         }
 
-        private bool ComparePropertyToColumn(CompareLogger logger, IProperty property, DatabaseColumn column)
+        private bool ComparePropertyToColumn(CompareLogger2 logger, IProperty property, DatabaseColumn column)
         {
             var error = logger.CheckDifferent(property.GetColumnType(), column.StoreType, CompareAttributes.ColumnType, _caseComparison);
             error |= logger.CheckDifferent(property.IsNullable.NullableAsString(), column.IsNullable.NullableAsString(), CompareAttributes.Nullability, _caseComparison);
@@ -267,7 +275,7 @@ namespace EfSchemaCompare.Internal
             typeof(byte), typeof(sbyte), typeof(short), typeof(ushort), typeof(int), typeof(uint), typeof(long), typeof(ulong)
         };
 
-        private bool CheckValueGenerated(CompareLogger logger, IProperty property, DatabaseColumn column)
+        private bool CheckValueGenerated(CompareLogger2 logger, IProperty property, DatabaseColumn column)
         {
             var colValGen = column.ValueGenerated.ConvertNullableValueGenerated(column.ComputedColumnSql, column.DefaultValueSql);
             if (colValGen == ValueGenerated.Never.ToString()
