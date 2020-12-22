@@ -23,7 +23,8 @@ namespace EfSchemaCompare
         /// Set this to StringComparer.CurrentCultureIgnoreCase to change the 
         /// This effects the table, schema, column, primary/index/foreignKey constraint names
         /// </summary>
-        public StringComparer CaseComparer { get; set; } = StringComparer.CurrentCulture;
+        //NOTE Turned off CaseComparer as doesn't work with EF Core 5
+        //public StringComparer CaseComparer { get; set; } = StringComparer.CurrentCulture;
 
         /// <summary>
         /// This allows you to ignore tables that your EF Core context doesn't use. There are three settings
