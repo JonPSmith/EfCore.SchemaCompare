@@ -11,8 +11,7 @@
   - Support Views
   - Use IRelationalTypeMappingSource for constants - see EF Core #21731
   - EF Core 5 - TPT
-  - EF Core 5 - Owned Type class can now be required
-  - EF Core 5 - direct many-to-many
+  - EF Core 5 - Owned Type class can now be required  
   - EF Core 5 - property bag
   - EF Core 5 - Same type mapped to different tables ??
   - EF Core 5 = persistant computed column
@@ -26,3 +25,5 @@
 
 ## 1.0.0-preview001
 
+- Support for EF Core 5 
+- EF Core 5 - direct many-to-many

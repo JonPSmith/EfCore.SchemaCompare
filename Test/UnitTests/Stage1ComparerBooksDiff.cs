@@ -25,7 +25,7 @@ namespace Test.UnitTests
             using (var context = new BookContext(_options))
             {
                 _connectionString = context.Database.GetDbConnection().ConnectionString;
-                context.Database.EnsureCreated();
+                context.Database.EnsureClean();
             }
         }
 
@@ -47,11 +47,11 @@ namespace Test.UnitTests
                 var hasErrors = handler.CompareModelToDatabase(database);
 
                 //VERIFY
-                hasErrors.ShouldBeFalse();
                 foreach (var log in CompareLog.AllResultsIndented(handler.Logs))
                 {
                     _output.WriteLine(log);
                 }
+                hasErrors.ShouldBeFalse();
             }
         }
 

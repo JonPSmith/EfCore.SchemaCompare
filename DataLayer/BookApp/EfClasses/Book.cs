@@ -11,19 +11,19 @@ namespace DataLayer.BookApp.EfClasses
     {
         public int BookId { get; set; }
 
-        [Required] //#A
-        [MaxLength(256)] //#B
+        [Required] 
+        [MaxLength(256)] 
         public string Title { get; set; }
 
         public string Description { get; set; }
         public DateTime PublishedOn { get; set; }
 
-        [MaxLength(64)] //#B
+        [MaxLength(64)] 
         public string Publisher { get; set; }
 
         public decimal Price { get; set; }
 
-        [MaxLength(512)] //#B
+        [MaxLength(512)] 
         public string ImageUrl { get; set; }
 
         public bool SoftDeleted { get; set; }
@@ -36,9 +36,7 @@ namespace DataLayer.BookApp.EfClasses
 
         public ICollection<BookAuthor> 
             AuthorsLink { get; set; }
+
+        public ICollection<Tag> Tags { get; set; }
     }
-    /****************************************************
-    #A This tells EF Core that the string is non-nullable.
-    #B The [MaxLength] attibute defines the the size of the string column in the database
-     * **************************************************/
 }

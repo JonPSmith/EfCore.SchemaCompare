@@ -29,7 +29,7 @@ namespace Test.UnitTests.OldTestSupportIssueTests
             using (var context = new Issue012DbContext(_options))
             {
                 _connectionString = context.Database.GetDbConnection().ConnectionString;
-                context.Database.EnsureCreated();
+                context.Database.EnsureClean();
             }
         }
 
@@ -51,11 +51,11 @@ namespace Test.UnitTests.OldTestSupportIssueTests
                 var hasErrors = handler.CompareModelToDatabase(database);
 
                 //VERIFY
-                hasErrors.ShouldBeFalse();
                 foreach (var log in CompareLog.AllResultsIndented(handler.Logs))
                 {
                     _output.WriteLine(log);
                 }
+                hasErrors.ShouldBeFalse();
             }
         }
     }

@@ -16,6 +16,8 @@ namespace DataLayer.BookApp.EfCode
         public DbSet<Book> Books { get; set; }
         public DbSet<Author> Authors { get; set; }
         public DbSet<PriceOffer> PriceOffers { get; set; }
+        
+        public DbSet<Tag> Tags { get; set; }
 
         protected override void
             OnModelCreating(ModelBuilder modelBuilder)

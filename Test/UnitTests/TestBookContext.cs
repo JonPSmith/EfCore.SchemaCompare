@@ -3,7 +3,11 @@
 
 using System.Linq;
 using DataLayer.BookApp.EfCode;
+using EfSchemaCompare.Internal;
 using Microsoft.EntityFrameworkCore;
+using Microsoft.EntityFrameworkCore.Scaffolding;
+using Microsoft.EntityFrameworkCore.SqlServer.Design.Internal;
+using Microsoft.Extensions.DependencyInjection;
 using Test.EfHelpers;
 using TestSupport.EfHelpers;
 using Xunit;
@@ -14,7 +18,7 @@ namespace Test.UnitTests
     public class TestBookContext
     {
         [Fact]
-        public void TestContextOk()
+        public void TestSeedContextOk()
         {
             //SETUP
             var options = SqliteInMemory.CreateOptions<BookContext>();
@@ -26,7 +30,69 @@ namespace Test.UnitTests
 
             //VERIFY
             context.Books.Count().ShouldEqual(4);
+            context.Tags.Count().ShouldEqual(4);
             context.Model.GetDefaultSchema().ShouldEqual(null);
+        }
+
+        [Fact]
+        public void TestTagsOk()
+        {
+            //SETUP
+            var options = SqliteInMemory.CreateOptions<BookContext>();
+            using var context = new BookContext(options);
+            context.Database.EnsureCreated();
+            context.SeedDatabaseFourBooks();
+
+            context.ChangeTracker.Clear();
+            
+            //ATTEMPT 
+            var books = context.Books.Include(b => b.Tags).ToList();
+
+            //VERIFY
+            var bTags = books.Select(x => new {
+                x.BookId, 
+                tagsNames = string.Join(" | ", x.Tags.Select(y => y.TagId))
+
+            });
+        }
+
+        [Fact]
+        public void TestContextModelOk()
+        {
+            //SETUP
+            var options = SqliteInMemory.CreateOptions<BookContext>();
+            using var context = new BookContext(options);
+            context.Database.EnsureCreated();
+
+            //ATTEMPT 
+            var tables = context.Model.GetEntityTypes().Select(x => x.GetTableName()).ToArray();
+
+            //VERIFY
+            tables.ShouldEqual(new []{ "BookTag", "Authors", "Books", "BookAuthor", "PriceOffers", "Review", "Tags" });
+        }
+
+        [Fact]
+        public void TestDatabaseTablesOk()
+        {
+            //SETUP
+            var options = this.CreateUniqueClassOptions<BookContext>();
+            using var context = new BookContext(options);
+            context.Database.EnsureClean();
+            context.Database.EnsureCreated();
+
+            //ATTEMPT 
+            var serviceProvider = new SqlServerDesignTimeServices().GetDesignTimeProvider();
+            var factory = serviceProvider.GetService<IDatabaseModelFactory>();
+
+            //ATTEMPT 
+
+            var model = factory.Create(context.Database.GetConnectionString(),
+                new DatabaseModelFactoryOptions(new string[] { }, new string[] { }));
+
+            //VERIFY
+            model.ShouldNotBeNull();
+            model.Tables.Select(x => x.Name).ToArray()
+                .ShouldEqual(new[] { "Authors", "BookAuthor", "Books", "BookTag", "PriceOffers", "Review", "Tags" });
         }
     }
 }
