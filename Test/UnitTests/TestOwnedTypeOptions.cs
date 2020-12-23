@@ -51,6 +51,24 @@ namespace Test.UnitTests
             hasErrors.ShouldBeFalse(comparer.GetAllErrors);
         }
 
+        [Fact]
+        public void CompareOwnedTypeSeparateTable()
+        {
+            //SETUP
+            var options = this.CreateUniqueClassOptions<OwnedTypeDbContext>(
+                builder => builder.ReplaceService<IModelCacheKeyFactory, OwnedTypeModelCacheKeyFactory>());
+            using var context = new OwnedTypeDbContext(options, OwnedTypeDbContext.Configs.SeparateTable);
+            context.Database.EnsureClean();
+
+            var comparer = new CompareEfSql();
+
+            //ATTEMPT
+            var hasErrors = comparer.CompareEfWithDb(context);
+
+            //VERIFY
+            hasErrors.ShouldBeFalse(comparer.GetAllErrors);
+        }
+
 
         [Fact]
         public void LookAtEntityData()

@@ -36,6 +36,7 @@ namespace DataLayer.SpecialisedEntities.EfCode
                     modelBuilder.Entity<User>().Navigation(p => p.HomeAddress).IsRequired();
                     break;
                 case Configs.SeparateTable:
+                    modelBuilder.Entity<User>().OwnsOne(e => e.HomeAddress).ToTable("Addresses");
                     break;
                 default:
                     throw new ArgumentOutOfRangeException();
