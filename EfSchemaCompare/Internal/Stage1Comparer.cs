@@ -21,7 +21,8 @@ namespace EfSchemaCompare.Internal
 
         private readonly IModel _model;
         private readonly string _dbContextName;
-        private readonly string _databaseDefaultScheme;
+        private readonly string _modelDefaultSchema;
+        private string _databaseDefaultSchema;
         private readonly IReadOnlyList<CompareLog> _ignoreList;
         private readonly StringComparer _caseComparer;
         private readonly StringComparison _caseComparison;
@@ -41,19 +42,20 @@ namespace EfSchemaCompare.Internal
             _caseComparer = StringComparer.CurrentCulture;          //Turned off CaseComparer as doesn't work with EF Core 5
             _caseComparison = _caseComparer.GetStringComparison();
 
-            _databaseDefaultScheme = (config ?? new CompareEfSqlConfig()).DefaultSchema;
+            _modelDefaultSchema = (config ?? new CompareEfSqlConfig()).DefaultSchema;
         }
 
 
         public bool CompareModelToDatabase(DatabaseModel databaseModel)
         {
+            _databaseDefaultSchema = databaseModel.DefaultSchema;
             var dbLogger = new CompareLogger2(CompareType.DbContext, _dbContextName, _logs, _ignoreList, () => _hasErrors = true);
 
             //Check things about the database, such as sequences
             dbLogger.MarkAsOk(_dbContextName);
             CheckDatabaseOk(_logs.Last(), _model, databaseModel);
 
-            _tableDict = databaseModel.Tables.ToDictionary(x => x.FormSchemaTable(databaseModel.DefaultSchema), _caseComparer);
+            _tableDict = databaseModel.Tables.ToDictionary(x => x.FormSchemaTable(_databaseDefaultSchema), _caseComparer);
             var dbQueries = _model.GetEntityTypes().Where(x => x.FindPrimaryKey() == null).ToList();
             if (dbQueries.Any())
                 dbLogger.Warning("EfSchemaCompare does not check read-only types", null, string.Join(", ", dbQueries.Select(x => x.ClrType.Name)));
@@ -125,27 +127,18 @@ namespace EfSchemaCompare.Internal
             }
         }
 
+        
         private bool IgnoreForeignKeyIfInSameTable(IEntityType entityType, IForeignKey entityFKey, DatabaseTable table)
         {
-            if (entityType.DefiningEntityType != null &&
-                string.Equals(entityType.DefiningEntityType.GetTableName(), table.Name, _caseComparison))
-                //if a owned table, and the owned entity's table matches this table then ignore
-                return true;
-
             //see https://github.com/aspnet/EntityFrameworkCore/issues/10345#issuecomment-345841191
             var fksPropsInOneTable = entityFKey.Properties.All(x =>
-                string.Equals(x.DeclaringEntityType.GetTableName(), table.Name, _caseComparison));
+                string.Equals(x.DeclaringEntityType.FormSchemaTable(), table.FormSchemaTable(_databaseDefaultSchema), _caseComparison));
             var fksPropsColumnNames = entityFKey.Properties.Select(p => GetColumnNameTakingIntoAccountSchema(p, table));
             var pkPropsColumnNames =
                 entityFKey.PrincipalKey.Properties.Select(p => GetColumnNameTakingIntoAccountSchema(p, 
                     _tableDict[p.DeclaringEntityType.FormSchemaTable()]));
             
-            if (fksPropsInOneTable && fksPropsColumnNames.SequenceEqual(pkPropsColumnNames))
-                //If all the declaring entity type of the foreign key are all in this table, then we ignore this (table splitting case)
-                return true;
-
-            //Otherwise we should not ignore it
-            return false;
+            return fksPropsInOneTable && fksPropsColumnNames.SequenceEqual(pkPropsColumnNames);
         }
 
         private void CompareIndexes(CompareLog log, IEntityType entityType, DatabaseTable table)
@@ -198,6 +191,7 @@ namespace EfSchemaCompare.Internal
                     pKeyError = true;  //extra set of pKeyError
                     _hasErrors = true;
                 });
+            
             pKeyLogger.CheckDifferent(efPKeyConstraintName, table.PrimaryKey?.Name ?? NoPrimaryKey, 
                 CompareAttributes.ConstraintName, _caseComparison);
             foreach (var property in entityType.GetProperties())
@@ -259,7 +253,8 @@ namespace EfSchemaCompare.Internal
         private bool ComparePropertyToColumn(CompareLogger2 logger, IProperty property, DatabaseColumn column)
         {
             var error = logger.CheckDifferent(property.GetColumnType(), column.StoreType, CompareAttributes.ColumnType, _caseComparison);
-            error |= logger.CheckDifferent(property.IsNullable.NullableAsString(), column.IsNullable.NullableAsString(), CompareAttributes.Nullability, _caseComparison);
+            error |= logger.CheckDifferent(property.IsNullable.NullableAsString(), 
+                column.IsNullable.NullableAsString(), CompareAttributes.Nullability, _caseComparison);
             error |= logger.CheckDifferent(property.GetComputedColumnSql().RemoveUnnecessaryBrackets(),
                 column.ComputedColumnSql.RemoveUnnecessaryBrackets(), CompareAttributes.ComputedColumnSql, _caseComparison);
             var defaultValue = property.GetDefaultValueSql() ?? property.GetDefaultValue()?.ToString();
@@ -291,7 +286,7 @@ namespace EfSchemaCompare.Internal
 
         private string GetColumnNameTakingIntoAccountSchema(IProperty property, DatabaseTable table)
         {
-            var modelSchema = table.Schema == _databaseDefaultScheme ? null : table.Schema;
+            var modelSchema = table.Schema == _modelDefaultSchema ? null : table.Schema;
             var columnName = property.GetColumnName(StoreObjectIdentifier.Table(table.Name, modelSchema));
             if (columnName == null)
                 throw new Exception("Column name is null");

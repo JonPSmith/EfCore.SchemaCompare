@@ -41,21 +41,5 @@ namespace Test.UnitTests
                 "DIFFERENT: BookDetail->Property 'Price', nullability. Expected = NOT NULL, found = NULL");
         }
 
-        [Fact]
-        public void CompareOwnedWithKeyDbContext()
-        {
-            //SETUP
-            var options = this.CreateUniqueMethodOptions<OwnedWithKeyDbContext>();
-            using var context = new OwnedWithKeyDbContext(options);
-            context.Database.EnsureClean();
-            
-            var comparer = new CompareEfSql();
-
-            //ATTEMPT
-            var hasErrors = comparer.CompareEfWithDb(context);
-
-            //VERIFY
-            hasErrors.ShouldBeFalse(comparer.GetAllErrors);
-        }
     }
 }
