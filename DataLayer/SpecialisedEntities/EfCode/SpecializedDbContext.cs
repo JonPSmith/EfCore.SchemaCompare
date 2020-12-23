@@ -20,6 +20,10 @@ namespace DataLayer.SpecialisedEntities.EfCode
         protected override void OnModelCreating
             (ModelBuilder modelBuilder)
         {
+            modelBuilder.Entity<AllTypesEntity>()
+                .Property(p => p.ValueConverterEnumToString)
+                .HasConversion<string>();
+
             modelBuilder.ApplyConfiguration(new BookSummaryConfig());
             modelBuilder.ApplyConfiguration(new BookDetailConfig());
             modelBuilder.ApplyConfiguration(new OrderInfoConfig());

@@ -32,6 +32,10 @@ namespace DataLayer.SpecialisedEntities.EfClasses
         public TimeSpan MyTimeSpan { get;  set; }
         public DateTimeOffset MyDateTimeOffset { get;  set; }
         public byte[] MyByteArray { get;  set; }
+        
+        
+        public enum ValueConverterExample {Zero, One, Two}
+        public ValueConverterExample ValueConverterEnumToString { get; set; } 
 
         public void SetId(int id)
         {

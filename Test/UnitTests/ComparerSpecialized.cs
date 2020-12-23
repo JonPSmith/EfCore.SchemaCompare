@@ -38,7 +38,10 @@ namespace Test.UnitTests
 
             hasErrors.ShouldBeTrue(comparer.GetAllErrors);
             comparer.GetAllErrors.ShouldEqual(
-                "DIFFERENT: BookDetail->Property 'Price', nullability. Expected = NOT NULL, found = NULL");
+                @"DIFFERENT: BookDetail->Property 'Price', nullability. Expected = NOT NULL, found = NULL
+DIFFERENT: Address->Property 'CountryCodeIso2', nullability. Expected = NOT NULL, found = NULL
+DIFFERENT: Address->Property 'CountryCodeIso2', nullability. Expected = NOT NULL, found = NULL");
+
         }
 
     }
