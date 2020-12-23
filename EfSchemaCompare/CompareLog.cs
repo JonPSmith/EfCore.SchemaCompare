@@ -35,7 +35,7 @@ namespace EfSchemaCompare
         //This is used to match any attribute for the ignore list
         MatchAnything,
         //column items
-        ColumnName, ColumnType, Nullability, DefaultValueSql, ComputedColumnSql, ValueGenerated,
+        ColumnName, ColumnType, Nullability, DefaultValueSql, ComputedColumnSql, PersistentComputedColumn, ValueGenerated,
         //Tables
         TableName,
         //keys - primary, foreign, alternative

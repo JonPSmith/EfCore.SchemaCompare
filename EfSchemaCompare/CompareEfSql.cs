@@ -126,7 +126,7 @@ namespace EfSchemaCompare
             bool hasErrors = false;
             foreach (var context in dbContexts)
             {
-                var stage1Comparer = new Stage1Comparer(context.Model, context.GetType().Name, _config, _logs);
+                var stage1Comparer = new Stage1Comparer(context, _config, _logs);
                 hasErrors |= stage1Comparer.CompareModelToDatabase(databaseModel);
             }
 

@@ -7,8 +7,10 @@ using System.Collections.Immutable;
 using System.Linq;
 using System.Runtime.CompilerServices;
 using Microsoft.EntityFrameworkCore;
+using Microsoft.EntityFrameworkCore.Infrastructure;
 using Microsoft.EntityFrameworkCore.Metadata;
 using Microsoft.EntityFrameworkCore.Scaffolding.Metadata;
+using Microsoft.EntityFrameworkCore.Storage;
 
 [assembly: InternalsVisibleTo("Test")]
 
@@ -18,24 +20,24 @@ namespace EfSchemaCompare.Internal
     {
         private const string NoPrimaryKey = "- no primary key -";
 
-        private readonly IModel _model;
-        private readonly string _dbContextName;
-        private readonly string _modelDefaultSchema;
-        private string _databaseDefaultSchema;
+        private readonly DbContext _context;
+        private readonly IRelationalTypeMappingSource _relationalTypeMapping;
         private readonly IReadOnlyList<CompareLog> _ignoreList;
         private readonly StringComparer _caseComparer;
         private readonly StringComparison _caseComparison;
+        private readonly string _modelDefaultSchema;
 
+        private string _databaseDefaultSchema;
         private Dictionary<string, DatabaseTable> _tableDict;
         private bool _hasErrors;
 
         private readonly List<CompareLog> _logs;
         public IReadOnlyList<CompareLog> Logs => _logs.ToImmutableList();
 
-        public Stage1Comparer(IModel model, string dbContextName, CompareEfSqlConfig config = null, List<CompareLog> logs = null)
+        public Stage1Comparer(DbContext context, CompareEfSqlConfig config = null, List<CompareLog> logs = null)
         {
-            _model = model;
-            _dbContextName = dbContextName;
+            _context = context;
+            _relationalTypeMapping = context.GetService<IRelationalTypeMappingSource>();
             _logs = logs ?? new List<CompareLog>();
             _ignoreList = config?.LogsToIgnore ?? new List<CompareLog>();
             _caseComparer = StringComparer.CurrentCulture;          //Turned off CaseComparer as doesn't work with EF Core 5
@@ -48,17 +50,20 @@ namespace EfSchemaCompare.Internal
         public bool CompareModelToDatabase(DatabaseModel databaseModel)
         {
             _databaseDefaultSchema = databaseModel.DefaultSchema;
-            var dbLogger = new CompareLogger2(CompareType.DbContext, _dbContextName, _logs, _ignoreList, () => _hasErrors = true);
+            var dbContextName = _context.GetType().Name;
+            var model = _context.Model;
+                
+            var dbLogger = new CompareLogger2(CompareType.DbContext, dbContextName, _logs, _ignoreList, () => _hasErrors = true);
 
             //Check things about the database, such as sequences
-            dbLogger.MarkAsOk(_dbContextName);
-            CheckDatabaseOk(_logs.Last(), _model, databaseModel);
+            dbLogger.MarkAsOk(dbContextName);
+            CheckDatabaseOk(_logs.Last(), model, databaseModel);
 
             _tableDict = databaseModel.Tables.ToDictionary(x => x.FormSchemaTable(_databaseDefaultSchema), _caseComparer);
-            var dbQueries = _model.GetEntityTypes().Where(x => x.FindPrimaryKey() == null).ToList();
+            var dbQueries = model.GetEntityTypes().Where(x => x.FindPrimaryKey() == null).ToList();
             if (dbQueries.Any())
                 dbLogger.Warning("EfSchemaCompare does not check read-only types", null, string.Join(", ", dbQueries.Select(x => x.ClrType.Name)));
-            foreach (var entityType in _model.GetEntityTypes().Where(x => x.FindPrimaryKey() != null))
+            foreach (var entityType in model.GetEntityTypes().Where(x => x.FindPrimaryKey() != null))
             {
                 var logger = new CompareLogger2(CompareType.Entity, entityType.ClrType.Name, _logs.Last().SubLogs, _ignoreList, () => _hasErrors = true);
                 if (_tableDict.ContainsKey(entityType.FormSchemaTable()))
@@ -256,8 +261,15 @@ namespace EfSchemaCompare.Internal
                 column.IsNullable.NullableAsString(), CompareAttributes.Nullability, _caseComparison);
             error |= logger.CheckDifferent(property.GetComputedColumnSql().RemoveUnnecessaryBrackets(),
                 column.ComputedColumnSql.RemoveUnnecessaryBrackets(), CompareAttributes.ComputedColumnSql, _caseComparison);
-            var defaultValue = property.GetDefaultValueSql() ?? property.GetDefaultValue()?.ToString();
-            error |= logger.CheckDifferent(defaultValue.RemoveUnnecessaryBrackets(),
+            if (property.GetComputedColumnSql() != null)
+                error |= logger.CheckDifferent(property.GetIsStored()?.ToString() ?? false.ToString()
+                    , column.IsStored.ToString(),
+                    CompareAttributes.PersistentComputedColumn, _caseComparison);
+            var defaultValue = property.GetDefaultValue() != null
+                ? _relationalTypeMapping.FindMapping(property.GetDefaultValue().GetType())
+                    .GenerateSqlLiteral(property.GetDefaultValue())
+                : property.GetDefaultValueSql().RemoveUnnecessaryBrackets();
+            error |= logger.CheckDifferent(defaultValue,
                     column.DefaultValueSql.RemoveUnnecessaryBrackets(), CompareAttributes.DefaultValueSql, _caseComparison);
             error |= CheckValueGenerated(logger, property, column);
             return error;

@@ -26,7 +26,7 @@ namespace Test.UnitTests.OldTestSupportIssueTests
             using (var context = new Issue15DbContext(_options))
             {
                 _connectionString = context.Database.GetDbConnection().ConnectionString;
-                context.Database.EnsureCreated();
+                context.Database.EnsureClean();
             }
         }
 
@@ -45,17 +45,12 @@ namespace Test.UnitTests.OldTestSupportIssueTests
                 //hasErrors.ShouldBeFalse(comparer.GetAllErrors);
                 hasErrors.ShouldBeTrue();
 
-                comparer.GetAllErrors.ShouldEqual(@"DIFFERENT: Message->Property 'BoolRequiredDefaultFalse', default value sql. Expected = False, found = CONVERT([bit],(0))
-DIFFERENT: Message->Property 'BoolRequiredDefaultTrue', default value sql. Expected = True, found = CONVERT([bit],(1))
-DIFFERENT: Message->Property 'EnumRequiredDefaultOne', default value sql. Expected = One, found = 1
-DIFFERENT: Message->Property 'EnumRequiredDefaultZero', default value sql. Expected = Zero, found = <null>
+                comparer.GetAllErrors.ShouldEqual(@"DIFFERENT: Message->Property 'BoolRequiredDefaultFalse', default value sql. Expected = CAST(0 AS bit), found = CONVERT([bit],(0))
+DIFFERENT: Message->Property 'BoolRequiredDefaultTrue', default value sql. Expected = CAST(1 AS bit), found = CONVERT([bit],(1))
+DIFFERENT: Message->Property 'EnumRequiredDefaultZero', default value sql. Expected = 0, found = <null>
 DIFFERENT: Message->Property 'EnumRequiredDefaultZero', value generated. Expected = OnAdd, found = Never
 DIFFERENT: Message->Property 'IntRequiredDefault0', default value sql. Expected = 0, found = <null>
-DIFFERENT: Message->Property 'IntRequiredDefault0', value generated. Expected = OnAdd, found = Never
-DIFFERENT: Message->Property 'StringRequiredDefaultEmpty', default value sql. Expected = , found = N''
-DIFFERENT: Message->Property 'StringRequiredDefaultSomething', default value sql. Expected = something, found = N'something'
-DIFFERENT: Message->Property 'XmlRequiredDefaultEmpty', default value sql. Expected = , found = N''
-DIFFERENT: Message->Property 'XmlRequiredDefaultSomething', default value sql. Expected = <something />, found = N'<something />'");
+DIFFERENT: Message->Property 'IntRequiredDefault0', value generated. Expected = OnAdd, found = Never");
 
             }
         }

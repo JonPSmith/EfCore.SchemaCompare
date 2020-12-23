@@ -11,7 +11,7 @@ namespace DataLayer.MyEntityDb
         public enum Configs
         {
             NormalTable, TableWithSchema, WholeSchemaSet, DifferentPk, 
-            ComputedCol, DefaultValue,
+            ComputedCol, PersistentComputedColumn, DefaultValue,
             ShadowProp, HasIndex, HasUniqueIndex, 
             DifferentColName, StringIsRequired, StringIsAscii 
         }
@@ -46,7 +46,19 @@ namespace DataLayer.MyEntityDb
                     modelBuilder.Entity<MyEntity>().ToTable("MyEntites");
                     modelBuilder.Entity<MyEntity>()
                         .Property(p => p.MyDateTime)
+                        .HasColumnType("datetime");
+                    modelBuilder.Entity<MyEntity>()
+                        .Property(p => p.MyDateTime)
                         .HasComputedColumnSql("getutcdate()");
+                    break;
+                case Configs.PersistentComputedColumn:
+                    modelBuilder.Entity<MyEntity>().ToTable("MyEntites");
+                    modelBuilder.Entity<MyEntity>()
+                        .Property(p => p.MyString)
+                        .HasColumnType("nvarchar(30)");
+                    modelBuilder.Entity<MyEntity>()
+                        .Property(p => p.MyString)
+                        .HasComputedColumnSql("CONVERT([nvarchar](30),[MyEntityId]+(1))", true);
                     break;
                 case Configs.DefaultValue:
                     modelBuilder.Entity<MyEntity>().ToTable("MyEntites");

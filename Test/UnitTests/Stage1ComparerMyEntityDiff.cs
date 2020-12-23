@@ -53,7 +53,7 @@ namespace Test.UnitTests
             using (var context = new MyEntityDbContext(options, MyEntityDbContext.Configs.NormalTable))
             {
                 var model = context.Model;
-                var handler = new Stage1Comparer(model, context.GetType().Name);
+                var handler = new Stage1Comparer(context);
 
                 //ATTEMPT
                 var hasErrors = handler.CompareModelToDatabase(databaseModel);
@@ -75,7 +75,7 @@ namespace Test.UnitTests
             using (var context = new MyEntityDbContext(options, MyEntityDbContext.Configs.TableWithSchema))
             {
                 var model = context.Model;
-                var handler = new Stage1Comparer(model, context.GetType().Name);
+                var handler = new Stage1Comparer(context);
 
                 //ATTEMPT
                 var hasErrors = handler.CompareModelToDatabase(databaseModel);
@@ -96,7 +96,7 @@ namespace Test.UnitTests
             using (var context = new MyEntityDbContext(options, MyEntityDbContext.Configs.WholeSchemaSet))
             {
                 var model = context.Model;
-                var handler = new Stage1Comparer(model, context.GetType().Name);
+                var handler = new Stage1Comparer(context);
 
                 //ATTEMPT
                 var hasErrors = handler.CompareModelToDatabase(databaseModel);
@@ -117,7 +117,7 @@ namespace Test.UnitTests
             using (var context = new MyEntityDbContext(options, MyEntityDbContext.Configs.ShadowProp))
             {
                 var model = context.Model;
-                var handler = new Stage1Comparer(model, context.GetType().Name);
+                var handler = new Stage1Comparer(context);
 
                 //ATTEMPT
                 var hasErrors = handler.CompareModelToDatabase(databaseModel);
@@ -138,7 +138,7 @@ namespace Test.UnitTests
             using (var context = new MyEntityDbContext(options, MyEntityDbContext.Configs.DifferentColName))
             {
                 var model = context.Model;
-                var handler = new Stage1Comparer(model, context.GetType().Name);
+                var handler = new Stage1Comparer(context);
 
                 //ATTEMPT
                 var hasErrors = handler.CompareModelToDatabase(databaseModel);
@@ -159,7 +159,7 @@ namespace Test.UnitTests
             using (var context = new MyEntityDbContext(options, MyEntityDbContext.Configs.StringIsRequired))
             {
                 var model = context.Model;
-                var handler = new Stage1Comparer(model, context.GetType().Name);
+                var handler = new Stage1Comparer(context);
 
                 //ATTEMPT
                 var hasErrors = handler.CompareModelToDatabase(databaseModel);
@@ -180,7 +180,7 @@ namespace Test.UnitTests
             using (var context = new MyEntityDbContext(options, MyEntityDbContext.Configs.StringIsAscii))
             {
                 var model = context.Model;
-                var handler = new Stage1Comparer(model, context.GetType().Name);
+                var handler = new Stage1Comparer(context);
 
                 //ATTEMPT
                 var hasErrors = handler.CompareModelToDatabase(databaseModel);
@@ -201,7 +201,7 @@ namespace Test.UnitTests
             using (var context = new MyEntityDbContext(options, MyEntityDbContext.Configs.DifferentPk))
             {
                 var model = context.Model;
-                var handler = new Stage1Comparer(model, context.GetType().Name);
+                var handler = new Stage1Comparer(context);
 
                 //ATTEMPT
                 var hasErrors = handler.CompareModelToDatabase(databaseModel);
@@ -230,7 +230,7 @@ namespace Test.UnitTests
             using (var context = new MyEntityDbContext(options, MyEntityDbContext.Configs.HasUniqueIndex))
             {
                 var model = context.Model;
-                var handler = new Stage1Comparer(model, context.GetType().Name);
+                var handler = new Stage1Comparer(context);
 
                 //ATTEMPT
                 var hasErrors = handler.CompareModelToDatabase(databaseModel);
@@ -257,7 +257,7 @@ namespace Test.UnitTests
             using (var context = new MyEntityDbContext(options, MyEntityDbContext.Configs.ComputedCol))
             {
                 var model = context.Model;
-                var handler = new Stage1Comparer(model, context.GetType().Name);
+                var handler = new Stage1Comparer(context);
 
                 //ATTEMPT
                 var hasErrors = handler.CompareModelToDatabase(databaseModel);
@@ -265,11 +265,42 @@ namespace Test.UnitTests
                 //VERIFY
                 hasErrors.ShouldBeTrue();
                 var errors = CompareLog.ListAllErrors(handler.Logs).ToList();
-                errors.Count.ShouldEqual(2);
+                errors.Count.ShouldEqual(3);
                 errors[0].ShouldEqual(
-                    "DIFFERENT: MyEntity->Property 'MyDateTime', computed column sql. Expected = getutcdate(), found = <null>");
+                    "DIFFERENT: MyEntity->Property 'MyDateTime', column type. Expected = datetime, found = datetime2");
                 errors[1].ShouldEqual(
+                    "DIFFERENT: MyEntity->Property 'MyDateTime', computed column sql. Expected = getutcdate(), found = <null>");
+                errors[2].ShouldEqual(
                     "DIFFERENT: MyEntity->Property 'MyDateTime', value generated. Expected = OnAddOrUpdate, found = Never");
+            }
+        }
+
+        [Fact]
+        public void ComparePropertyPersistentComputedColName()
+        {
+            //SETUP
+            var options = this.CreateUniqueClassOptions<MyEntityDbContext>(
+                builder => builder.ReplaceService<IModelCacheKeyFactory, MyEntityModelCacheKeyFactory>());
+            using (var context = new MyEntityDbContext(options, MyEntityDbContext.Configs.PersistentComputedColumn))
+            {
+                var model = context.Model;
+                var handler = new Stage1Comparer(context);
+
+                //ATTEMPT
+                var hasErrors = handler.CompareModelToDatabase(databaseModel);
+
+                //VERIFY
+                hasErrors.ShouldBeTrue();
+                var errors = CompareLog.ListAllErrors(handler.Logs).ToList();
+                errors.Count.ShouldEqual(4);
+                errors[0].ShouldEqual(
+                    "DIFFERENT: MyEntity->Property 'MyString', column type. Expected = nvarchar(30), found = nvarchar(max)");
+                errors[1].ShouldEqual(
+                    "DIFFERENT: MyEntity->Property 'MyString', computed column sql. Expected = CONVERT([nvarchar](30),[MyEntityId]+(1)), found = <null>");
+                errors[2].ShouldEqual(
+                    "DIFFERENT: MyEntity->Property 'MyString', persistent computed column. Expected = True, found = False");
+                errors[3].ShouldEqual(
+                    "DIFFERENT: MyEntity->Property 'MyString', value generated. Expected = OnAddOrUpdate, found = Never");
             }
         }
 
@@ -282,7 +313,7 @@ namespace Test.UnitTests
             using (var context = new MyEntityDbContext(options, MyEntityDbContext.Configs.ComputedCol))
             {
                 var model = context.Model;
-                var handler = new Stage1Comparer(model, context.GetType().Name);
+                var handler = new Stage1Comparer(context);
 
                 //ATTEMPT
                 var hasErrors = handler.CompareModelToDatabase(databaseModel);
@@ -291,9 +322,14 @@ namespace Test.UnitTests
                 hasErrors.ShouldBeTrue();
                 //The setting of a computed col changed the column type
                 var errors = CompareLog.ListAllErrors(handler.Logs).ToList();
-                errors.Count.ShouldEqual(2);
+                errors.Count.ShouldEqual(3);
+                errors[0].ShouldEqual(
+                    "DIFFERENT: MyEntity->Property 'MyDateTime', column type. Expected = datetime, found = datetime2");
                 errors[1].ShouldEqual(
+                    "DIFFERENT: MyEntity->Property 'MyDateTime', computed column sql. Expected = getutcdate(), found = <null>");
+                errors[2].ShouldEqual(
                     "DIFFERENT: MyEntity->Property 'MyDateTime', value generated. Expected = OnAddOrUpdate, found = Never");
+
 
             }
         }
@@ -307,7 +343,7 @@ namespace Test.UnitTests
             using (var context = new MyEntityDbContext(options, MyEntityDbContext.Configs.DefaultValue))
             {
                 var model = context.Model;
-                var handler = new Stage1Comparer(model, context.GetType().Name);
+                var handler = new Stage1Comparer(context);
 
                 //ATTEMPT
                 var hasErrors = handler.CompareModelToDatabase(databaseModel);

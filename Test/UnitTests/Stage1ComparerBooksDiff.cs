@@ -45,7 +45,7 @@ namespace Test.UnitTests
                 var database = factory.Create(_connectionString,
                     new DatabaseModelFactoryOptions(new string[] { }, new string[] { }));
 
-                var handler = new Stage1Comparer(context.Model, nameof(BookContext));
+                var handler = new Stage1Comparer(context);
 
                 //ATTEMPT
                 var hasErrors = handler.CompareModelToDatabase(database);
