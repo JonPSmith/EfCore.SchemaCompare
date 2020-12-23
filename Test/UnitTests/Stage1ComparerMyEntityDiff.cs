@@ -2,10 +2,11 @@
 // Licensed under MIT license. See License.txt in the project root for license information.
 
 using System.Linq;
-using DataLayer.MyEntityDb.EfCompareDbs;
+using DataLayer.MyEntityDb;
 using EfSchemaCompare;
 using EfSchemaCompare.Internal;
 using Microsoft.EntityFrameworkCore;
+using Microsoft.EntityFrameworkCore.Infrastructure;
 using Microsoft.EntityFrameworkCore.Scaffolding;
 using Microsoft.EntityFrameworkCore.Scaffolding.Metadata;
 using Microsoft.EntityFrameworkCore.SqlServer.Design.Internal;
@@ -22,25 +23,23 @@ namespace Test.UnitTests
 {
     public class Stage1ComparerMyEntityDiff
     {
-        private readonly string _connectionString;
-        private readonly DatabaseModel _databaseModel;
-        private readonly DbContextOptions<MyEntityDbContext> _options;
+        private readonly DatabaseModel databaseModel;
         private readonly ITestOutputHelper _output;
 
         public Stage1ComparerMyEntityDiff(ITestOutputHelper output)
         {
             _output = output;
-            _options = this
-                .CreateUniqueClassOptions<MyEntityDbContext>();
+
             var serviceProvider = new SqlServerDesignTimeServices().GetDesignTimeProvider();
             var factory = serviceProvider.GetService<IDatabaseModelFactory>();
 
-            using (var context = new MyEntityDbContext(_options))
+            var options = this.CreateUniqueClassOptions<MyEntityDbContext>(
+                builder => builder.ReplaceService<IModelCacheKeyFactory, MyEntityModelCacheKeyFactory>());
+            using (var context = new MyEntityDbContext(options, MyEntityDbContext.Configs.NormalTable))
             {
-                _connectionString = context.Database.GetDbConnection().ConnectionString;
-                context.Database.EnsureCreated();
-
-                _databaseModel = factory.Create(_connectionString,
+                context.Database.EnsureClean();
+                var connectionString = context.Database.GetDbConnection().ConnectionString;
+                databaseModel = factory.Create(connectionString,
                     new DatabaseModelFactoryOptions(new string[] { }, new string[] { }));
             }
         }
@@ -49,13 +48,15 @@ namespace Test.UnitTests
         public void CompareDefaultConfigNoErrors()
         {
             //SETUP
-            using (var context = new MyEntityDbContext(_options))
+            var options = this.CreateUniqueClassOptions<MyEntityDbContext>(
+                builder => builder.ReplaceService<IModelCacheKeyFactory, MyEntityModelCacheKeyFactory>());
+            using (var context = new MyEntityDbContext(options, MyEntityDbContext.Configs.NormalTable))
             {
                 var model = context.Model;
                 var handler = new Stage1Comparer(model, context.GetType().Name);
 
                 //ATTEMPT
-                var hasErrors = handler.CompareModelToDatabase(_databaseModel);
+                var hasErrors = handler.CompareModelToDatabase(databaseModel);
 
                 //VERIFY
                 hasErrors.ShouldBeFalse();
@@ -66,17 +67,18 @@ namespace Test.UnitTests
         }
 
         [Fact]
-        public void CompareSchemaConfig()
+        public void CompareTableSchemaConfig()
         {
             //SETUP
-            var optionsBuilder = new DbContextOptionsBuilder<MyEntitySetSchemaDbContext>();
-            optionsBuilder.UseSqlServer(_connectionString);
-            using (var context = new MyEntitySetSchemaDbContext(optionsBuilder.Options))
+            var options = this.CreateUniqueClassOptions<MyEntityDbContext>(
+                builder => builder.ReplaceService<IModelCacheKeyFactory, MyEntityModelCacheKeyFactory>());
+            using (var context = new MyEntityDbContext(options, MyEntityDbContext.Configs.TableWithSchema))
             {
-                var handler = new Stage1Comparer(context.Model, context.GetType().Name);
+                var model = context.Model;
+                var handler = new Stage1Comparer(model, context.GetType().Name);
 
                 //ATTEMPT
-                var hasErrors = handler.CompareModelToDatabase(_databaseModel);
+                var hasErrors = handler.CompareModelToDatabase(databaseModel);
 
                 //VERIFY
                 hasErrors.ShouldBeTrue();
@@ -86,17 +88,39 @@ namespace Test.UnitTests
         }
 
         [Fact]
-        public void CompareExtraProperty()
+        public void CompareTotalSchemaConfig()
         {
             //SETUP
-            var optionsBuilder = new DbContextOptionsBuilder<MyEntityExtraPropDbContext>();
-            optionsBuilder.UseSqlServer(_connectionString);
-            using (var context = new MyEntityExtraPropDbContext(optionsBuilder.Options))
+            var options = this.CreateUniqueClassOptions<MyEntityDbContext>(
+                builder => builder.ReplaceService<IModelCacheKeyFactory, MyEntityModelCacheKeyFactory>());
+            using (var context = new MyEntityDbContext(options, MyEntityDbContext.Configs.WholeSchemaSet))
             {
-                var handler = new Stage1Comparer(context.Model, context.GetType().Name);
+                var model = context.Model;
+                var handler = new Stage1Comparer(model, context.GetType().Name);
 
                 //ATTEMPT
-                var hasErrors = handler.CompareModelToDatabase(_databaseModel);
+                var hasErrors = handler.CompareModelToDatabase(databaseModel);
+
+                //VERIFY
+                hasErrors.ShouldBeTrue();
+                CompareLog.ListAllErrors(handler.Logs).Single().ShouldEqual(
+                    "NOT IN DATABASE: Entity 'MyEntity', table name. Expected = AllSchema.MyEntites");
+            }
+        }
+
+        [Fact]
+        public void CompareShadowProperty()
+        {
+            //SETUP
+            var options = this.CreateUniqueClassOptions<MyEntityDbContext>(
+                builder => builder.ReplaceService<IModelCacheKeyFactory, MyEntityModelCacheKeyFactory>());
+            using (var context = new MyEntityDbContext(options, MyEntityDbContext.Configs.ShadowProp))
+            {
+                var model = context.Model;
+                var handler = new Stage1Comparer(model, context.GetType().Name);
+
+                //ATTEMPT
+                var hasErrors = handler.CompareModelToDatabase(databaseModel);
 
                 //VERIFY
                 hasErrors.ShouldBeTrue();
@@ -109,14 +133,15 @@ namespace Test.UnitTests
         public void ComparePropertyDiffColName()
         {
             //SETUP
-            var optionsBuilder = new DbContextOptionsBuilder<MyEntityPropertyDiffColDbContext>();
-            optionsBuilder.UseSqlServer(_connectionString);
-            using (var context = new MyEntityPropertyDiffColDbContext(optionsBuilder.Options))
+            var options = this.CreateUniqueClassOptions<MyEntityDbContext>(
+                builder => builder.ReplaceService<IModelCacheKeyFactory, MyEntityModelCacheKeyFactory>());
+            using (var context = new MyEntityDbContext(options, MyEntityDbContext.Configs.DifferentColName))
             {
-                var handler = new Stage1Comparer(context.Model, context.GetType().Name);
+                var model = context.Model;
+                var handler = new Stage1Comparer(model, context.GetType().Name);
 
                 //ATTEMPT
-                var hasErrors = handler.CompareModelToDatabase(_databaseModel);
+                var hasErrors = handler.CompareModelToDatabase(databaseModel);
 
                 //VERIFY
                 hasErrors.ShouldBeTrue();
@@ -129,14 +154,15 @@ namespace Test.UnitTests
         public void ComparePropertyDiffNullName()
         {
             //SETUP
-            var optionsBuilder = new DbContextOptionsBuilder<MyEntityPropertyDiffNullDbContext>();
-            optionsBuilder.UseSqlServer(_connectionString);
-            using (var context = new MyEntityPropertyDiffNullDbContext(optionsBuilder.Options))
+            var options = this.CreateUniqueClassOptions<MyEntityDbContext>(
+                builder => builder.ReplaceService<IModelCacheKeyFactory, MyEntityModelCacheKeyFactory>());
+            using (var context = new MyEntityDbContext(options, MyEntityDbContext.Configs.StringIsRequired))
             {
-                var handler = new Stage1Comparer(context.Model, context.GetType().Name);
+                var model = context.Model;
+                var handler = new Stage1Comparer(model, context.GetType().Name);
 
                 //ATTEMPT
-                var hasErrors = handler.CompareModelToDatabase(_databaseModel);
+                var hasErrors = handler.CompareModelToDatabase(databaseModel);
 
                 //VERIFY
                 hasErrors.ShouldBeTrue();
@@ -149,14 +175,15 @@ namespace Test.UnitTests
         public void ComparePropertyDiffTypeName()
         {
             //SETUP
-            var optionsBuilder = new DbContextOptionsBuilder<MyEntityPropertyDiffTypeDbContext>();
-            optionsBuilder.UseSqlServer(_connectionString);
-            using (var context = new MyEntityPropertyDiffTypeDbContext(optionsBuilder.Options))
+            var options = this.CreateUniqueClassOptions<MyEntityDbContext>(
+                builder => builder.ReplaceService<IModelCacheKeyFactory, MyEntityModelCacheKeyFactory>());
+            using (var context = new MyEntityDbContext(options, MyEntityDbContext.Configs.StringIsAscii))
             {
-                var handler = new Stage1Comparer(context.Model, context.GetType().Name);
+                var model = context.Model;
+                var handler = new Stage1Comparer(model, context.GetType().Name);
 
                 //ATTEMPT
-                var hasErrors = handler.CompareModelToDatabase(_databaseModel);
+                var hasErrors = handler.CompareModelToDatabase(databaseModel);
 
                 //VERIFY
                 hasErrors.ShouldBeTrue();
@@ -169,14 +196,15 @@ namespace Test.UnitTests
         public void CompareDiffPrimaryKey()
         {
             //SETUP
-            var optionsBuilder = new DbContextOptionsBuilder<MyEntityDiffPKeyDbContext>();
-            optionsBuilder.UseSqlServer(_connectionString);
-            using (var context = new MyEntityDiffPKeyDbContext(optionsBuilder.Options))
+            var options = this.CreateUniqueClassOptions<MyEntityDbContext>(
+                builder => builder.ReplaceService<IModelCacheKeyFactory, MyEntityModelCacheKeyFactory>());
+            using (var context = new MyEntityDbContext(options, MyEntityDbContext.Configs.DifferentPk))
             {
-                var handler = new Stage1Comparer(context.Model, context.GetType().Name);
+                var model = context.Model;
+                var handler = new Stage1Comparer(model, context.GetType().Name);
 
                 //ATTEMPT
-                var hasErrors = handler.CompareModelToDatabase(_databaseModel);
+                var hasErrors = handler.CompareModelToDatabase(databaseModel);
 
                 //VERIFY
                 hasErrors.ShouldBeTrue();
@@ -197,14 +225,15 @@ namespace Test.UnitTests
         public void CompareDiffIndexes()
         {
             //SETUP
-            var optionsBuilder = new DbContextOptionsBuilder<MyEntityIndexesDbContext>();
-            optionsBuilder.UseSqlServer(_connectionString);
-            using (var context = new MyEntityIndexesDbContext(optionsBuilder.Options))
+            var options = this.CreateUniqueClassOptions<MyEntityDbContext>(
+                builder => builder.ReplaceService<IModelCacheKeyFactory, MyEntityModelCacheKeyFactory>());
+            using (var context = new MyEntityDbContext(options, MyEntityDbContext.Configs.HasUniqueIndex))
             {
-                var handler = new Stage1Comparer(context.Model, context.GetType().Name);
+                var model = context.Model;
+                var handler = new Stage1Comparer(model, context.GetType().Name);
 
                 //ATTEMPT
-                var hasErrors = handler.CompareModelToDatabase(_databaseModel);
+                var hasErrors = handler.CompareModelToDatabase(databaseModel);
 
                 //VERIFY
                 hasErrors.ShouldBeTrue();
@@ -223,14 +252,15 @@ namespace Test.UnitTests
         public void ComparePropertyComputedColName()
         {
             //SETUP
-            var optionsBuilder = new DbContextOptionsBuilder<MyEntityComputedColDbContext>();
-            optionsBuilder.UseSqlServer(_connectionString);
-            using (var context = new MyEntityComputedColDbContext(optionsBuilder.Options))
+            var options = this.CreateUniqueClassOptions<MyEntityDbContext>(
+                builder => builder.ReplaceService<IModelCacheKeyFactory, MyEntityModelCacheKeyFactory>());
+            using (var context = new MyEntityDbContext(options, MyEntityDbContext.Configs.ComputedCol))
             {
-                var handler = new Stage1Comparer(context.Model, context.GetType().Name);
+                var model = context.Model;
+                var handler = new Stage1Comparer(model, context.GetType().Name);
 
                 //ATTEMPT
-                var hasErrors = handler.CompareModelToDatabase(_databaseModel);
+                var hasErrors = handler.CompareModelToDatabase(databaseModel);
 
                 //VERIFY
                 hasErrors.ShouldBeTrue();
@@ -243,76 +273,28 @@ namespace Test.UnitTests
             }
         }
 
-        private DbContextOptions<MyEntityComputedColDbContext> GetComputedColDbOptions()
-        {
-            var options = this.CreateUniqueMethodOptions<MyEntityComputedColDbContext>();
-            return options;
-        }
-
         [Fact]
         public void ComparePropertyComputedColSelf()
         {
             //SETUP
-            var options = GetComputedColDbOptions();
-            using (var context = new MyEntityComputedColDbContext(options))
+            var options = this.CreateUniqueClassOptions<MyEntityDbContext>(
+                builder => builder.ReplaceService<IModelCacheKeyFactory, MyEntityModelCacheKeyFactory>());
+            using (var context = new MyEntityDbContext(options, MyEntityDbContext.Configs.ComputedCol))
             {
-                var dtService = context.GetDesignTimeService();
-                var serviceProvider = dtService.GetDesignTimeProvider();
-                var factory = serviceProvider.GetService<IDatabaseModelFactory>();
-                var connectionString = context.Database.GetDbConnection().ConnectionString;
-                context.Database.EnsureCreated();
-                var localDatabaseModel = factory.Create(connectionString,
-                    new DatabaseModelFactoryOptions(new string[] { }, new string[] { }));
-
-                var handler = new Stage1Comparer(context.Model, context.GetType().Name);
+                var model = context.Model;
+                var handler = new Stage1Comparer(model, context.GetType().Name);
 
                 //ATTEMPT
-                var hasErrors = handler.CompareModelToDatabase(localDatabaseModel);
+                var hasErrors = handler.CompareModelToDatabase(databaseModel);
 
                 //VERIFY
                 hasErrors.ShouldBeTrue();
                 //The setting of a computed col changed the column type
                 var errors = CompareLog.ListAllErrors(handler.Logs).ToList();
-                errors.Count.ShouldEqual(1);
-                errors[0].ShouldEqual(
-                    "DIFFERENT: MyEntity->Property 'MyDateTime', column type. Expected = datetime2, found = datetime");
-            }
-        }
-
-        [Fact]
-        public void ComparePropertyComputedColNameReversed()
-        {
-            //SETUP
-            var options = GetComputedColDbOptions();
-            DatabaseModel localDatabaseModel;
-            using (var context = new MyEntityComputedColDbContext(options))
-            {
-                var dtService = context.GetDesignTimeService();
-                var serviceProvider = dtService.GetDesignTimeProvider();
-                var factory = serviceProvider.GetService<IDatabaseModelFactory>();
-                var connectionString = context.Database.GetDbConnection().ConnectionString;
-                context.Database.EnsureCreated();
-                localDatabaseModel = factory.Create(connectionString,
-                        new DatabaseModelFactoryOptions(new string[] { }, new string[] { }));
-            }
-
-            using (var context = new MyEntityDbContext(_options))
-            {
-                var handler = new Stage1Comparer(context.Model, context.GetType().Name);
-
-                //ATTEMPT
-                var hasErrors = handler.CompareModelToDatabase(localDatabaseModel);
-
-                //VERIFY
-                hasErrors.ShouldBeTrue();
-                var errors = CompareLog.ListAllErrors(handler.Logs).ToList();
-                errors.Count.ShouldEqual(3);
-                errors[0].ShouldEqual(
-                    "DIFFERENT: MyEntity->Property 'MyDateTime', column type. Expected = datetime2, found = datetime");
+                errors.Count.ShouldEqual(2);
                 errors[1].ShouldEqual(
-                    "DIFFERENT: MyEntity->Property 'MyDateTime', computed column sql. Expected = <null>, found = getutcdate()");
-                errors[2].ShouldEqual(
-                    "DIFFERENT: MyEntity->Property 'MyDateTime', value generated. Expected = Never, found = OnAddOrUpdate");
+                    "DIFFERENT: MyEntity->Property 'MyDateTime', value generated. Expected = OnAddOrUpdate, found = Never");
+
             }
         }
 
@@ -320,91 +302,30 @@ namespace Test.UnitTests
         public void ComparePropertySqlDefaultName()
         {
             //SETUP
-            var optionsBuilder = new DbContextOptionsBuilder<MyEntitySqlDefaultDbContext>();
-            optionsBuilder.UseSqlServer(_connectionString);
-            using (var context = new MyEntitySqlDefaultDbContext(optionsBuilder.Options))
+            var options = this.CreateUniqueClassOptions<MyEntityDbContext>(
+                builder => builder.ReplaceService<IModelCacheKeyFactory, MyEntityModelCacheKeyFactory>());
+            using (var context = new MyEntityDbContext(options, MyEntityDbContext.Configs.DefaultValue))
             {
-                var handler = new Stage1Comparer(context.Model, context.GetType().Name);
+                var model = context.Model;
+                var handler = new Stage1Comparer(model, context.GetType().Name);
 
                 //ATTEMPT
-                var hasErrors = handler.CompareModelToDatabase(_databaseModel);
+                var hasErrors = handler.CompareModelToDatabase(databaseModel);
 
                 //VERIFY
                 hasErrors.ShouldBeTrue();
                 var errors = CompareLog.ListAllErrors(handler.Logs).ToList();
-                errors.Count.ShouldEqual(2);
+                errors.Count.ShouldEqual(4);
                 errors[0].ShouldEqual(
-                    "DIFFERENT: MyEntity->Property 'MyInt', default value sql. Expected = 123, found = <null>");
+                    "DIFFERENT: MyEntity->Property 'MyDateTime', default value sql. Expected = 2000-01-01T00:00:00, found = <null>");
                 errors[1].ShouldEqual(
-                    "DIFFERENT: MyEntity->Property 'MyInt', value generated. Expected = OnAdd, found = Never");
+                    "DIFFERENT: MyEntity->Property 'MyDateTime', value generated. Expected = OnAdd, found = Never");
+                errors[2].ShouldEqual(
+                    "DIFFERENT: MyEntity->Property 'MyString', default value sql. Expected = Hello!, found = <null>");
+                errors[3].ShouldEqual(
+                    "DIFFERENT: MyEntity->Property 'MyString', value generated. Expected = OnAdd, found = Never");
             }
         }
 
-
-        private DbContextOptions<MyEntitySqlDefaultDbContext> GetDefaultSqlDbOptions()
-        {
-            var options = this.CreateUniqueMethodOptions<MyEntitySqlDefaultDbContext>();
-            return options;
-        }
-
-        [Fact]
-        public void ComparePropertySqlDefaultSelf()
-        {
-            //SETUP
-            var options = GetDefaultSqlDbOptions();
-            using (var context = new MyEntitySqlDefaultDbContext(options))
-            {
-                var dtService = context.GetDesignTimeService();
-                var serviceProvider = dtService.GetDesignTimeProvider();
-                var factory = serviceProvider.GetService<IDatabaseModelFactory>();
-                var connectionString = context.Database.GetDbConnection().ConnectionString;
-                context.Database.EnsureCreated();
-                var localDatabaseModel = factory.Create(connectionString,
-                    new DatabaseModelFactoryOptions(new string[] { }, new string[] { }));
-
-                var handler = new Stage1Comparer(context.Model, context.GetType().Name);
-
-                //ATTEMPT
-                var hasErrors = handler.CompareModelToDatabase(localDatabaseModel);
-
-                //VERIFY
-                hasErrors.ShouldBeFalse();
-            }
-        }
-
-        [Fact]
-        public void ComparePropertySqlDefaultReversed()
-        {
-            //SETUP
-            var options = GetDefaultSqlDbOptions();
-            DatabaseModel localDatabaseModel;
-            using (var context = new MyEntitySqlDefaultDbContext(options))
-            {
-                var dtService = context.GetDesignTimeService();
-                var serviceProvider = dtService.GetDesignTimeProvider();
-                var factory = serviceProvider.GetService<IDatabaseModelFactory>();
-                var connectionString = context.Database.GetDbConnection().ConnectionString;
-                context.Database.EnsureCreated();
-                localDatabaseModel = factory.Create(connectionString,
-                    new DatabaseModelFactoryOptions(new string[] { }, new string[] { }));
-            }
-
-            using (var context = new MyEntityDbContext(_options))
-            {
-                var handler = new Stage1Comparer(context.Model, context.GetType().Name);
-
-                //ATTEMPT
-                var hasErrors = handler.CompareModelToDatabase(localDatabaseModel);
-
-                //VERIFY
-                hasErrors.ShouldBeTrue();
-                var errors = CompareLog.ListAllErrors(handler.Logs).ToList();
-                errors.Count.ShouldEqual(2);
-                errors[0].ShouldEqual(
-                    "DIFFERENT: MyEntity->Property 'MyInt', default value sql. Expected = <null>, found = 123");
-                errors[1].ShouldEqual(
-                    "DIFFERENT: MyEntity->Property 'MyInt', value generated. Expected = Never, found = OnAdd");
-            }
-        }
     }
 }

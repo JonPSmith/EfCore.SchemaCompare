@@ -3,10 +3,11 @@
 
 using System.Collections.Generic;
 using System.Linq;
-using DataLayer.MyEntityDb.EfCompareDbs;
+using DataLayer.MyEntityDb;
 using EfSchemaCompare;
 using EfSchemaCompare.Internal;
 using Microsoft.EntityFrameworkCore;
+using Microsoft.EntityFrameworkCore.Infrastructure;
 using Microsoft.EntityFrameworkCore.Scaffolding;
 using Microsoft.EntityFrameworkCore.Scaffolding.Metadata;
 using Microsoft.EntityFrameworkCore.SqlServer.Design.Internal;
@@ -35,10 +36,10 @@ namespace Test.UnitTests
             var serviceProvider = new SqlServerDesignTimeServices().GetDesignTimeProvider();
             var factory = serviceProvider.GetService<IDatabaseModelFactory>();
 
-            using (var context = new MyEntityDbContext(options))
+            using (var context = new MyEntityDbContext(options, MyEntityDbContext.Configs.NormalTable))
             {
                 var connectionString = context.Database.GetDbConnection().ConnectionString;
-                context.Database.EnsureCreated();
+                context.Database.EnsureClean();
 
                 _databaseModel = factory.Create(connectionString,
                     new DatabaseModelFactoryOptions(new string[] { }, new string[] { }));
@@ -105,15 +106,16 @@ namespace Test.UnitTests
             var firstStageLogs = JsonConvert.DeserializeObject<List<CompareLog>>(
                 TestData.GetFileContent("DbContextCompareLog01*.json"));
 
-            var options = this.CreateUniqueMethodOptions<MyEntityIndexAddedDbContext>();
-            using (var context = new MyEntityIndexAddedDbContext(options))
+            var options = this.CreateUniqueClassOptions<MyEntityDbContext>(
+                builder => builder.ReplaceService<IModelCacheKeyFactory, MyEntityModelCacheKeyFactory>());
+            using (var context = new MyEntityDbContext(options, MyEntityDbContext.Configs.HasIndex))
             {
                 var dtService = context.GetDesignTimeService();
                 var serviceProvider = dtService.GetDesignTimeProvider();
                 var factory = serviceProvider.GetService<IDatabaseModelFactory>();
                 var connectionString = context.Database.GetDbConnection().ConnectionString;
 
-                context.Database.EnsureCreated();
+                context.Database.EnsureClean();
 
                 var databaseModel = factory.Create(connectionString,
                     new DatabaseModelFactoryOptions(new string[] { }, new string[] { }));
