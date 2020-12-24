@@ -20,7 +20,7 @@ namespace Test.UnitTests.OldTestSupportIssueTests
             using (var context = new Issue3DbContext(options))
             {
                 //context.Database.EnsureDeleted();
-                context.Database.EnsureCreated();
+                context.Database.EnsureClean();
                 var comparer = new CompareEfSql();
 
                 //ATTEMPT
@@ -31,7 +31,7 @@ namespace Test.UnitTests.OldTestSupportIssueTests
                 var errors = CompareLog.ListAllErrors(comparer.Logs).ToList();
                 errors.Count.ShouldEqual(1);
                 errors[0].ShouldEqual(
-                    "DIFFERENT: Parameter->Property 'ValueAggregationTypeId', default value sql. Expected = Invariable, found = CONVERT([tinyint],(1))");
+                    "DIFFERENT: Parameter->Property 'ValueAggregationTypeId', default value sql. Expected = CAST(1 AS tinyint), found = CONVERT([tinyint],(1))");
             }
         }
     }

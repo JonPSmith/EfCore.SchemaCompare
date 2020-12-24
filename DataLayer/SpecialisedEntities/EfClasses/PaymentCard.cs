@@ -6,5 +6,6 @@ namespace DataLayer.SpecialisedEntities.EfClasses
     public class PaymentCard : Payment
     {
         public string ReceiptCode { get; set; }
+        public decimal CostOfSale { get; set; }
     }
 }

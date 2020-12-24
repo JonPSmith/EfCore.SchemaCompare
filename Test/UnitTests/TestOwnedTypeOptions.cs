@@ -78,19 +78,20 @@ namespace Test.UnitTests
             //SETUP
             var options = this.CreateUniqueClassOptions<OwnedTypeDbContext>(
                 builder => builder.ReplaceService<IModelCacheKeyFactory, OwnedTypeModelCacheKeyFactory>());
-            using var context = new OwnedTypeDbContext(options, OwnedTypeDbContext.Configs.NestedNull);
+            using var context1 = new OwnedTypeDbContext(options, OwnedTypeDbContext.Configs.NestedNull);
+            using var context2 = new OwnedTypeDbContext(options, OwnedTypeDbContext.Configs.NestedNotNull);
 
             //ATTEMPT
-            var modelEntities = context.Model.GetEntityTypes().ToList();
-            var userE = context.Entry(new User());
-            var addressE = context.Entry(new Address());
-
+            var user1E = context1.Entry(new User());
+            var user2E = context2.Entry(new User());
+            var address1E = context1.Entry(new Address());
+            var address2E = context2.Entry(new Address());
 
             //VERIFY
-            var m0 = modelEntities[0].GetProperties().ToList();
-            var m1 = modelEntities[1].GetProperties().ToList();
-            var m1n = modelEntities[1].GetDeclaredNavigations().ToList();
-
+            var a1Keys = address1E.Metadata.GetKeys().ToList();
+            var a2Keys = address2E.Metadata.GetKeys().ToList();
+            var u1Nav = user1E.Metadata.GetNavigations().ToList();
+            var u2Nav = user2E.Metadata.GetNavigations().ToList();
         }
     }
 }

@@ -9,7 +9,8 @@ namespace DataLayer.OwnedTypes.EfCode
 {
     public class OwnedTypeDbContext : DbContext
     {
-        public enum Configs { NestedNull, NestedNotNull, SeparateTable}
+        public enum Configs { NestedNull, NestedNotNull, SeparateTable, 
+            HasAlternateKey }
         
         public Configs Config { get; }
 
@@ -27,6 +28,7 @@ namespace DataLayer.OwnedTypes.EfCode
             {
                 case Configs.NestedNull:
                     modelBuilder.Entity<User>().ToTable("Users");
+                    modelBuilder.Entity<User>().HasAlternateKey(p => p.Email);
                     modelBuilder.Entity<User>().OwnsOne(e => e.HomeAddress);
                     break;
                 case Configs.NestedNotNull:
@@ -38,6 +40,13 @@ namespace DataLayer.OwnedTypes.EfCode
                     modelBuilder.Entity<User>().ToTable("Users");
                     modelBuilder.Entity<User>().OwnsOne(e => e.HomeAddress).ToTable("Addresses");
                     break;
+
+                case Configs.HasAlternateKey:
+                    modelBuilder.Entity<User>().ToTable("Users");
+                    modelBuilder.Entity<User>().HasAlternateKey(p => p.Email);
+                    modelBuilder.Entity<User>().OwnsOne(e => e.HomeAddress);
+                    break;
+                
                 default:
                     throw new ArgumentOutOfRangeException();
             }

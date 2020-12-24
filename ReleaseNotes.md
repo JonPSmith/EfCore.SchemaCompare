@@ -21,6 +21,13 @@
   - Check GetColumnName default - EF Core issue #23301
 
 
+#### Next steps
+
+- Check Owned Type in Owned Type
+- Work out a way to detect a) Owned Type, b) table splitting
+    - These all work the same, apart from OwnedType required.
+- Detect TPH to set properties to be nullable
+
 ## 1.0.0-preview001
 
 - Support for EF Core 5 

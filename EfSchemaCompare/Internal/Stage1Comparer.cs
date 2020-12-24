@@ -203,30 +203,31 @@ namespace EfSchemaCompare.Internal
                 var colLogger = new CompareLogger2(CompareType.Property, property.Name, log.SubLogs, _ignoreList, () => _hasErrors = true);
                 if (columnDict.ContainsKey(GetColumnNameTakingIntoAccountSchema(property, table)))
                 {
-                    if (!IgnorePrimaryKeyFoundInOwnedTypes(entityType.DefiningEntityType, table, property, entityType.FindPrimaryKey()))
-                    {
-                        var error = ComparePropertyToColumn(colLogger, property, 
-                            columnDict[GetColumnNameTakingIntoAccountSchema(property, table)]);
-                        //check for primary key
-                        if (property.IsPrimaryKey() != primaryKeyDict.ContainsKey(GetColumnNameTakingIntoAccountSchema(property, table)))
-                        {
-                            if (!primaryKeyDict.ContainsKey(GetColumnNameTakingIntoAccountSchema(property, table)))
-                            {
-                                pKeyLogger.NotInDatabase(GetColumnNameTakingIntoAccountSchema(property, table), CompareAttributes.ColumnName);
-                                error = true;
-                            }
-                            else
-                            {
-                                pKeyLogger.ExtraInDatabase(GetColumnNameTakingIntoAccountSchema(property, table), CompareAttributes.ColumnName,
-                                    table.PrimaryKey.Name);
-                            }
-                        }
 
-                        if (!error)
+                    var error = ComparePropertyToColumn(colLogger, property,
+                        columnDict[GetColumnNameTakingIntoAccountSchema(property, table)]);
+                    //check for primary key
+                    if (property.IsPrimaryKey() !=
+                        primaryKeyDict.ContainsKey(GetColumnNameTakingIntoAccountSchema(property, table)))
+                    {
+                        if (!primaryKeyDict.ContainsKey(GetColumnNameTakingIntoAccountSchema(property, table)))
                         {
-                            //There were no errors noted, so we mark it as OK
-                            colLogger.MarkAsOk(GetColumnNameTakingIntoAccountSchema(property, table));
+                            pKeyLogger.NotInDatabase(GetColumnNameTakingIntoAccountSchema(property, table),
+                                CompareAttributes.ColumnName);
+                            error = true;
                         }
+                        else
+                        {
+                            pKeyLogger.ExtraInDatabase(GetColumnNameTakingIntoAccountSchema(property, table),
+                                CompareAttributes.ColumnName,
+                                table.PrimaryKey.Name);
+                        }
+                    }
+
+                    if (!error)
+                    {
+                        //There were no errors noted, so we mark it as OK
+                        colLogger.MarkAsOk(GetColumnNameTakingIntoAccountSchema(property, table));
                     }
                 }
                 else
@@ -236,22 +237,6 @@ namespace EfSchemaCompare.Internal
             }
             if (!pKeyError)
                 pKeyLogger.MarkAsOk(efPKeyConstraintName);
-        }
-
-        private bool IgnorePrimaryKeyFoundInOwnedTypes(IEntityType entityTypeDefiningEntityType, DatabaseTable table,
-            IProperty property, IKey primaryKey)
-        {
-            if (entityTypeDefiningEntityType == null ||
-                !string.Equals(entityTypeDefiningEntityType.GetTableName(), table.Name, _caseComparison))
-                //if not a owned table, or the owned table has its own table then carry on
-                return false;
-
-            //Now we know that its an owned table, and it has a primary key which matches the table
-            if (!primaryKey.Properties.Contains(property))
-                return false;
-
-            //It is a primary key so don't consider it as that is checked in the rest of the code
-            return true;
         }
 
         private bool ComparePropertyToColumn(CompareLogger2 logger, IProperty property, DatabaseColumn column)
