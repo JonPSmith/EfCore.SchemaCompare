@@ -2,11 +2,10 @@
 // Licensed under MIT license. See License.txt in the project root for license information.
 
 using System;
-using DataLayer.SpecialisedEntities.EfClasses;
-using DataLayer.SpecialisedEntities.EfCode.Configurations;
+using DataLayer.OwnedTypes.EfClasses;
 using Microsoft.EntityFrameworkCore;
 
-namespace DataLayer.SpecialisedEntities.EfCode
+namespace DataLayer.OwnedTypes.EfCode
 {
     public class OwnedTypeDbContext : DbContext
     {
@@ -20,8 +19,6 @@ namespace DataLayer.SpecialisedEntities.EfCode
             Config = config;
         }
 
-        public DbSet<User> Users { get; set; }
-
         protected override void OnModelCreating
             (ModelBuilder modelBuilder)
         {
@@ -29,13 +26,16 @@ namespace DataLayer.SpecialisedEntities.EfCode
             switch (Config)
             {
                 case Configs.NestedNull:
+                    modelBuilder.Entity<User>().ToTable("Users");
                     modelBuilder.Entity<User>().OwnsOne(e => e.HomeAddress);
                     break;
                 case Configs.NestedNotNull:
+                    modelBuilder.Entity<User>().ToTable("Users");
                     modelBuilder.Entity<User>().OwnsOne(e => e.HomeAddress);
                     modelBuilder.Entity<User>().Navigation(p => p.HomeAddress).IsRequired();
                     break;
                 case Configs.SeparateTable:
+                    modelBuilder.Entity<User>().ToTable("Users");
                     modelBuilder.Entity<User>().OwnsOne(e => e.HomeAddress).ToTable("Addresses");
                     break;
                 default:

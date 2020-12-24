@@ -4,7 +4,7 @@
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Infrastructure;
 
-namespace DataLayer.SpecialisedEntities.EfCode
+namespace DataLayer.OwnedTypes.EfCode
 {
     //see https://docs.microsoft.com/en-us/ef/core/modeling/dynamic-model
     public class OwnedTypeModelCacheKeyFactory : IModelCacheKeyFactory
