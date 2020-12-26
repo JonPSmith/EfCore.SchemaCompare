@@ -21,6 +21,8 @@
 #### Next steps
 
 - Support Views
+- Add 'not tested' error for Keyless and ToQuery 
+- Add config to turn off 'not tested' errors
 
 
 ## 1.0.0-preview001

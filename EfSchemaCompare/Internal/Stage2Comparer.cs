@@ -42,7 +42,7 @@ namespace EfSchemaCompare.Internal
         private void LookForUnusedTables(IReadOnlyList<CompareLog> firstStageLogs, CompareLog log)
         {
             var logger = new CompareLogger2(CompareType.Table, null, log.SubLogs, _ignoreList, () => _hasErrors = true);
-            var databaseTableNames = _databaseModel.Tables.Select(x => x.FormSchemaTable(_databaseModel.DefaultSchema));
+            var databaseTableNames = _databaseModel.Tables.Select(x => x.FormSchemaTableFromDatabase(_databaseModel.DefaultSchema));
             var allEntityTableNames = firstStageLogs.SelectMany(p => p.SubLogs)
                 .Where(x => x.State == CompareState.Ok && x.Type == CompareType.Entity)
                 .Select(p => p.Expected).OrderBy(p => p).Distinct().ToList();
@@ -57,7 +57,7 @@ namespace EfSchemaCompare.Internal
         private void LookForUnusedColumns(IReadOnlyList<CompareLog> firstStageLogs, CompareLog log)
         {
             var logger = new CompareLogger2(CompareType.Column, null, _logs, _ignoreList, () => _hasErrors = true);
-            var tableDict = _databaseModel.Tables.ToDictionary(x => x.FormSchemaTable(_databaseModel.DefaultSchema), _caseComparer);
+            var tableDict = _databaseModel.Tables.ToDictionary(x => x.FormSchemaTableFromDatabase(_databaseModel.DefaultSchema), _caseComparer);
             //because of table splitting and TPH we need to groups properties by table name to correctly say what columns are missed
             var entityColsGrouped = firstStageLogs.SelectMany(p => p.SubLogs)
                 .Where(x => x.State == CompareState.Ok && x.Type == CompareType.Entity)
@@ -84,7 +84,7 @@ namespace EfSchemaCompare.Internal
         private void LookForUnusedIndexes(IReadOnlyList<CompareLog> firstStageLogs, CompareLog log)
         {
             var logger = new CompareLogger2(CompareType.Index, null, _logs, _ignoreList, () => _hasErrors = true);
-            var tableDict = _databaseModel.Tables.ToDictionary(x => x.FormSchemaTable(_databaseModel.DefaultSchema), _caseComparer);
+            var tableDict = _databaseModel.Tables.ToDictionary(x => x.FormSchemaTableFromDatabase(_databaseModel.DefaultSchema), _caseComparer);
             foreach (var entityLog in firstStageLogs.SelectMany(p => p.SubLogs)
                 .Where(x => x.State == CompareState.Ok && x.Type == CompareType.Entity))
             {

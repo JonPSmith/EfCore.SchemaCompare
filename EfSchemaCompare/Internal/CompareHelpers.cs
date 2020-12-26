@@ -2,7 +2,6 @@
 // Licensed under MIT license. See License.txt in the project root for license information.
 
 using System;
-using System.Collections.Generic;
 using System.Linq;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Metadata;
@@ -11,14 +10,34 @@ using Microsoft.EntityFrameworkCore.Scaffolding.Metadata;
 
 namespace EfSchemaCompare.Internal
 {
+    internal enum MappingOptions { NotMapped, ToTable, ToView}
+    
     internal static class CompareHelpers
     {
-        public static string FormSchemaTable(this IEntityType entityType)
+        /// <summary>
+        /// This returns a string in the format "table" or "{schema}.{table}" that this entity is mapped to
+        /// This also handles "ToView" entities, in which case it will map the 
+        /// It it isn't mapped to a table it returns null
+        /// </summary>
+        /// <param name="entityType"></param>
+        /// <returns></returns>
+        public static string FormSchemaTableFromModel(this IEntityType entityType)
         {
-            return FormSchemaTable(entityType.GetSchema(), entityType.GetTableName());
+            var viewAnnotations = entityType.GetAnnotations()
+                .Where(a => a.Name == RelationalAnnotationNames.ViewName ||
+                            a.Name == RelationalAnnotationNames.ViewSchema)
+                .OrderBy(a =>a.Name)
+                .Select(a => (string)a.Value)
+                .ToList();
+
+            return viewAnnotations.Any()
+                ? FormSchemaTable(viewAnnotations.Last(), viewAnnotations.First())
+                : entityType.GetTableName() == null
+                    ? null
+                    : FormSchemaTable(entityType.GetSchema(), entityType.GetTableName());
         }
 
-        public static string FormSchemaTable(this DatabaseTable table, string defaultSchema)
+        public static string FormSchemaTableFromDatabase(this DatabaseTable table, string defaultSchema)
         {
             //The DatabaseTable always provides a schema name, while the database Model provides null if default schema name.
             //This makes sure that name will match the EF Core Model format

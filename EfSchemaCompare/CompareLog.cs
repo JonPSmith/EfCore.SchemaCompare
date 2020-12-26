@@ -27,7 +27,7 @@ namespace EfSchemaCompare
     /// <summary>
     /// This defines the result of a comparision
     /// </summary>
-    public enum CompareState { Debug, Ok, Warning, Different, NotInDatabase, ExtraInDatabase }
+    public enum CompareState { Debug, Ok, NotChecked, Different, NotInDatabase, ExtraInDatabase }
     /// <summary>
     /// This contains extra information on what exactly was compared
     /// </summary>
@@ -40,7 +40,8 @@ namespace EfSchemaCompare
         TableName,
         //keys - primary, foreign, alternative
         PrimaryKey, ConstraintName, IndexConstraintName, Unique, DeleteBehaviour,
-        //Others
+        //NoChecked 
+        NotMappedToDatabase
     }
 #pragma warning restore 1591
 

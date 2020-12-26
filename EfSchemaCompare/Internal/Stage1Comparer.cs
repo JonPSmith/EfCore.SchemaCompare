@@ -29,7 +29,7 @@ namespace EfSchemaCompare.Internal
         private readonly string _modelDefaultSchema;
 
         private string _databaseDefaultSchema;
-        private Dictionary<string, DatabaseTable> _tableDict;
+        private Dictionary<string, DatabaseTable> _tableViewDict;
         private bool _hasErrors;
 
         private readonly List<CompareLog> _logs;
@@ -60,18 +60,23 @@ namespace EfSchemaCompare.Internal
             dbLogger.MarkAsOk(_dbContextName);
             CheckDatabaseOk(_logs.Last(), _model, databaseModel);
 
-            _tableDict = databaseModel.Tables.ToDictionary(x => x.FormSchemaTable(_databaseDefaultSchema), _caseComparer);
+            _tableViewDict = databaseModel.Tables.ToDictionary(x => x.FormSchemaTableFromDatabase(_databaseDefaultSchema), _caseComparer);
+            var entitiesNotMappedToTableOrView = _model.GetEntityTypes().Where(x => x.FormSchemaTableFromModel() == null).ToList();
+            if (entitiesNotMappedToTableOrView.Any())
+                dbLogger.NoChecked("NotChecked",
+                    string.Join(", ", entitiesNotMappedToTableOrView.Select(x => x.ClrType.Name)), CompareAttributes.NotMappedToDatabase);
             var dbQueries = _model.GetEntityTypes().Where(x => x.FindPrimaryKey() == null).ToList();
             if (dbQueries.Any())
-                dbLogger.Warning("EfSchemaCompare does not check read-only types", null, string.Join(", ", dbQueries.Select(x => x.ClrType.Name)));
+                dbLogger.NoChecked("EfSchemaCompare does not check read-only types", 
+                    string.Join(", ", dbQueries.Select(x => x.ClrType.Name)), CompareAttributes.NotSet);
             foreach (var entityType in _model.GetEntityTypes().Where(x => x.FindPrimaryKey() != null))
             {
                 var logger = new CompareLogger2(CompareType.Entity, entityType.ClrType.Name, _logs.Last().SubLogs, _ignoreList, () => _hasErrors = true);
-                if (_tableDict.ContainsKey(entityType.FormSchemaTable()))
+                if (_tableViewDict.ContainsKey(entityType.FormSchemaTableFromModel()))
                 {
-                    var databaseTable = _tableDict[entityType.FormSchemaTable()];
+                    var databaseTable = _tableViewDict[entityType.FormSchemaTableFromModel()];
                     //Checks for table matching
-                    var log = logger.MarkAsOk(entityType.FormSchemaTable());
+                    var log = logger.MarkAsOk(entityType.FormSchemaTableFromModel());
                     logger.CheckDifferent(entityType.FindPrimaryKey()?.GetName() ?? NoPrimaryKey,
                         databaseTable.PrimaryKey?.Name ?? NoPrimaryKey,
                         CompareAttributes.ConstraintName, _caseComparison);
@@ -81,10 +86,20 @@ namespace EfSchemaCompare.Internal
                 }
                 else
                 {
-                    logger.NotInDatabase(entityType.FormSchemaTable(), CompareAttributes.TableName);
+                    logger.NotInDatabase(entityType.FormSchemaTableFromModel(), CompareAttributes.TableName);
                 }
             }
             return _hasErrors;
+        }
+
+        private List<IEntityType> EntitiesToIgnore()
+        {
+            var result = new List<IEntityType>();
+            //This finds entities mapped to views and other versions, such as ToSqlQuery
+            var entitiesNotMappedToTable = _model.GetEntityTypes().Where(x => x.GetTableName() == null).ToList();
+
+            throw new NotImplementedException();
+
         }
 
         private void CheckDatabaseOk(CompareLog log, IModel modelRel, DatabaseModel databaseModel)
@@ -137,11 +152,11 @@ namespace EfSchemaCompare.Internal
         {
             //see https://github.com/aspnet/EntityFrameworkCore/issues/10345#issuecomment-345841191
             var fksPropsInOneTable = entityFKey.Properties.All(x =>
-                string.Equals(x.DeclaringEntityType.FormSchemaTable(), table.FormSchemaTable(_databaseDefaultSchema), _caseComparison));
+                string.Equals(x.DeclaringEntityType.FormSchemaTableFromModel(), table.FormSchemaTableFromDatabase(_databaseDefaultSchema), _caseComparison));
             var fksPropsColumnNames = entityFKey.Properties.Select(p => GetColumnNameTakingIntoAccountSchema(p, table));
             var pkPropsColumnNames =
                 entityFKey.PrincipalKey.Properties.Select(p => GetColumnNameTakingIntoAccountSchema(p, 
-                    _tableDict[p.DeclaringEntityType.FormSchemaTable()]));
+                    _tableViewDict[p.DeclaringEntityType.FormSchemaTableFromModel()]));
             
             return fksPropsInOneTable && fksPropsColumnNames.SequenceEqual(pkPropsColumnNames);
         }
