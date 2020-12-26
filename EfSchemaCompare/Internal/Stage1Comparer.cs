@@ -20,7 +20,8 @@ namespace EfSchemaCompare.Internal
     {
         private const string NoPrimaryKey = "- no primary key -";
 
-        private readonly DbContext _context;
+        private readonly IModel _model;
+        private readonly string _dbContextName;
         private readonly IRelationalTypeMappingSource _relationalTypeMapping;
         private readonly IReadOnlyList<CompareLog> _ignoreList;
         private readonly StringComparer _caseComparer;
@@ -36,7 +37,8 @@ namespace EfSchemaCompare.Internal
 
         public Stage1Comparer(DbContext context, CompareEfSqlConfig config = null, List<CompareLog> logs = null)
         {
-            _context = context;
+            _model = context.Model;
+            _dbContextName = context.GetType().Name;
             _relationalTypeMapping = context.GetService<IRelationalTypeMappingSource>();
             _logs = logs ?? new List<CompareLog>();
             _ignoreList = config?.LogsToIgnore ?? new List<CompareLog>();
@@ -50,20 +52,19 @@ namespace EfSchemaCompare.Internal
         public bool CompareModelToDatabase(DatabaseModel databaseModel)
         {
             _databaseDefaultSchema = databaseModel.DefaultSchema;
-            var dbContextName = _context.GetType().Name;
-            var model = _context.Model;
+
                 
-            var dbLogger = new CompareLogger2(CompareType.DbContext, dbContextName, _logs, _ignoreList, () => _hasErrors = true);
+            var dbLogger = new CompareLogger2(CompareType.DbContext, _dbContextName, _logs, _ignoreList, () => _hasErrors = true);
 
             //Check things about the database, such as sequences
-            dbLogger.MarkAsOk(dbContextName);
-            CheckDatabaseOk(_logs.Last(), model, databaseModel);
+            dbLogger.MarkAsOk(_dbContextName);
+            CheckDatabaseOk(_logs.Last(), _model, databaseModel);
 
             _tableDict = databaseModel.Tables.ToDictionary(x => x.FormSchemaTable(_databaseDefaultSchema), _caseComparer);
-            var dbQueries = model.GetEntityTypes().Where(x => x.FindPrimaryKey() == null).ToList();
+            var dbQueries = _model.GetEntityTypes().Where(x => x.FindPrimaryKey() == null).ToList();
             if (dbQueries.Any())
                 dbLogger.Warning("EfSchemaCompare does not check read-only types", null, string.Join(", ", dbQueries.Select(x => x.ClrType.Name)));
-            foreach (var entityType in model.GetEntityTypes().Where(x => x.FindPrimaryKey() != null))
+            foreach (var entityType in _model.GetEntityTypes().Where(x => x.FindPrimaryKey() != null))
             {
                 var logger = new CompareLogger2(CompareType.Entity, entityType.ClrType.Name, _logs.Last().SubLogs, _ignoreList, () => _hasErrors = true);
                 if (_tableDict.ContainsKey(entityType.FormSchemaTable()))
@@ -181,12 +182,47 @@ namespace EfSchemaCompare.Internal
             }
         }
 
+        /// <summary>
+        /// This looks for
+        /// 1. TPH
+        /// 2. Nested Owned Types and table splitting where the class is optional
+        /// If it finds one of these it returns a list of property names that aren't forces to be nullable (all other properties are forced to nullable types)
+        /// Otherwise it returns null
+        /// </summary>
+        /// <param name="entityType"></param>
+        /// <param name="table"></param>
+        /// <returns></returns>
+        private List<string> ClassIsAddedToTable(IEntityType entityType, DatabaseTable table)
+        {
+            //Check for THP
+            if (entityType.BaseType != null)
+            {
+                //We need to return the BaseType properties as not forces to nullable
+                return entityType.BaseType.GetProperties()
+                    .Select(x => GetColumnNameTakingIntoAccountSchema(x, table, false))
+                    .ToList();
+            }
+
+            //Now check for Nested Owned Types and table splitting where the class is optional
+            foreach (var foreignKey in entityType.GetForeignKeys())
+            {
+                var fkColumnNames = foreignKey
+                    .Properties.Select(x => GetColumnNameTakingIntoAccountSchema(x, table)).ToList();
+                var pkPropsColumnNames =
+                    foreignKey.PrincipalKey
+                        .Properties.Select(x => GetColumnNameTakingIntoAccountSchema(x, table, false))
+                        .ToList();
+                if (pkPropsColumnNames.SequenceEqual(fkColumnNames))
+                    return pkPropsColumnNames;
+            }
+
+            return null;
+        }
+
         private void CompareColumns(CompareLog log, IEntityType entityType, DatabaseTable table)
         {
-            var columnDict = table.Columns.ToDictionary(x => x.Name, _caseComparer);
             var primaryKeyDict = table.PrimaryKey?.Columns.ToDictionary(x => x.Name, _caseComparer)
                                  ?? new Dictionary<string, DatabaseColumn>();
-
             var efPKeyConstraintName = entityType.FindPrimaryKey().GetName();
             bool pKeyError = false;
             var pKeyLogger = new CompareLogger2(CompareType.PrimaryKey, efPKeyConstraintName, log.SubLogs, _ignoreList,
@@ -198,14 +234,19 @@ namespace EfSchemaCompare.Internal
             
             pKeyLogger.CheckDifferent(efPKeyConstraintName, table.PrimaryKey?.Name ?? NoPrimaryKey, 
                 CompareAttributes.ConstraintName, _caseComparison);
+            var columnDict = table.Columns.ToDictionary(x => x.Name, _caseComparer);
+            
+            //This finds all the Owned Types and THP
+            var pksOfClassAddedToTable = ClassIsAddedToTable(entityType, table);
             foreach (var property in entityType.GetProperties())
             {
                 var colLogger = new CompareLogger2(CompareType.Property, property.Name, log.SubLogs, _ignoreList, () => _hasErrors = true);
-                if (columnDict.ContainsKey(GetColumnNameTakingIntoAccountSchema(property, table)))
+                var columnName = GetColumnNameTakingIntoAccountSchema(property, table);
+                if (columnDict.ContainsKey(columnName))
                 {
-
+                    var isNullable = pksOfClassAddedToTable?.Contains(columnName) == false;
                     var error = ComparePropertyToColumn(colLogger, property,
-                        columnDict[GetColumnNameTakingIntoAccountSchema(property, table)]);
+                        columnDict[GetColumnNameTakingIntoAccountSchema(property, table)], isNullable);
                     //check for primary key
                     if (property.IsPrimaryKey() !=
                         primaryKeyDict.ContainsKey(GetColumnNameTakingIntoAccountSchema(property, table)))
@@ -239,10 +280,10 @@ namespace EfSchemaCompare.Internal
                 pKeyLogger.MarkAsOk(efPKeyConstraintName);
         }
 
-        private bool ComparePropertyToColumn(CompareLogger2 logger, IProperty property, DatabaseColumn column)
+        private bool ComparePropertyToColumn(CompareLogger2 logger, IProperty property, DatabaseColumn column, bool isNullable)
         {
             var error = logger.CheckDifferent(property.GetColumnType(), column.StoreType, CompareAttributes.ColumnType, _caseComparison);
-            error |= logger.CheckDifferent(property.IsNullable.NullableAsString(), 
+            error |= logger.CheckDifferent((property.IsNullable || isNullable).NullableAsString(), 
                 column.IsNullable.NullableAsString(), CompareAttributes.Nullability, _caseComparison);
             error |= logger.CheckDifferent(property.GetComputedColumnSql().RemoveUnnecessaryBrackets(),
                 column.ComputedColumnSql.RemoveUnnecessaryBrackets(), CompareAttributes.ComputedColumnSql, _caseComparison);
@@ -280,11 +321,11 @@ namespace EfSchemaCompare.Internal
                 colValGen, CompareAttributes.ValueGenerated, _caseComparison);
         }
 
-        private string GetColumnNameTakingIntoAccountSchema(IProperty property, DatabaseTable table)
+        private string GetColumnNameTakingIntoAccountSchema(IProperty property, DatabaseTable table, bool throwExceptionOnNull = true)
         {
             var modelSchema = table.Schema == _modelDefaultSchema ? null : table.Schema;
             var columnName = property.GetColumnName(StoreObjectIdentifier.Table(table.Name, modelSchema));
-            if (columnName == null)
+            if (columnName == null && throwExceptionOnNull)
                 throw new Exception("Column name is null");
             return columnName;
         }
