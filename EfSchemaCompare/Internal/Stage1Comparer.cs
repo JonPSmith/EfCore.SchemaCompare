@@ -63,13 +63,9 @@ namespace EfSchemaCompare.Internal
             _tableViewDict = databaseModel.Tables.ToDictionary(x => x.FormSchemaTableFromDatabase(_databaseDefaultSchema), _caseComparer);
             var entitiesNotMappedToTableOrView = _model.GetEntityTypes().Where(x => x.FormSchemaTableFromModel() == null).ToList();
             if (entitiesNotMappedToTableOrView.Any())
-                dbLogger.NoChecked("NotChecked",
+                dbLogger.NoChecked(null,
                     string.Join(", ", entitiesNotMappedToTableOrView.Select(x => x.ClrType.Name)), CompareAttributes.NotMappedToDatabase);
-            var dbQueries = _model.GetEntityTypes().Where(x => x.FindPrimaryKey() == null).ToList();
-            if (dbQueries.Any())
-                dbLogger.NoChecked("EfSchemaCompare does not check read-only types", 
-                    string.Join(", ", dbQueries.Select(x => x.ClrType.Name)), CompareAttributes.NotSet);
-            foreach (var entityType in _model.GetEntityTypes().Where(x => x.FindPrimaryKey() != null))
+            foreach (var entityType in _model.GetEntityTypes().Where(x => !entitiesNotMappedToTableOrView.Contains(x)))
             {
                 var logger = new CompareLogger2(CompareType.Entity, entityType.ClrType.Name, _logs.Last().SubLogs, _ignoreList, () => _hasErrors = true);
                 if (_tableViewDict.ContainsKey(entityType.FormSchemaTableFromModel()))
@@ -77,9 +73,13 @@ namespace EfSchemaCompare.Internal
                     var databaseTable = _tableViewDict[entityType.FormSchemaTableFromModel()];
                     //Checks for table matching
                     var log = logger.MarkAsOk(entityType.FormSchemaTableFromModel());
-                    logger.CheckDifferent(entityType.FindPrimaryKey()?.GetName() ?? NoPrimaryKey,
-                        databaseTable.PrimaryKey?.Name ?? NoPrimaryKey,
-                        CompareAttributes.ConstraintName, _caseComparison);
+                    if(entityType.GetTableName() != null)
+                    {
+                        //Its not a view
+                        logger.CheckDifferent(entityType.FindPrimaryKey()?.GetName() ?? NoPrimaryKey,
+                            databaseTable.PrimaryKey?.Name ?? NoPrimaryKey,
+                            CompareAttributes.ConstraintName, _caseComparison);
+                    }
                     CompareColumns(log, entityType, databaseTable);
                     CompareForeignKeys(log, entityType, databaseTable);
                     CompareIndexes(log, entityType, databaseTable);
@@ -236,9 +236,10 @@ namespace EfSchemaCompare.Internal
 
         private void CompareColumns(CompareLog log, IEntityType entityType, DatabaseTable table)
         {
+            var isView = entityType.GetTableName() == null;
             var primaryKeyDict = table.PrimaryKey?.Columns.ToDictionary(x => x.Name, _caseComparer)
                                  ?? new Dictionary<string, DatabaseColumn>();
-            var efPKeyConstraintName = entityType.FindPrimaryKey().GetName();
+            var efPKeyConstraintName = isView ? NoPrimaryKey :  entityType.FindPrimaryKey().GetName();
             bool pKeyError = false;
             var pKeyLogger = new CompareLogger2(CompareType.PrimaryKey, efPKeyConstraintName, log.SubLogs, _ignoreList,
                 () =>
@@ -246,9 +247,9 @@ namespace EfSchemaCompare.Internal
                     pKeyError = true;  //extra set of pKeyError
                     _hasErrors = true;
                 });
-            
-            pKeyLogger.CheckDifferent(efPKeyConstraintName, table.PrimaryKey?.Name ?? NoPrimaryKey, 
-                CompareAttributes.ConstraintName, _caseComparison);
+            if(!isView)
+                pKeyLogger.CheckDifferent(efPKeyConstraintName, table.PrimaryKey?.Name ?? NoPrimaryKey, 
+                    CompareAttributes.ConstraintName, _caseComparison);
             var columnDict = table.Columns.ToDictionary(x => x.Name, _caseComparer);
             
             //This finds all the Owned Types and THP
@@ -256,14 +257,17 @@ namespace EfSchemaCompare.Internal
             foreach (var property in entityType.GetProperties())
             {
                 var colLogger = new CompareLogger2(CompareType.Property, property.Name, log.SubLogs, _ignoreList, () => _hasErrors = true);
-                var columnName = GetColumnNameTakingIntoAccountSchema(property, table);
+                var columnName = GetColumnNameTakingIntoAccountSchema(property, table, !isView);
+                if (columnName == null)
+                    //This happens its a view and a column is the primary key
+                    continue;
                 if (columnDict.ContainsKey(columnName))
                 {
                     var isNullable = pksOfClassAddedToTable?.Contains(columnName) == false;
                     var error = ComparePropertyToColumn(colLogger, property,
                         columnDict[GetColumnNameTakingIntoAccountSchema(property, table)], isNullable);
                     //check for primary key
-                    if (property.IsPrimaryKey() !=
+                    if (property.IsPrimaryKey() && !isView !=
                         primaryKeyDict.ContainsKey(GetColumnNameTakingIntoAccountSchema(property, table)))
                     {
                         if (!primaryKeyDict.ContainsKey(GetColumnNameTakingIntoAccountSchema(property, table)))
