@@ -3,9 +3,7 @@
 
 using System.Linq;
 using DataLayer.ReadOnlyTypes.EfCode;
-using DataLayer.SpecialisedEntities.EfCode;
 using EfSchemaCompare;
-using Microsoft.EntityFrameworkCore;
 using TestSupport.EfHelpers;
 using TestSupport.Helpers;
 using Xunit;
@@ -49,7 +47,7 @@ namespace Test.UnitTests
         }
 
         [Fact]
-        public void CompareReadOnlyDbContextIgnoreReadOnlyClass()
+        public void CompareReadOnlyDbContextIgnoreNormalClasses()
         {
             //SETUP
             var options = this.CreateUniqueClassOptions<ReadOnlyDbContext>();
@@ -60,7 +58,7 @@ namespace Test.UnitTests
 
             var config = new CompareEfSqlConfig
             {
-                TablesToIgnoreCommaDelimited = "ReadOnlyClass"
+                TablesToIgnoreCommaDelimited = "NormalClasses"
             };
 
             var comparer = new CompareEfSql(config);
@@ -71,11 +69,13 @@ namespace Test.UnitTests
             //VERIFY
             hasErrors.ShouldBeTrue();
             var errors = CompareLog.ListAllErrors(comparer.Logs).ToList();
-            errors.Count.ShouldEqual(2);
+            errors.Count.ShouldEqual(3);
             errors[0].ShouldEqual(
                 "NOT CHECKED: Entity 'MappedToQuery', not mapped to database. Expected = <null>, found = MappedToQuery");
             errors[1].ShouldEqual(
-                "NOT IN DATABASE: MappedToQuery->Entity 'ReadOnlyClass', table name. Expected = ReadOnlyClass");
+                "NOT IN DATABASE: MappedToQuery->Entity 'NormalClass', table name. Expected = NormalClasses");
+            errors[2].ShouldEqual(
+                "NOT IN DATABASE: MappedToQuery->Entity 'MappedToView', table name. Expected = NormalClasses");
         }
 
     }

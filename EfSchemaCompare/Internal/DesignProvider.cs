@@ -31,7 +31,7 @@ namespace EfSchemaCompare.Internal
         {
             var dbProvider = context.GetService<IDatabaseProvider>();
             if (dbProvider == null)
-                throw new InvalidOperationException("Cound not find a database provider service.");
+                throw new InvalidOperationException("Could not find a database provider service.");
 
             var providerName = dbProvider.Name;
 
@@ -40,7 +40,10 @@ namespace EfSchemaCompare.Internal
             if (providerName == SqliteProviderName)
                 return new SqliteDesignTimeServices();
 
-            throw new InvalidOperationException("This is not a database provider that we currently support.");
+            throw new InvalidOperationException("Your database provider isn't built into EfCore.SchemaCompare. This means you need to\n"+
+                                                "use the CompareEfWithDb<T> method which takes in a design time class for your database. e.g.\n" +
+                                                "comparer.CompareEfWithDb<NpgsqlDesignTimeServices>(context) for a Npgsql PostgreSql database provider.\n" +
+                                                "Also look at the documentation in the EfCore.SchemaCompare repo's wiki");
         }
 
         /// <summary>

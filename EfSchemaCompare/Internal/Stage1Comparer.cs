@@ -234,7 +234,7 @@ namespace EfSchemaCompare.Internal
             var isView = entityType.GetTableName() == null;
             var primaryKeyDict = table.PrimaryKey?.Columns.ToDictionary(x => x.Name, _caseComparer)
                                  ?? new Dictionary<string, DatabaseColumn>();
-            var efPKeyConstraintName = isView ? NoPrimaryKey :  entityType.FindPrimaryKey().GetName();
+            var efPKeyConstraintName = isView ? NoPrimaryKey :  entityType.FindPrimaryKey()?.GetName() ?? NoPrimaryKey;
             bool pKeyError = false;
             var pKeyLogger = new CompareLogger2(CompareType.PrimaryKey, efPKeyConstraintName, log.SubLogs, _ignoreList,
                 () =>

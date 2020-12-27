@@ -6,15 +6,11 @@
 - EfSchemaCompare EF Core 5  
   - Alternative keys
   - EF Core 5 - TPT
-  - EF Core 5 - Owned Type class can now be required  
   - EF Core 5 - IPAddress and PhysicalAddress
-  - Change DesignProvider to use EF Core constant instead of strings
-  - Change DesignProvider exception message to say how to use another database type
-  - Check GetColumnName default - EF Core issue #23301
-
 
 #### Next steps
 
+  - EF Core 5 - TPT
 
 ## 1.0.0-preview001
 
