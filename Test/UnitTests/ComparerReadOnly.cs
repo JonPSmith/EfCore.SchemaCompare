@@ -49,22 +49,33 @@ namespace Test.UnitTests
         }
 
         [Fact]
-        public void TestReadOnlyDbContext()
+        public void CompareReadOnlyDbContextIgnoreReadOnlyClass()
         {
             //SETUP
             var options = this.CreateUniqueClassOptions<ReadOnlyDbContext>();
             using var context = new ReadOnlyDbContext(options);
             context.Database.EnsureClean();
-            
-            
+            var filepath = TestData.GetFilePath("AddViewToDatabase.sql");
+            context.ExecuteScriptFileInTransaction(filepath);
+
+            var config = new CompareEfSqlConfig
+            {
+                TablesToIgnoreCommaDelimited = "ReadOnlyClass"
+            };
+
+            var comparer = new CompareEfSql(config);
 
             //ATTEMPT
-            var entities = context.Model.GetEntityTypes()
-                .Select(x => new {x, TableName = x.GetTableName()})
-                .ToList();
+            var hasErrors = comparer.CompareEfWithDb(context);
 
             //VERIFY
-
+            hasErrors.ShouldBeTrue();
+            var errors = CompareLog.ListAllErrors(comparer.Logs).ToList();
+            errors.Count.ShouldEqual(2);
+            errors[0].ShouldEqual(
+                "NOT CHECKED: Entity 'MappedToQuery', not mapped to database. Expected = <null>, found = MappedToQuery");
+            errors[1].ShouldEqual(
+                "NOT IN DATABASE: MappedToQuery->Entity 'ReadOnlyClass', table name. Expected = ReadOnlyClass");
         }
 
     }

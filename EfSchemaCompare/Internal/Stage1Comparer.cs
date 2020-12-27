@@ -26,9 +26,8 @@ namespace EfSchemaCompare.Internal
         private readonly IReadOnlyList<CompareLog> _ignoreList;
         private readonly StringComparer _caseComparer;
         private readonly StringComparison _caseComparison;
-        private readonly string _modelDefaultSchema;
 
-        private string _databaseDefaultSchema;
+        private string _defaultSchema;
         private Dictionary<string, DatabaseTable> _tableViewDict;
         private bool _hasErrors;
 
@@ -44,23 +43,19 @@ namespace EfSchemaCompare.Internal
             _ignoreList = config?.LogsToIgnore ?? new List<CompareLog>();
             _caseComparer = StringComparer.CurrentCulture;          //Turned off CaseComparer as doesn't work with EF Core 5
             _caseComparison = _caseComparer.GetStringComparison();
-
-            _modelDefaultSchema = (config ?? new CompareEfSqlConfig()).DefaultSchema;
         }
 
 
         public bool CompareModelToDatabase(DatabaseModel databaseModel)
         {
-            _databaseDefaultSchema = databaseModel.DefaultSchema;
-
-                
+            _defaultSchema = databaseModel.DefaultSchema;
             var dbLogger = new CompareLogger2(CompareType.DbContext, _dbContextName, _logs, _ignoreList, () => _hasErrors = true);
 
             //Check things about the database, such as sequences
             dbLogger.MarkAsOk(_dbContextName);
             CheckDatabaseOk(_logs.Last(), _model, databaseModel);
 
-            _tableViewDict = databaseModel.Tables.ToDictionary(x => x.FormSchemaTableFromDatabase(_databaseDefaultSchema), _caseComparer);
+            _tableViewDict = databaseModel.Tables.ToDictionary(x => x.FormSchemaTableFromDatabase(_defaultSchema), _caseComparer);
             var entitiesNotMappedToTableOrView = _model.GetEntityTypes().Where(x => x.FormSchemaTableFromModel() == null).ToList();
             if (entitiesNotMappedToTableOrView.Any())
                 dbLogger.NoChecked(null,
@@ -152,7 +147,7 @@ namespace EfSchemaCompare.Internal
         {
             //see https://github.com/aspnet/EntityFrameworkCore/issues/10345#issuecomment-345841191
             var fksPropsInOneTable = entityFKey.Properties.All(x =>
-                string.Equals(x.DeclaringEntityType.FormSchemaTableFromModel(), table.FormSchemaTableFromDatabase(_databaseDefaultSchema), _caseComparison));
+                string.Equals(x.DeclaringEntityType.FormSchemaTableFromModel(), table.FormSchemaTableFromDatabase(_defaultSchema), _caseComparison));
             var fksPropsColumnNames = entityFKey.Properties.Select(p => GetColumnNameTakingIntoAccountSchema(p, table));
             var pkPropsColumnNames =
                 entityFKey.PrincipalKey.Properties.Select(p => GetColumnNameTakingIntoAccountSchema(p, 
@@ -342,7 +337,7 @@ namespace EfSchemaCompare.Internal
 
         private string GetColumnNameTakingIntoAccountSchema(IProperty property, DatabaseTable table, bool throwExceptionOnNull = true)
         {
-            var modelSchema = table.Schema == _modelDefaultSchema ? null : table.Schema;
+            var modelSchema = table.Schema == _defaultSchema ? null : table.Schema;
             var columnName = property.GetColumnName(StoreObjectIdentifier.Table(table.Name, modelSchema));
             if (columnName == null && throwExceptionOnNull)
                 throw new Exception("Column name is null");
