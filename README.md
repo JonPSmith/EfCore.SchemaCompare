@@ -10,33 +10,16 @@ The EfCore.SchemaCompare library (shortened to EfSchemaCompare in the documentat
 
 1. [Introduction to how EfCore.SchemaCompare]
 
-## List of checks
-
-NOTE: I use the term *entity class* for classes mapped to the database by EF Core.
-
-Here is a full list of the things that EfSchemaCompare checks
+*NOTE: I use the term *entity class* for classes mapped to the database by EF Core.*
+## List of checks made
 
 ### Stage 1 - checks on EF Core side
 
-- Table/View exist: That a table or view that an entity class is mapped exists
-- Property/Column:
-  - exists
-  - database type, size, precision
-  - nullability (see limitations)
-  - computed column and its persistence
-  - column default value
-  - When updated, e.g. column is updated `OnAdd` for a int primary key which is provided by the database
-- Primary key:
-  - SQL constraint name
-  - properties
-- Foreign keys:
-  - SQL constraint name
-  - Delete behavior
-  - properties
-- Indexes
-  - SQL constraint name
-  - Unique/not unique
-  - properties
+- **Table/View exists**: That a table or view that an entity class is mapped exists
+- **Property/Column:**  exists, database type (including size and precision), nullability, computed column (including persistence), column default value, when updated (e.g. column is updated `OnAdd` for a int primary key which is provided by the database)
+- **Primary key:** SQL constraint name, properties
+- **Foreign keys:** SQL constraint name, Delete behavior, properties
+- **Indexes:** SQL constraint name, Unique/not unique, properties
 
 ### Stage 2 - checks on database
 
