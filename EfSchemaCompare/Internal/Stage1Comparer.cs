@@ -87,22 +87,11 @@ namespace EfSchemaCompare.Internal
             return _hasErrors;
         }
 
-        private List<IEntityType> EntitiesToIgnore()
-        {
-            var result = new List<IEntityType>();
-            //This finds entities mapped to views and other versions, such as ToSqlQuery
-            var entitiesNotMappedToTable = _model.GetEntityTypes().Where(x => x.GetTableName() == null).ToList();
-
-            throw new NotImplementedException();
-
-        }
-
         private void CheckDatabaseOk(CompareLog log, IModel modelRel, DatabaseModel databaseModel)
         {
             //Check sequences
             //var logger = new CompareLogger2(CompareType.Sequence, <sequence name>, _logs);
         }
-
 
         private void CompareForeignKeys(CompareLog log, IEntityType entityType, DatabaseTable table)
         {
