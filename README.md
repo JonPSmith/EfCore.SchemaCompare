@@ -10,13 +10,13 @@ The EfCore.SchemaCompare library (shortened to EfSchemaCompare in the documentat
 
 **TABLE OF CONTENT**
 
-1. [[What does EfSchemaCompare check?]]
-2. [[List of limitations]]
-3. [[Introduction to how EfSchemaCompare works]]
-4. [[How to use EfSchemaCompare]]
-5. [[What errors look like]]
-6. [[How to suppress errors]]
-7. [[Other configuration options]]
+1. [What does EfSchemaCompare check?](#what-does-EfSchemaCompare-check)
+2. [List of limitations](#List-of-limitations)
+3. [Introduction to how EfSchemaCompare works](#Introduction-to-how-EfSchemaCompare-works)
+4. [How to use EfSchemaCompare](#How-to-use-EfSchemaCompare)
+5. [Understanding the error messages](#Understanding-the-error-messages)
+6. [How to suppress certain error messages](#How-to-suppress-certain-error-messages)
+7. [Other configuration options](#Other-configuration-options)
 
 **NOTE:** I use the term *entity class* for classes mapped to the database by EF Core.
 
@@ -138,7 +138,7 @@ public void TestCompareEfSqlPostgreSql()
 }
 ```
 
-## What errors look like
+## Understanding the error messages
 
 The `comparer.GetAllErrors` property will return a string with each error separated by the `Environment.NewLine` string. Below is an example of an error
 
@@ -163,7 +163,7 @@ This says that there is a column called `MyEntityId` in the table `MyEntites` th
 
 *NOTE: When errors contain the word `Table` it can be a SQL Table or View.*
 
-## How to suppress errors
+## How to suppress certain error messages
 
 In a few cases you will get errors that aren't correct (see limitations) or not relevant. In these cases you might want to suppress those errors. There are two way to do this, with the first being the easiest. Both use the `CompareEfSqlConfig` class.
 
