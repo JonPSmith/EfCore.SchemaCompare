@@ -12,4 +12,46 @@
     <PackageReference Include="Microsoft.EntityFrameworkCore.SqlServer" Version="5.0.0" />
   </ItemGroup>
 
+  <PropertyGroup>
+    <PackageId>EfCore.SchemaCompare</PackageId>
+    <PackageVersion>5.0.0-preview001</PackageVersion>
+    <Version>5.0.0</Version>
+    <AssemblyVersion>5.0.0.0</AssemblyVersion>
+    <FileVersion>5.0.0.0</FileVersion>
+    <Authors>Jon P Smith</Authors>
+    <Description>Useful tool if you  are changing the schema of your database's schema outside of EF Core' migrations, say by using SQL change scripts. See readme file on github.</Description>
+    <PackageRequireLicenseAcceptance>false</PackageRequireLicenseAcceptance>
+    <PackageReleaseNotes>
+      - Move to separate library in order to tidy up and improve this feature
+      - Improvement: Support for EF Core 5 database features
+      - EF Core 5 - direct many-to-many
+      - EF Core 5 - property bag
+      - EF Core 5 - Same type mapped to different tables
+      - EF Core 5 - persistent computed column
+      - EF Core 5 - Entity to SQL query is marked as not checked
+      - New Feature: Support Views
+      - Improvement: Uses IRelationalTypeMappingSource for constants - see EF Core #21731
+      - Bug fix: Nested Owned Type properties are tested as nullable
+      - Bug fix: Nested table splitting optional class properties as nullable
+      - Bug fix: TPH properties being nullable
+      - BREAKING CHANGE: Cannot compare tables/views using IgnoreCase
+    </PackageReleaseNotes>
+    <Copyright>Copyright (c) 2020 Jon P Smith. Licenced under MIT licence</Copyright>
+    <PackageTags>Entity Framework Core, Database</PackageTags>
+    <IsPackable>true</IsPackable>
+    <GeneratePackageOnBuild>true</GeneratePackageOnBuild>
+    <ProjectUrl>https://github.com/JonPSmith/EfCore.SchemaCompare</ProjectUrl>
+    <RepositoryUrl>https://github.com/JonPSmith/EfCore.SchemaCompare</RepositoryUrl>
+    <PackageIcon>EfSchemaCompareNuGetIcon128.png</PackageIcon>
+    <PackageLicenseExpression>MIT</PackageLicenseExpression>
+  </PropertyGroup>
+
+  <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Release|AnyCPU'">
+    <DocumentationFile>bin\Release\EfSchemaCompare.xml</DocumentationFile>
+  </PropertyGroup>
+
+  <ItemGroup>
+    <None Include="EfSchemaCompareNuGetIcon128.png" Pack="true" PackagePath="\" />
+  </ItemGroup>
+
 </Project>

@@ -3,8 +3,7 @@
 
 ## TODO
 
-- Readme.
-
+- Update to latest EfCore.TestSupport.
 
 ## 1.0.0-preview001
 
@@ -20,7 +19,7 @@
 - Bug fix: Nested Owned Type properties are tested as nullable
 - Bug fix: Nested table splitting optional class properties as nullable
 - Bug fix: TPH properties being nullable
-
+- BREAKING CHANGE: Cannot compare tables/views using IgnoreCase
 
 ### Does not support
 
