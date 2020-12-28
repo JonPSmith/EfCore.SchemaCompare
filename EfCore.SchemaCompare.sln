@@ -10,6 +10,8 @@ EndProject
 Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "Solution Items", "Solution Items", "{E1829449-86FD-49B9-8260-D02023B26E3B}"
 	ProjectSection(SolutionItems) = preProject
 		EfSchemaCompare.png = EfSchemaCompare.png
+		LICENSE = LICENSE
+		README.md = README.md
 		ReleaseNotes.md = ReleaseNotes.md
 	EndProjectSection
 EndProject

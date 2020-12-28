@@ -4,14 +4,23 @@ If you are changing the schema of your database's schema outside of EF Core' mig
 
 The first number in the version number of this library defines what version of EF Core it works for. e.g. EfCore.SchemaCompare version 5 is works with to EF Core 5.
 
+This project is open-source (MIT licence). 
+
 The EfCore.SchemaCompare library (shortened to EfSchemaCompare in the documentations) is available on [NuGet as EfCore.SchemaCompare](#) and is an open-source library under the MIT licence. See [ReleaseNotes](https://github.com/JonPSmith/EfCore.SchemaCompare/blob/master/ReleaseNotes.md) for details of changes and information on versions before EF Core 5.
 
 **TABLE OF CONTENT**
 
-1. [Introduction to how EfCore.SchemaCompare]
+1. [[What does EfSchemaCompare check?]]
+2. [[List of limitations]]
+3. [[Introduction to how EfSchemaCompare works]]
+4. [[How to use EfSchemaCompare]]
+5. [[What errors look like]]
+6. [[How to suppress errors]]
+7. [[Other configuration options]]
 
-*NOTE: I use the term *entity class* for classes mapped to the database by EF Core.*
-## List of checks made
+**NOTE:** I use the term *entity class* for classes mapped to the database by EF Core.
+
+## What does EfSchemaCompare check?
 
 ### Stage 1 - checks on EF Core side
 
@@ -222,12 +231,14 @@ public void CompareSuppressViaViaAddIgnoreCompareLog()
 
 ## Other configuration options
 
-You have already seen the class called `CompareEfSqlConfig` for suppressing errors. There is one other configuration property called `TablesToIgnoreCommaDelimited`, which allows you to control what table/views in the database are considered. By default (i.e. when `TablesToIgnoreCommaDelimited` is null) then `CompareEfSql` will only look at the tables/views in the database that your EF Core entity classes are mapped to. This provides an simple starting point. The other options are:
+You have already seen the class called `CompareEfSqlConfig` for suppressing errors. There is one other configuration property called `TablesToIgnoreCommaDelimited`, which allows you to control what table/views in the database are considered. 
+
+By default (i.e. when `TablesToIgnoreCommaDelimited` is null) then `CompareEfSql` will only look at the tables/views in the database that your EF Core entity classes are mapped to. This provides an simple starting point. The other options are:
 
 - Set `TablesToIgnoreCommaDelimited` to "" (i.e. empty string)  
-This will check all the tables/Views in the database
-- Set `TablesToIgnoreCommaDelimited` to a list of tables to ignore  
-If there are tables in your database that EF Core doesn't access then you need to tell `CompareEfSql`
+This will check all the tables/Views in the database.
+- Set `TablesToIgnoreCommaDelimited` to a list of tables to ignore.  
+If there are tables/views in your database that EF Core doesn't access then you need to tell `CompareEfSql`
 about them, otherwise it will output a message saying there are extra tables you are not accessing from EF Core.
 You do this by providing a comma delimited list of table names, with an optional schema name if needed.
 Here are two examples of a table name
