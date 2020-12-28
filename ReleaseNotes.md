@@ -3,7 +3,8 @@
 
 ## TODO
 
-- Update to latest EfCore.TestSupport.
+- Update to EF Core 5.1
+- Update to latest EfCore.TestSupport
 
 ## 1.0.0-preview001
 
