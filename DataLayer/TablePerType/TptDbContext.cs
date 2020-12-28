@@ -11,7 +11,9 @@ namespace DataLayer.TablePerType
             : base(options)
         {
         }
-        
+
+        public DbSet<NormalClass> NormalClasses { get; set; }
+
         public DbSet<TptBase> TptBases { get; set; }
 
         protected override void OnModelCreating(ModelBuilder modelBuilder)

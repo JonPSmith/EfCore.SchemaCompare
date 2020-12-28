@@ -233,11 +233,13 @@ namespace EfSchemaCompare
             if (ignoreItem.State != State)
                 return false;
 
-            return (ignoreItem.Type == CompareType.MatchAnything || ignoreItem.Type == Type)
+            var result = (ignoreItem.Type == CompareType.MatchAnything || ignoreItem.Type == Type)
                 && (ignoreItem.Attribute == CompareAttributes.MatchAnything || ignoreItem.Attribute == Attribute)
                 && (ignoreItem.Name == null || ignoreItem.Name == Name)
                 && (ignoreItem.Expected == null || ignoreItem.Expected == Expected)
                 && (ignoreItem.Found == null || ignoreItem.Found == Found);
+
+            return result;
         }
 
         private static string ReplaceNullTokenWithNull(string str)
@@ -248,7 +250,10 @@ namespace EfSchemaCompare
         private string ToStringDifferentStart(string start)
         {
             //Typical output would be: Column 'Id', column type is Different : Expected = varchar(20), Found = nvarchar(20)
-            var result = $"{start}{Type} '{Name}'";
+            var type = Type == CompareType.Column && State == CompareState.ExtraInDatabase
+                ? CompareType.Table
+                : Type;
+            var result = $"{start}{type} '{Name}'";
             if (Attribute != CompareAttributes.NotSet)
                 result += $", {Attribute.SplitCamelCaseToLower()}";
             if (State == CompareState.Ok)

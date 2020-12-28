@@ -111,7 +111,6 @@ namespace Test.UnitTests
             var comparer = new CompareEfSql();
 
             //ATTEMPT
-
             var ex = Assert.Throws<System.ArgumentException>(() =>
                 comparer.CompareEfWithDb("bad connection string", context));
 

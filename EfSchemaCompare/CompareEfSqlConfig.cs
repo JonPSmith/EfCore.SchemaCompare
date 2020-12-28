@@ -49,7 +49,7 @@ namespace EfSchemaCompare
         }
 
         /// <summary>
-        /// This allows you to add a log with setting that will be used to decide if a log is ignored
+        /// This allows you to add a log with setting that will be used to decide if a log is ignored.
         /// The Type and State must be set, but any strings set to null with automatically match anything 
         /// and the Attribute has a MatchAnything setting too.
         /// </summary>
