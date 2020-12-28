@@ -57,7 +57,7 @@ EfSchemaCompare uses two EF Core features to get EF Core's internal schema and t
 
 The fun part is comparing these two sources, especially with all the different types of configurations that EF Core can handle. The diagram shown below shows using EfSchemaCompare to check a test database that you updated with some SQL migration scripts against the current EF Core's `Model`.
 
-![EfSchemaCompare diagram](https://github.com/JonPSmith/EfCore.SchemaCompare)
+![EfSchemaCompare diagram](https://github.com/JonPSmith/EfCore.SchemaCompare/blob/master/EfSchemaCompare.png)
 
 ## How to use EfSchemaCompare
 
