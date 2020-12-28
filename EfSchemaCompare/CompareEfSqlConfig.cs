@@ -14,10 +14,10 @@ namespace EfSchemaCompare
     {
         private readonly List<CompareLog> _logsToIgnore = new List<CompareLog>();
 
-        /// <summary>
-        /// Set this to StringComparer.CurrentCultureIgnoreCase to change the 
-        /// This effects the table, schema, column, primary/index/foreignKey constraint names
-        /// </summary>
+        ///// <summary>
+        ///// Set this to StringComparer.CurrentCultureIgnoreCase to change the 
+        ///// This effects the table, schema, column, primary/index/foreignKey constraint names
+        ///// </summary>
         //NOTE Turned off CaseComparer as doesn't work with EF Core 5
         //public StringComparer CaseComparer { get; set; } = StringComparer.CurrentCulture;
 

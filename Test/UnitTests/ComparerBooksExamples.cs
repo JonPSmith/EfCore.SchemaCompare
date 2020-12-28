@@ -7,6 +7,7 @@ using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.SqlServer.Design.Internal;
 using TestSupport.Attributes;
 using TestSupport.EfHelpers;
+using TestSupport.Helpers;
 using Xunit;
 using Xunit.Abstractions;
 using Xunit.Extensions.AssertExtensions;
@@ -63,6 +64,32 @@ namespace Test.UnitTests
                 //VERIFY
                 hasErrors.ShouldBeFalse(comparer.GetAllErrors);
             }
+        }
+
+        [Fact]
+        public void CompareSuppressViaViaAddIgnoreCompareLog()
+        {
+            //SETUP
+            var options = this.CreateUniqueClassOptions<BookContext>();
+            using var context = new BookContext(options);
+            context.Database.EnsureClean();
+            var filepath = TestData.GetFilePath("AddViewToBookContext.sql");
+            context.ExecuteScriptFileInTransaction(filepath);
+
+            var config = new CompareEfSqlConfig
+            {
+                //This tells EfSchemaCompare to look at ALL tables and views
+                TablesToIgnoreCommaDelimited = ""
+            };
+            //This will ignore any Table or View that is not accessed by EF Core
+            config.AddIgnoreCompareLog(new CompareLog(CompareType.Table, CompareState.ExtraInDatabase, null));
+            var comparer = new CompareEfSql(config);
+
+            //ATTEMPT
+            var hasErrors = comparer.CompareEfWithDb(context);
+
+            //VERIFY
+            hasErrors.ShouldBeFalse(comparer.GetAllErrors);
         }
 
         [Fact]

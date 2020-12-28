@@ -120,7 +120,7 @@ namespace EfSchemaCompare.Internal
                     }
                     error |= logger.CheckDifferent(entityFKey.DeleteBehavior.ToString(),
                         fKeyDict[constraintName].OnDelete.ConvertReferentialActionToDeleteBehavior(entityFKey.DeleteBehavior),
-                            CompareAttributes.DeleteBehaviour, _caseComparison);
+                            CompareAttributes.DeleteBehavior, _caseComparison);
                     if (!error)
                         logger.MarkAsOk(constraintName);
                 }

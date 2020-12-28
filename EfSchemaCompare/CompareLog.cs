@@ -39,7 +39,7 @@ namespace EfSchemaCompare
         //Tables
         TableName,
         //keys - primary, foreign, alternative
-        PrimaryKey, ConstraintName, IndexConstraintName, Unique, DeleteBehaviour,
+        PrimaryKey, ConstraintName, IndexConstraintName, Unique, DeleteBehavior,
         //NoChecked 
         NotMappedToDatabase
     }

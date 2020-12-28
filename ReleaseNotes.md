@@ -26,6 +26,8 @@
 
 - Cannot detect Owned Type with Required option (i.e. not null)
 - Cannot correctly check Table-per-Type classes
+- You can no longer compare database entries using ignore case. (that is a EF Core 5 limitation)
+- Checking of collations
 - Checking of Alternative keys
 - Checking of sequences
 

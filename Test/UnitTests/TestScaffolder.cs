@@ -2,6 +2,7 @@
 // Licensed under MIT license. See License.txt in the project root for license information.
 
 using System;
+using System.Linq;
 using DataLayer.BookApp.EfCode;
 using EfSchemaCompare;
 using EfSchemaCompare.Internal;
@@ -11,6 +12,7 @@ using Microsoft.EntityFrameworkCore.SqlServer.Design.Internal;
 using Microsoft.Extensions.DependencyInjection;
 using Npgsql.EntityFrameworkCore.PostgreSQL.Design.Internal;
 using TestSupport.EfHelpers;
+using TestSupport.Helpers;
 using Xunit;
 using Xunit.Abstractions;
 using Xunit.Extensions.AssertExtensions;
@@ -22,12 +24,12 @@ namespace Test.UnitTests
     {
 
         [Fact]
-        public void GetDatabaseModel()
+        public void GetBookContextDatabaseModel()
         {
             //SETUP
             var options = this.CreateUniqueClassOptions<BookContext>();
             using var context = new BookContext(options);
-            context.Database.EnsureCreated();
+            context.Database.EnsureClean();
 
             var serviceProvider = new SqlServerDesignTimeServices().GetDesignTimeProvider();
             var factory = serviceProvider.GetService<IDatabaseModelFactory>();
@@ -38,7 +40,33 @@ namespace Test.UnitTests
 
             //VERIFY
             model.ShouldNotBeNull();
+            model.Tables.Select(x => x.Name).OrderBy(x => x).ToArray()
+                .ShouldEqual(new []{"Authors", "BookAuthor", "Books", "BookTag", "PriceOffers", "Review", "Tags" });
             model.DefaultSchema.ShouldEqual("dbo");
+        }
+
+
+        [Fact]
+        public void GetBookContextDatabaseModelWithView()
+        {
+            //SETUP
+            var options = this.CreateUniqueClassOptions<BookContext>();
+            using var context = new BookContext(options);
+            context.Database.EnsureClean();
+            var filepath = TestData.GetFilePath("AddViewToBookContext.sql");
+            context.ExecuteScriptFileInTransaction(filepath);
+
+            var serviceProvider = new SqlServerDesignTimeServices().GetDesignTimeProvider();
+            var factory = serviceProvider.GetService<IDatabaseModelFactory>();
+
+            //ATTEMPT 
+            var model = factory.Create(context.Database.GetConnectionString(),
+                new DatabaseModelFactoryOptions(new string[] { }, new string[] { }));
+
+            //VERIFY
+            model.ShouldNotBeNull();
+            model.Tables.Select(x => x.Name).OrderBy(x => x).ToArray()
+                .ShouldEqual(new[] { "Authors", "BookAuthor", "Books", "BookTag", "MyView", "PriceOffers", "Review", "Tags" });
         }
 
 

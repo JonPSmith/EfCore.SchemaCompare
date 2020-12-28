@@ -29,7 +29,7 @@ namespace Test.UnitTests
         }        
         
         [Fact]
-        public void CompareTptContextIgnoreViaIgnoreTheseErrors()
+        public void CompareTptContextSuppressViaIgnoreTheseErrors()
         {
             //SETUP
             var options = this.CreateUniqueClassOptions<TptDbContext>();
@@ -40,12 +40,12 @@ namespace Test.UnitTests
             config.IgnoreTheseErrors(@"DIFFERENT: TptVer1->PrimaryKey 'PK_TptBases', constraint name. Expected = PK_TptBases, found = PK_TptVer1
 DIFFERENT: TptVer1->Property 'Id', value generated. Expected = OnAdd, found = Never
 DIFFERENT: TptVer1->Property 'MyVer1Int', nullability. Expected = NULL, found = NOT NULL
-DIFFERENT: TptVer1->ForeignKey 'FK_TptVer1_TptBases_Id', delete behaviour. Expected = ClientCascade, found = NoAction
+DIFFERENT: TptVer1->ForeignKey 'FK_TptVer1_TptBases_Id', delete behavior. Expected = ClientCascade, found = NoAction
 DIFFERENT: Entity 'TptVer1', constraint name. Expected = PK_TptBases, found = PK_TptVer1
 DIFFERENT: TptVer2->PrimaryKey 'PK_TptBases', constraint name. Expected = PK_TptBases, found = PK_TptVer2
 DIFFERENT: TptVer2->Property 'Id', value generated. Expected = OnAdd, found = Never
 DIFFERENT: TptVer2->Property 'MyVer2Int', nullability. Expected = NULL, found = NOT NULL
-DIFFERENT: TptVer2->ForeignKey 'FK_TptVer2_TptBases_Id', delete behaviour. Expected = ClientCascade, found = NoAction
+DIFFERENT: TptVer2->ForeignKey 'FK_TptVer2_TptBases_Id', delete behavior. Expected = ClientCascade, found = NoAction
 DIFFERENT: Entity 'TptVer2', constraint name. Expected = PK_TptBases, found = PK_TptVer2");
 
             var comparer = new CompareEfSql(config);
