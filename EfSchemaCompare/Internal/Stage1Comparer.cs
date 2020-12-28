@@ -209,7 +209,7 @@ namespace EfSchemaCompare.Internal
             {
                 //We need to return the BaseType properties as not forces to nullable
                 return entityType.BaseType.GetProperties()
-                    .Select(x => GetColumnNameTakingIntoAccountSchema(x, table, false))
+                    .Select(x => GetColumnNameTakingIntoAccountSchema(x, table))
                     .ToList();
             }
 
@@ -220,7 +220,7 @@ namespace EfSchemaCompare.Internal
                     .Properties.Select(x => GetColumnNameTakingIntoAccountSchema(x, table)).ToList();
                 var pkPropsColumnNames =
                     foreignKey.PrincipalKey
-                        .Properties.Select(x => GetColumnNameTakingIntoAccountSchema(x, table, false))
+                        .Properties.Select(x => GetColumnNameTakingIntoAccountSchema(x, table))
                         .ToList();
                 if (pkPropsColumnNames.SequenceEqual(fkColumnNames))
                     return pkPropsColumnNames;
@@ -252,7 +252,7 @@ namespace EfSchemaCompare.Internal
             foreach (var property in entityType.GetProperties())
             {
                 var colLogger = new CompareLogger2(CompareType.Property, property.Name, log.SubLogs, _ignoreList, () => _hasErrors = true);
-                var columnName = GetColumnNameTakingIntoAccountSchema(property, table, !isView);
+                var columnName = GetColumnNameTakingIntoAccountSchema(property, table);
                 if (columnName == null)
                     //This happens its a view and a column is the primary key
                     continue;
@@ -335,12 +335,10 @@ namespace EfSchemaCompare.Internal
                 colValGen, CompareAttributes.ValueGenerated, _caseComparison);
         }
 
-        private string GetColumnNameTakingIntoAccountSchema(IProperty property, DatabaseTable table, bool throwExceptionOnNull = true)
+        private string GetColumnNameTakingIntoAccountSchema(IProperty property, DatabaseTable table)
         {
             var modelSchema = table.Schema == _defaultSchema ? null : table.Schema;
             var columnName = property.GetColumnName(StoreObjectIdentifier.Table(table.Name, modelSchema));
-            if (columnName == null && throwExceptionOnNull)
-                throw new Exception("Column name is null");
             return columnName;
         }
 
