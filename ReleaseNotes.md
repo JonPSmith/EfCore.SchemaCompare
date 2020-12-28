@@ -22,9 +22,14 @@
 - Bug fix: TPH properties being nullable
 
 
-## Does not support
+### Does not support
 
 - Cannot detect Owned Type with Required option (i.e. not null)
 - Cannot correctly check Table-per-Type classes
 - Checking of Alternative keys
 - Checking of sequences
+
+
+## Previous releases of EfSchemaCompare
+
+This library started with EF Core 5. For EF Core below 5.0.0, for instance EF Core 3.x, of EF Core 2.1.x then use [EfCore.TestSupport](https://github.com/JonPSmith/EfCore.TestSupport)
