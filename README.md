@@ -6,6 +6,8 @@ The first number in the version number of this library defines what version of E
 
 This project is open-source (MIT licence). 
 
+*NOTE: Please don't add a pull request without first contacting me via an issue containing the reason/idea first.*
+
 The EfCore.SchemaCompare library (shortened to EfSchemaCompare in the documentations) is available on [NuGet as EfCore.SchemaCompare](#) and is an open-source library under the MIT licence. See [ReleaseNotes](https://github.com/JonPSmith/EfCore.SchemaCompare/blob/master/ReleaseNotes.md) for details of changes and information on versions before EF Core 5.
 
 **TABLE OF CONTENT**
