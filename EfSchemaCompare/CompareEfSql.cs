@@ -156,7 +156,7 @@ namespace EfSchemaCompare
             if (_config.TablesToIgnoreCommaDelimited == null)
             {
                 //We remove all tables not mapped by the contexts
-                var tablesInContext = contexts.SelectMany(x => x.Model.GetEntityTypes()).Where(x => x.FindPrimaryKey() != null)
+                var tablesInContext = contexts.SelectMany(x => x.Model.GetEntityTypes())
                     .Select(x => x.FormSchemaTableFromModel()).ToList();
 
                 tablesToRemove = databaseModel.Tables

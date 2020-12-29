@@ -63,6 +63,8 @@ The fun part is comparing these two sources, especially with all the different t
 
 ## How to use EfSchemaCompare
 
+I usually run the EfSchemaCompare code in my unit tests, but that is up to you.
+
 Here is a example of using the EfSchemaCompare feature
 
 ```c#

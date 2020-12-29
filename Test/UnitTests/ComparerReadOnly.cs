@@ -39,11 +39,9 @@ namespace Test.UnitTests
             //VERIFY
             hasErrors.ShouldBeTrue();
             var errors = CompareLog.ListAllErrors(comparer.Logs).ToList();
-            errors.Count.ShouldEqual(2);
+            errors.Count.ShouldEqual(1);
             errors[0].ShouldEqual(
                 "NOT CHECKED: Entity 'MappedToQuery', not mapped to database. Expected = <null>, found = MappedToQuery");
-            errors[1].ShouldEqual(
-                "NOT IN DATABASE: MappedToQuery->Entity 'ReadOnlyClass', table name. Expected = ReadOnlyClass");
         }
 
         [Fact]

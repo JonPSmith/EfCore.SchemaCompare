@@ -5,6 +5,7 @@
 
 - Update to EF Core 5.1
 - Update to latest EfCore.TestSupport
+- Write article
 
 ## 1.0.0-preview001
 
