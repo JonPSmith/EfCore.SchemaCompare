@@ -9,7 +9,8 @@
 
 ## 1.0.0-preview001
 
-- Move to separate library in order to tidy up and improve this feature
+- Moved from EfCore.TestSupport to become a separate library 
+- Big tidy up and improve this feature
 - Improvement: Support for EF Core 5 database features
    - EF Core 5 - direct many-to-many
    - EF Core 5 - property bag
