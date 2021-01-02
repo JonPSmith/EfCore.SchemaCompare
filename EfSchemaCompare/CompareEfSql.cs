@@ -12,7 +12,6 @@ using Microsoft.EntityFrameworkCore.Design;
 using Microsoft.EntityFrameworkCore.Scaffolding;
 using Microsoft.EntityFrameworkCore.Scaffolding.Metadata;
 using Microsoft.Extensions.Configuration;
-using TestSupport.Helpers;
 
 namespace EfSchemaCompare
 {

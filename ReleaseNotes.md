@@ -14,9 +14,9 @@
    - EF Core 5 - direct many-to-many
    - EF Core 5 - property bag
    - EF Core 5 - Same type mapped to different tables
-   - EF Core 5 = persistent computed column
+   - EF Core 5 - persistent computed column
    - EF Core 5 - Entity to SQL query is marked as not checked
-- New Feature: Support Views
+- New Feature: Checks Views
 - Improvement: Uses IRelationalTypeMappingSource for constants - see EF Core #21731
 - Bug fix: Nested Owned Type properties are tested as nullable
 - Bug fix: Nested table splitting optional class properties as nullable

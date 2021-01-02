@@ -59,10 +59,11 @@ namespace EfSchemaCompare.Internal
 
 
         /// <summary>
-        /// This is for adding a warning.
+        /// This is for adding a Not Checked log.
         /// </summary>
         /// <param name="errorMessage">What we don't check</param>
         /// <param name="found">entities that aren't checked</param>
+        /// <param name="attribute"></param>
         public void NoChecked(string errorMessage, string found, CompareAttributes attribute)
         {
             AddToLogsIfNotIgnored(new CompareLog(CompareType.Entity, CompareState.NotChecked, found, attribute, null, found));
