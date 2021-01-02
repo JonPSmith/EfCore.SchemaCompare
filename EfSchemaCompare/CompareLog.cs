@@ -40,7 +40,7 @@ namespace EfSchemaCompare
         TableName,
         //keys - primary, foreign, alternative
         PrimaryKey, ConstraintName, IndexConstraintName, Unique, DeleteBehavior,
-        //NoChecked 
+        //MarkAsNotChecked 
         NotMappedToDatabase
     }
 #pragma warning restore 1591

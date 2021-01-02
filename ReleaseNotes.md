@@ -7,7 +7,11 @@
 - Update to latest EfCore.TestSupport
 - Write article
 
-## 1.0.0-preview001
+## 5.0.1
+
+- Fixed bug in table checks
+
+## 5.0.0
 
 - Moved from EfCore.TestSupport to become a separate library 
 - Big tidy up and improve this feature

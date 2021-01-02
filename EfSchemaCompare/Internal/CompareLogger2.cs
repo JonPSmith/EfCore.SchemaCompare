@@ -64,7 +64,7 @@ namespace EfSchemaCompare.Internal
         /// <param name="errorMessage">What we don't check</param>
         /// <param name="found">entities that aren't checked</param>
         /// <param name="attribute"></param>
-        public void NoChecked(string errorMessage, string found, CompareAttributes attribute)
+        public void MarkAsNotChecked(string errorMessage, string found, CompareAttributes attribute)
         {
             AddToLogsIfNotIgnored(new CompareLog(CompareType.Entity, CompareState.NotChecked, found, attribute, null, found));
         }

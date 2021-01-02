@@ -19,6 +19,7 @@ namespace EfSchemaCompare.Internal
     internal class Stage1Comparer
     {
         private const string NoPrimaryKey = "- no primary key -";
+        private const string ViewPrimaryKey = "- view primary key -";
 
         private readonly IModel _model;
         private readonly string _dbContextName;
@@ -58,7 +59,7 @@ namespace EfSchemaCompare.Internal
             _tableViewDict = databaseModel.Tables.ToDictionary(x => x.FormSchemaTableFromDatabase(_defaultSchema), _caseComparer);
             var entitiesNotMappedToTableOrView = _model.GetEntityTypes().Where(x => x.FormSchemaTableFromModel() == null).ToList();
             if (entitiesNotMappedToTableOrView.Any())
-                dbLogger.NoChecked(null,
+                dbLogger.MarkAsNotChecked(null,
                     string.Join(", ", entitiesNotMappedToTableOrView.Select(x => x.ClrType.Name)), CompareAttributes.NotMappedToDatabase);
             foreach (var entityType in _model.GetEntityTypes().Where(x => !entitiesNotMappedToTableOrView.Contains(x)))
             {
@@ -231,9 +232,10 @@ namespace EfSchemaCompare.Internal
                     pKeyError = true;  //extra set of pKeyError
                     _hasErrors = true;
                 });
-            if(!isView)
-                pKeyLogger.CheckDifferent(efPKeyConstraintName, table.PrimaryKey?.Name ?? NoPrimaryKey, 
+            if (!isView)
+                pKeyLogger.CheckDifferent(efPKeyConstraintName, table.PrimaryKey?.Name ?? NoPrimaryKey,
                     CompareAttributes.ConstraintName, _caseComparison);
+
             var columnDict = table.Columns.ToDictionary(x => x.Name, _caseComparer);
             
             //This finds all the Owned Types and THP
@@ -241,29 +243,29 @@ namespace EfSchemaCompare.Internal
             foreach (var property in entityType.GetProperties())
             {
                 var colLogger = new CompareLogger2(CompareType.Property, property.Name, log.SubLogs, _ignoreList, () => _hasErrors = true);
-                var columnName = GetColumnNameTakingIntoAccountSchema(property, table);
+                var columnName = GetColumnNameTakingIntoAccountSchema(property, table, isView);
                 if (columnName == null)
-                    //This happens its a view and a column is the primary key
+                {
+                    //This catches properties in TPH, split tables, and Owned Types where the properties are not mapped to the current table
                     continue;
+                }
                 if (columnDict.ContainsKey(columnName))
                 {
                     var isNullable = pksOfClassAddedToTable?.Contains(columnName) == false;
-                    var error = ComparePropertyToColumn(colLogger, property,
-                        columnDict[GetColumnNameTakingIntoAccountSchema(property, table)], isNullable);
+                    var error = ComparePropertyToColumn(colLogger, property, columnDict[columnName], isNullable, isView);
                     //check for primary key
-                    if (property.IsPrimaryKey() && !isView !=
-                        primaryKeyDict.ContainsKey(GetColumnNameTakingIntoAccountSchema(property, table)))
+                    if (property.IsPrimaryKey() &&
+                        //This remove TPH, Owned Types primary key checks 
+                        !isView != primaryKeyDict.ContainsKey(columnName))
                     {
-                        if (!primaryKeyDict.ContainsKey(GetColumnNameTakingIntoAccountSchema(property, table)))
+                        if (!primaryKeyDict.ContainsKey(columnName))
                         {
-                            pKeyLogger.NotInDatabase(GetColumnNameTakingIntoAccountSchema(property, table),
-                                CompareAttributes.ColumnName);
+                            pKeyLogger.NotInDatabase(columnName, CompareAttributes.ColumnName);
                             error = true;
                         }
                         else
                         {
-                            pKeyLogger.ExtraInDatabase(GetColumnNameTakingIntoAccountSchema(property, table),
-                                CompareAttributes.ColumnName,
+                            pKeyLogger.ExtraInDatabase(columnName, CompareAttributes.ColumnName,
                                 table.PrimaryKey.Name);
                         }
                     }
@@ -271,7 +273,7 @@ namespace EfSchemaCompare.Internal
                     if (!error)
                     {
                         //There were no errors noted, so we mark it as OK
-                        colLogger.MarkAsOk(GetColumnNameTakingIntoAccountSchema(property, table));
+                        colLogger.MarkAsOk(columnName);
                     }
                 }
                 else
@@ -283,7 +285,7 @@ namespace EfSchemaCompare.Internal
                 pKeyLogger.MarkAsOk(efPKeyConstraintName);
         }
 
-        private bool ComparePropertyToColumn(CompareLogger2 logger, IProperty property, DatabaseColumn column, bool isNullable)
+        private bool ComparePropertyToColumn(CompareLogger2 logger, IProperty property, DatabaseColumn column, bool isNullable, bool isView)
         {
             var error = logger.CheckDifferent(property.GetColumnType(), column.StoreType, CompareAttributes.ColumnType, _caseComparison);
             error |= logger.CheckDifferent((property.IsNullable || isNullable).NullableAsString(), 
@@ -300,7 +302,8 @@ namespace EfSchemaCompare.Internal
                 : property.GetDefaultValueSql().RemoveUnnecessaryBrackets();
             error |= logger.CheckDifferent(defaultValue,
                     column.DefaultValueSql.RemoveUnnecessaryBrackets(), CompareAttributes.DefaultValueSql, _caseComparison);
-            error |= CheckValueGenerated(logger, property, column);
+            if (!isView)
+                error |= CheckValueGenerated(logger, property, column);
             return error;
         }
 
@@ -324,10 +327,13 @@ namespace EfSchemaCompare.Internal
                 colValGen, CompareAttributes.ValueGenerated, _caseComparison);
         }
 
-        private string GetColumnNameTakingIntoAccountSchema(IProperty property, DatabaseTable table)
+        private string GetColumnNameTakingIntoAccountSchema(IProperty property, DatabaseTable table,
+            bool isView = false)
         {
             var modelSchema = table.Schema == _defaultSchema ? null : table.Schema;
-            var columnName = property.GetColumnName(StoreObjectIdentifier.Table(table.Name, modelSchema));
+            var columnName = isView
+                ? property.GetColumnName(StoreObjectIdentifier.View(table.Name, modelSchema))
+                : property.GetColumnName(StoreObjectIdentifier.Table(table.Name, modelSchema));
             return columnName;
         }
 

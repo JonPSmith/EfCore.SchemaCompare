@@ -1,18 +1,17 @@
 ﻿// Copyright (c) 2020 Jon P Smith, GitHub: JonPSmith, web: http://www.thereformedprogrammer.net/
 // Licensed under MIT license. See License.txt in the project root for license information.
 
-using System;
 using Microsoft.EntityFrameworkCore;
 
-namespace DataLayer.ReadOnlyTypes.EfClasses
+namespace DataLayer.Chapter09ViewUsage
 {
-    [Keyless]
-    public class MappedToView
+    public class App1DbContext : DbContext
     {
-        public int Id { get; set; }
+        public DbSet<UserPart1> Users { get; set; }
 
-        public DateTime MyDateTime { get; set; }
+        public App1DbContext(DbContextOptions<App1DbContext> options)
+            : base(options)
+        { }
 
-        public string MyString { get; set; }
     }
 }
