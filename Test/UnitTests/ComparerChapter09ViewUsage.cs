@@ -1,13 +1,10 @@
 // Copyright (c) 2020 Jon P Smith, GitHub: JonPSmith, web: http://www.thereformedprogrammer.net/
 // Licensed under MIT license. See License.txt in the project root for license information.
 
-using System.Linq;
 using DataLayer.Chapter09ViewUsage;
-using DataLayer.ReadOnlyTypes.EfCode;
 using EfSchemaCompare;
 using Microsoft.EntityFrameworkCore;
 using TestSupport.EfHelpers;
-using TestSupport.Helpers;
 using Xunit;
 using Xunit.Abstractions;
 using Xunit.Extensions.AssertExtensions;
