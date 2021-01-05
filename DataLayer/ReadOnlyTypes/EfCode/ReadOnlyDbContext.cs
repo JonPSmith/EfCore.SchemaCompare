@@ -8,19 +8,26 @@ namespace DataLayer.ReadOnlyTypes.EfCode
 {
     public class ReadOnlyDbContext : DbContext
     {
-        public ReadOnlyDbContext(DbContextOptions<ReadOnlyDbContext> options)
+        public enum Configs { MappedToViewClass, BadMappedToViewClass }
+
+        public Configs Config { get; }
+        
+        public ReadOnlyDbContext(DbContextOptions<ReadOnlyDbContext> options, Configs config = Configs.MappedToViewClass)
             : base(options)
         {
+            Config = config;
         }
         
         public DbSet<NormalClass> NormalClasses { get; set; }
-        public DbSet<MappedToView> MappedToViews => Set<MappedToView>("MyView") ;
-        public DbSet<MappedToView> MappedToTable => Set<MappedToView>("NormalClasses");
 
         protected override void OnModelCreating(ModelBuilder modelBuilder)
         {
-            modelBuilder.SharedTypeEntity<MappedToView>("MyView").ToView("MyView");
             modelBuilder.SharedTypeEntity<MappedToView>("NormalClasses").ToView("NormalClasses");
+            
+            if (Config == Configs.BadMappedToViewClass)
+                modelBuilder.Entity<MappedToViewBad>().ToView("MyView");
+            else
+                modelBuilder.SharedTypeEntity<MappedToView>("MyView").ToView("MyView");
 
             modelBuilder.Entity<MappedToQuery>().ToSqlQuery(
                 @"SELECT Id, MyDateTime, MyInt, MyString FROM NormalClasses");

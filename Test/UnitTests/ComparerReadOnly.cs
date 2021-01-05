@@ -23,7 +23,7 @@ namespace Test.UnitTests
         }
 
         [Fact]
-        public void CompareReadOnlyDbContextOk()
+        public void CompareReadOnlyDbContextNotCheckedOk()
         {
             //SETUP
             var options = this.CreateUniqueClassOptions<ReadOnlyDbContext>();
@@ -46,7 +46,27 @@ namespace Test.UnitTests
                 "NOT CHECKED: Entity 'MappedToQuery', not mapped to database. Expected = <null>, found = MappedToQuery");
         }
 
+        [Fact]
+        public void CompareReadOnlyDbContextOk()
+        {
+            //SETUP
+            var options = this.CreateUniqueClassOptions<ReadOnlyDbContext>();
+            using var context = new ReadOnlyDbContext(options);
+            context.Database.EnsureClean();
+            context.Database.ExecuteSqlRaw(
+                "CREATE OR ALTER VIEW MyView AS SELECT Id, MyDateTime, MyString FROM NormalClasses");
 
+            var config = new CompareEfSqlConfig();
+            config.IgnoreTheseErrors(
+                "NOT CHECKED: Entity 'MappedToQuery', not mapped to database. Expected = <null>, found = MappedToQuery");
+            var comparer = new CompareEfSql(config);
+
+            //ATTEMPT
+            var hasErrors = comparer.CompareEfWithDb(context);
+
+            //VERIFY
+            hasErrors.ShouldBeFalse(comparer.GetAllErrors);
+        }
         [Fact]
         public void CompareReadOnlyDbContextMissingView()
         {
@@ -57,7 +77,10 @@ namespace Test.UnitTests
             context.Database.ExecuteSqlRaw(
                 "CREATE OR ALTER VIEW MyView AS SELECT Id, MyDateTime FROM NormalClasses");
 
-            var comparer = new CompareEfSql();
+            var config = new CompareEfSqlConfig();
+            config.IgnoreTheseErrors(
+                "NOT CHECKED: Entity 'MappedToQuery', not mapped to database. Expected = <null>, found = MappedToQuery");
+            var comparer = new CompareEfSql(config);
 
             //ATTEMPT
             var hasErrors = comparer.CompareEfWithDb(context);
@@ -65,12 +88,9 @@ namespace Test.UnitTests
             //VERIFY
             hasErrors.ShouldBeTrue();
             var errors = CompareLog.ListAllErrors(comparer.Logs).ToList();
-            (errors.Count == 2).ShouldBeTrue(comparer.GetAllErrors);
-            errors.Count.ShouldEqual(2); 
+            (errors.Count == 1).ShouldBeTrue(comparer.GetAllErrors);
             errors[0].ShouldEqual(
-                "NOT CHECKED: Entity 'MappedToQuery', not mapped to database. Expected = <null>, found = MappedToQuery");
-            errors[1].ShouldEqual(
-                "NOT IN DATABASE: MappedToQuery->MappedToView->Property 'MyString', column name. Expected = <null>");
+                "NOT IN DATABASE: MappedToView->Property 'MyString', column name. Expected = <null>");
         }
 
         [Fact]
@@ -86,7 +106,6 @@ namespace Test.UnitTests
             var config = new CompareEfSqlConfig();
             config.IgnoreTheseErrors(
                 "NOT CHECKED: Entity 'MappedToQuery', not mapped to database. Expected = <null>, found = MappedToQuery");
-
             var comparer = new CompareEfSql(config);
 
             //ATTEMPT
@@ -96,8 +115,34 @@ namespace Test.UnitTests
             hasErrors.ShouldBeTrue();
             var errors = CompareLog.ListAllErrors(comparer.Logs).ToList();
             (errors.Count == 1).ShouldBeTrue(comparer.GetAllErrors);
-            errors.Count.ShouldEqual(1);
             errors[0].ShouldEqual("EXTRA IN DATABASE: Table 'MyView', column name. Found = MyInt");
+        }
+
+
+        [Fact]
+        public void CompareReadOnlyDbContextDifferentColumnType()
+        {
+            //SETUP
+            var options = this.CreateUniqueClassOptions<ReadOnlyDbContext>();
+            using var context = new ReadOnlyDbContext(options, ReadOnlyDbContext.Configs.BadMappedToViewClass);
+            context.Database.EnsureClean();
+            context.Database.ExecuteSqlRaw(
+                "CREATE OR ALTER VIEW MyView AS SELECT Id, MyDateTime, MyString FROM NormalClasses");
+
+            var config = new CompareEfSqlConfig();
+            config.IgnoreTheseErrors(
+                "NOT CHECKED: Entity 'MappedToQuery', not mapped to database. Expected = <null>, found = MappedToQuery");
+            var comparer = new CompareEfSql(config);
+
+            //ATTEMPT
+            var hasErrors = comparer.CompareEfWithDb(context);
+
+            //VERIFY
+            hasErrors.ShouldBeTrue();
+            var errors = CompareLog.ListAllErrors(comparer.Logs).ToList();
+            (errors.Count == 2).ShouldBeTrue(comparer.GetAllErrors);
+            errors[0].ShouldEqual("DIFFERENT: MappedToViewBad->Property 'MyString', column type. Expected = int, found = nvarchar(max)");
+            errors[1].ShouldEqual("DIFFERENT: MappedToViewBad->Property 'MyString', nullability. Expected = NOT NULL, found = NULL");
         }
 
         [Fact]
