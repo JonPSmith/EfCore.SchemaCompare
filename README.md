@@ -2,13 +2,9 @@
 
 If you are changing the schema of your database's schema outside of EF Core' migrations, say by using SQL change scripts, then this library can quickly tell you if the a specific database schema and EF Core's `Model` of the database are in step.
 
-The first number in the version number of this library defines what version of EF Core it works for. e.g. EfCore.SchemaCompare version 5 is works with to EF Core 5.
+The first number in the version number of this library defines what version of EF Core it works for. e.g. EfCore.SchemaCompare version 5 is works with to EF Core 5. If you are looking for the EfCore.SchemaCompare for EF Core version 2 or 3 you will find it in the [EfCore.TestSupport version 3.2.0](https://www.nuget.org/packages/EfCore.TestSupport/3.2.0) (NOTE: This older version has most, but not all the features this version has).
 
-This project is open-source (MIT licence). 
-
-*NOTE: Please don't add a pull request without first contacting me via an issue containing the reason/idea first.*
-
-The EfCore.SchemaCompare library (shortened to EfSchemaCompare in the documentations) is available on [NuGet as EfCore.SchemaCompare](#) and is an open-source library under the MIT licence. See [ReleaseNotes](https://github.com/JonPSmith/EfCore.SchemaCompare/blob/master/ReleaseNotes.md) for details of changes and information on versions before EF Core 5.
+The EfCore.SchemaCompare library (shortened to EfSchemaCompare in the documentations) is available on [NuGet as EfCore.SchemaCompare](https://www.nuget.org/packages/EfCore.SchemaCompare/) and is an open-source library under the MIT licence. See [ReleaseNotes](https://github.com/JonPSmith/EfCore.SchemaCompare/blob/master/ReleaseNotes.md) for details of changes and information on versions before EF Core 5.
 
 **TABLE OF CONTENT**
 
@@ -41,8 +37,8 @@ The EfCore.SchemaCompare library (shortened to EfSchemaCompare in the documentat
 ## List of limitations
 
 - Cannot detect [Owned Type with `Required` option](https://docs.microsoft.com/en-us/ef/core/what-is-new/ef-core-5.0/whatsnew#required-11-dependents) (i.e. not null) - This is a limitation of EF Core (see EF Core issue [#23758](https://github.com/dotnet/efcore/issues/23758)).
-- Cannot correctly check Table-per-Type classes. This is a limitation of EF Core.
-- Cannot compare database entries using ignore case. That is a EF Core 5 limitation.
+- Cannot correctly check Table-per-Type classes. I need to look into this in more detail.
+- Cannot compare database tables/columns using InvariantCultureIgnoreCase. That is a EF Core 5 limitation.
 
 The following are things I haven't bothered to check.
 

@@ -3,6 +3,7 @@
 
 using DataLayer.TablePerType;
 using EfSchemaCompare;
+using Microsoft.EntityFrameworkCore;
 using TestSupport.EfHelpers;
 using Xunit;
 using Xunit.Extensions.AssertExtensions;
@@ -11,6 +12,19 @@ namespace Test.UnitTests
 {
     public class TestTablePerType
     {
+        [Fact]
+        public void TptContextModel()
+        {
+            //SETUP
+            var options = this.CreateUniqueClassOptions<TptDbContext>();
+            using var context = new TptDbContext(options);
+
+            //ATTEMPT
+            var relational = context.Model.GetRelationalModel();
+
+            //VERIFY
+        }
+
         [Fact]
         public void CompareTptContext()
         {

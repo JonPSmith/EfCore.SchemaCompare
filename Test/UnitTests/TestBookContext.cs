@@ -72,6 +72,20 @@ namespace Test.UnitTests
         }
 
         [Fact]
+        public void TestContextModelGetRelationalModelOk()
+        {
+            //SETUP
+            var options = SqliteInMemory.CreateOptions<BookContext>();
+            using var context = new BookContext(options);
+            context.Database.EnsureCreated();
+
+            //ATTEMPT 
+            var relational = context.Model.GetRelationalModel();
+
+            //VERIFY
+        }
+
+        [Fact]
         public void TestDatabaseTablesOk()
         {
             //SETUP
