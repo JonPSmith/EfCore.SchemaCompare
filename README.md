@@ -86,7 +86,7 @@ public void CompareViaContext()
 
 ### Different parameters to the `CompareEfWithDb` method
 
-1. The `CompareEfWithDb` method can take multiple DbContexts, known as *bounded contexts* (see chapter 13, section 13.4.8 in the second edition of my book [Entity Framework Core in Action(https://bit.ly/EfCoreBookEd2)]). You can add as many contexts and they are compared to one database.
+1. The `CompareEfWithDb` method can take multiple DbContexts, known as *bounded contexts* (see chapter 13, section 13.4.8 in my book [Entity Framework Core in Action, second edition](https://bit.ly/EfCoreBookEd2)). You can add as many contexts and they are compared to one database.
 2. You can also provide a string that points to the database as the first parameter. It can have two forms:
    - It will use the string as a connection string name in the test's `appsetting.json` file.
    - If no connection string is found in the `appsetting.json` file it assumes it is a connection string.
