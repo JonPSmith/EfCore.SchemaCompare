@@ -80,7 +80,8 @@ Here is a example of using the EfSchemaCompare feature
 public void CompareViaContext()
 {
     //SETUP
-    using (var context = new BookContext(_options))
+    var options = //... with connection to database to check
+    using (var context = new BookContext(options))
     {
         var comparer = new CompareEfSql();
 
@@ -101,7 +102,7 @@ public void CompareViaContext()
 1. The `CompareEfWithDb` method can take multiple DbContexts, known as *bounded contexts* (see chapter 13, section 13.4.8 in my book [Entity Framework Core in Action, second edition](https://bit.ly/EfCoreBookEd2)). You can add as many contexts and they are compared to one database.
 2. You can also provide a string that points to the database as the first parameter. It can have two forms:
    - It will use the string as a connection string name in the test's `appsetting.json` file.
-   - If no connection string is found in the `appsetting.json` file it assumes it is a connection string.
+   - If no connection string is found in the `appsetting.json` file, or there is no `appsetting.json`, then it assumes the string is a connection string.
 
 See below for an example of both of of these options:
 ```c#
