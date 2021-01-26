@@ -34,6 +34,18 @@ The EfCore.SchemaCompare library (shortened to EfSchemaCompare in the documentat
 - Unused columns
 - Unused Indexes
 
+### It check the following EF Core features
+
+- Normal classes/properties
+- Keyless classes
+- Backing fields
+- Shadow properties
+- Value Converters
+- Owned Types (see limitation below)
+- Table-per-Hierarchy
+- Table splitting
+- Concurrency tokens
+
 ## List of limitations
 
 - Cannot detect [Owned Type with `Required` option](https://docs.microsoft.com/en-us/ef/core/what-is-new/ef-core-5.0/whatsnew#required-11-dependents) (i.e. not null) - This is a limitation of EF Core (see EF Core issue [#23758](https://github.com/dotnet/efcore/issues/23758)).
