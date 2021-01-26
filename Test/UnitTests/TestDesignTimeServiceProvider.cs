@@ -143,6 +143,29 @@ namespace Test.UnitTests
         }
 
         [Fact]
+        public void GetIDatabaseModelFactoryDatabaseModel()
+        {
+            //SETUP
+            using (var context = new BookContext(_options))
+            {
+                var dtService = context.GetDesignTimeService();
+                var serviceProvider = dtService.GetDesignTimeProvider();
+                var factory = serviceProvider.GetService<IDatabaseModelFactory>();
+
+                //ATTEMPT
+
+                var databaseModel = factory.Create(context.Database.GetConnectionString(),
+                    new DatabaseModelFactoryOptions(new string[] { }, new string[] { }));
+
+                //VERIFY
+                foreach (var databaseModelTable in databaseModel.Tables)
+                {
+                    _output.WriteLine(databaseModelTable.Name);
+                }
+            }
+        }
+
+        [Fact]
         public void GetIScaffoldingModelFactory()
         {
             //SETUP
