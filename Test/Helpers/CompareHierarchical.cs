@@ -25,7 +25,10 @@ namespace Test.Helpers
 
         public override string ToString()
         {
-            return $"{Status}: {Name}";
+            var result = $"{Status}: {Name}";
+            if (Status == CompareStatuses.SkippedBecauseIndexer)
+                result += $", type = {PropType.Name}";
+            return result;
         }
     }
     
@@ -134,7 +137,7 @@ namespace Test.Helpers
 
             for (int i = 0; i < c1List.Count; i++)
             {
-                CompareProperty(c1List[i], c2List[i], $"IEnumerable<{higherLevelName}>.");
+                CompareProperty(c1List[i], c2List[i], $"{c1PropIEnumerable.GetType().Name} {higherLevelName}[{i}]");
             }
         }
 

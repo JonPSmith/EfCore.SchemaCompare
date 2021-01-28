@@ -97,7 +97,7 @@ namespace Test.UnitTests
             //VERIFY
             var comparer = new CompareHierarchical();
             comparer.CompareTwoSimilarClasses(relationalNNull, relationalNNot);
-            foreach (var log in comparer.LoggedDiffs.OrderBy(x => x.Status))
+            foreach (var log in comparer.LoggedDiffs.Where(x => x.Status != CompareStatuses.CouldNotCompare))
             {
                 _output.WriteLine(log.ToString());
             }
