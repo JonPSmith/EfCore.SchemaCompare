@@ -6,7 +6,7 @@ using System.Collections.Generic;
 using DataLayer.BookApp.EfClasses;
 using DataLayer.BookApp.EfCode;
 
-namespace Test.EfHelpers
+namespace Test.Helpers
 {
     public static class EfTestData
     {
