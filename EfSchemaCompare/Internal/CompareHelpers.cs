@@ -45,6 +45,14 @@ namespace EfSchemaCompare.Internal
             return FormSchemaTable(schemaToUse, table.Name);
         }
 
+        public static string FormSchemaTableFromITable(this ITable table, string defaultSchema)
+        {
+            //The DatabaseTable always provides a schema name, while the database Model provides null if default schema name.
+            //This makes sure that name will match the EF Core Model format
+            var schemaToUse = table.Schema == defaultSchema ? null : table.Schema;
+            return FormSchemaTable(schemaToUse, table.Name);
+        }
+
         public static string NullableAsString(this bool isNullable)
         {
             return isNullable ? "NULL" : "NOT NULL";

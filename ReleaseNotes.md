@@ -1,11 +1,9 @@
 # Release notes
 
 
-## TODO
+## 5.1.0
 
-- Update to EF Core 5.1
-- Update to latest EfCore.TestSupport
-- Write article
+- Fixed bug in TPH with `IsRequired` where properties aren't forced to nullable
 
 ## 5.0.1
 

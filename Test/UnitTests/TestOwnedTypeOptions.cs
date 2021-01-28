@@ -1,15 +1,11 @@
 ﻿// Copyright (c) 2020 Jon P Smith, GitHub: JonPSmith, web: http://www.thereformedprogrammer.net/
 // Licensed under MIT license. See License.txt in the project root for license information.
 
-using System.Collections.Generic;
 using System.Linq;
-using System.Reflection;
-using DataLayer.OwnedTypes.EfClasses;
 using DataLayer.OwnedTypes.EfCode;
 using EfSchemaCompare;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Infrastructure;
-using Newtonsoft.Json;
 using Test.Helpers;
 using TestSupport.EfHelpers;
 using Xunit;

@@ -5,6 +5,7 @@ using System.Linq;
 using DataLayer.ReadOnlyTypes.EfCode;
 using EfSchemaCompare;
 using Microsoft.EntityFrameworkCore;
+using Microsoft.EntityFrameworkCore.Infrastructure;
 using TestSupport.EfHelpers;
 using TestSupport.Helpers;
 using Xunit;
@@ -26,7 +27,8 @@ namespace Test.UnitTests
         public void CompareReadOnlyDbContextNotCheckedOk()
         {
             //SETUP
-            var options = this.CreateUniqueClassOptions<ReadOnlyDbContext>();
+            var options = this.CreateUniqueClassOptions<ReadOnlyDbContext>(
+                builder => builder.ReplaceService<IModelCacheKeyFactory, ReadOnlyModelCacheKeyFactory>());
             using var context = new ReadOnlyDbContext(options);
             context.Database.EnsureClean();
             context.Database.ExecuteSqlRaw(
@@ -50,7 +52,8 @@ namespace Test.UnitTests
         public void CompareReadOnlyDbContextOk()
         {
             //SETUP
-            var options = this.CreateUniqueClassOptions<ReadOnlyDbContext>();
+            var options = this.CreateUniqueClassOptions<ReadOnlyDbContext>(
+                builder => builder.ReplaceService<IModelCacheKeyFactory, ReadOnlyModelCacheKeyFactory>());
             using var context = new ReadOnlyDbContext(options);
             context.Database.EnsureClean();
             context.Database.ExecuteSqlRaw(
@@ -71,7 +74,8 @@ namespace Test.UnitTests
         public void CompareReadOnlyDbContextMissingView()
         {
             //SETUP
-            var options = this.CreateUniqueClassOptions<ReadOnlyDbContext>();
+            var options = this.CreateUniqueClassOptions<ReadOnlyDbContext>(
+                builder => builder.ReplaceService<IModelCacheKeyFactory, ReadOnlyModelCacheKeyFactory>());
             using var context = new ReadOnlyDbContext(options);
             context.Database.EnsureClean();
             context.Database.ExecuteSqlRaw(
@@ -97,7 +101,8 @@ namespace Test.UnitTests
         public void CompareReadOnlyDbContextExtraViewColumn()
         {
             //SETUP
-            var options = this.CreateUniqueClassOptions<ReadOnlyDbContext>();
+            var options = this.CreateUniqueClassOptions<ReadOnlyDbContext>(
+                builder => builder.ReplaceService<IModelCacheKeyFactory, ReadOnlyModelCacheKeyFactory>());
             using var context = new ReadOnlyDbContext(options);
             context.Database.EnsureClean();
             context.Database.ExecuteSqlRaw(
@@ -123,7 +128,8 @@ namespace Test.UnitTests
         public void CompareReadOnlyDbContextDifferentColumnType()
         {
             //SETUP
-            var options = this.CreateUniqueClassOptions<ReadOnlyDbContext>();
+            var options = this.CreateUniqueClassOptions<ReadOnlyDbContext>(
+                builder => builder.ReplaceService<IModelCacheKeyFactory, ReadOnlyModelCacheKeyFactory>());
             using var context = new ReadOnlyDbContext(options, ReadOnlyDbContext.Configs.BadMappedToViewClass);
             context.Database.EnsureClean();
             context.Database.ExecuteSqlRaw(
@@ -149,7 +155,8 @@ namespace Test.UnitTests
         public void CompareReadOnlyDbContextIgnoreNormalClasses()
         {
             //SETUP
-            var options = this.CreateUniqueClassOptions<ReadOnlyDbContext>();
+            var options = this.CreateUniqueClassOptions<ReadOnlyDbContext>(
+                builder => builder.ReplaceService<IModelCacheKeyFactory, ReadOnlyModelCacheKeyFactory>());
             using var context = new ReadOnlyDbContext(options);
             context.Database.EnsureClean();
             var filepath = TestData.GetFilePath("AddViewToDatabase.sql");

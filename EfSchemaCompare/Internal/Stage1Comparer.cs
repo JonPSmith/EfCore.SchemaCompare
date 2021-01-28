@@ -71,6 +71,8 @@ namespace EfSchemaCompare.Internal
                     var log = logger.MarkAsOk(entityType.FormSchemaTableFromModel());
                     if(entityType.GetTableName() != null)
                     {
+                        var xx = entityType.FindPrimaryKey().GetReferencingForeignKeys().ToList();
+                        var yy = entityType.FindPrimaryKey();
                         //Its not a view
                         logger.CheckDifferent(entityType.FindPrimaryKey()?.GetName() ?? NoPrimaryKey,
                             databaseTable.PrimaryKey?.Name ?? NoPrimaryKey,
@@ -103,7 +105,7 @@ namespace EfSchemaCompare.Internal
                 var entityFKeyprops = entityFKey.Properties;
                 var constraintName = entityFKey.GetConstraintName();
                 var logger = new CompareLogger2(CompareType.ForeignKey, constraintName, log.SubLogs, _ignoreList, () => _hasErrors = true);
-                if (IgnoreForeignKeyIfInSameTable(entityType, entityFKey, table))
+                if (IgnoreForeignKeyIfInSameTableOrTpT(entityType, entityFKey, table))
                     continue;
                 if (fKeyDict.ContainsKey(constraintName))
                 {
@@ -133,7 +135,7 @@ namespace EfSchemaCompare.Internal
         }
 
         
-        private bool IgnoreForeignKeyIfInSameTable(IEntityType entityType, IForeignKey entityFKey, DatabaseTable table)
+        private bool IgnoreForeignKeyIfInSameTableOrTpT(IEntityType entityType, IForeignKey entityFKey, DatabaseTable table)
         {
             //see https://github.com/aspnet/EntityFrameworkCore/issues/10345#issuecomment-345841191
             var fksPropsInOneTable = entityFKey.Properties.All(x =>
@@ -144,6 +146,11 @@ namespace EfSchemaCompare.Internal
                     _tableViewDict[p.DeclaringEntityType.FormSchemaTableFromModel()]));
             
             return fksPropsInOneTable && fksPropsColumnNames.SequenceEqual(pkPropsColumnNames);
+        }
+
+        private bool IsTpT(IEntityType entityType)
+        {
+            return entityType.BaseType != null && entityType.FormSchemaTableFromModel() != entityType.BaseType.FormSchemaTableFromModel();
         }
 
         private void CompareIndexes(CompareLog log, IEntityType entityType, DatabaseTable table)
@@ -184,26 +191,34 @@ namespace EfSchemaCompare.Internal
 
         /// <summary>
         /// This looks for
-        /// 1. TPH
-        /// 2. Nested Owned Types and table splitting where the class is optional
+        /// 1. TPH and TPT
+        /// 2. Nested Owned Types (can be required)
+        /// 3. Table splitting where the class is optional
         /// If it finds one of these it returns a list of property names that aren't forces to be nullable (all other properties are forced to nullable types)
         /// Otherwise it returns null
         /// </summary>
         /// <param name="entityType"></param>
         /// <param name="table"></param>
-        /// <returns></returns>
+        /// <returns>a list of property names that AREN'T forced to nullable</returns>
         private List<string> ClassIsAddedToTable(IEntityType entityType, DatabaseTable table)
         {
-            //Check for THP
+            //Check for THP or TPT
             if (entityType.BaseType != null)
             {
+                //this is true if the BaseType is in the same table of the entity
+                var isTpH = entityType.FormSchemaTableFromModel() == entityType.BaseType.FormSchemaTableFromModel();
+
                 //We need to return the BaseType properties as not forces to nullable
-                return entityType.BaseType.GetProperties()
+                var propertiesNotForcedNull = entityType.BaseType.GetProperties()
                     .Select(x => GetColumnNameTakingIntoAccountSchema(x, table))
                     .ToList();
+                if (!isTpH)
+                    propertiesNotForcedNull.AddRange(entityType.GetProperties()
+                        .Select(x => GetColumnNameTakingIntoAccountSchema(x, table)));
+                return propertiesNotForcedNull;
             }
 
-            //Now check for Nested Owned Types and table splitting where the class is optional
+            //Now check for Nested Owned Types and table splitting 
             foreach (var foreignKey in entityType.GetForeignKeys())
             {
                 var fkColumnNames = foreignKey
@@ -213,7 +228,22 @@ namespace EfSchemaCompare.Internal
                         .Properties.Select(x => GetColumnNameTakingIntoAccountSchema(x, table))
                         .ToList();
                 if (pkPropsColumnNames.SequenceEqual(fkColumnNames))
+                {
+                    //We are in a Nested Owned Types and table splitting
+
+                    //This will find if the nested Owned Type is Require, in which case no properties are forced to nullable
+                    var thisTableRelational = _model.GetRelationalModel().Tables.Single(x =>
+                        x.FormSchemaTableFromITable(_defaultSchema) == table.FormSchemaTableFromDatabase(_defaultSchema));
+                    var isRequired = thisTableRelational.PrimaryKey.MappedKeys.FirstOrDefault()?
+                        .GetReferencingForeignKeys().FirstOrDefault()?.IsRequiredDependent ?? false;
+                    if(isRequired)
+                        //Owned Type is marked as required, so add all the properties as not forces to nullable
+                        pkPropsColumnNames.AddRange(entityType.GetProperties()
+                            .Select(x => GetColumnNameTakingIntoAccountSchema(x, table)));
+
+
                     return pkPropsColumnNames;
+                }
             }
 
             return null;
@@ -252,10 +282,10 @@ namespace EfSchemaCompare.Internal
                 if (columnDict.ContainsKey(columnName))
                 {
                     var isNullable = pksOfClassAddedToTable?.Contains(columnName) == false;
-                    var error = ComparePropertyToColumn(colLogger, property, columnDict[columnName], isNullable, isView);
+                    var error = ComparePropertyToColumn(entityType, colLogger, property, columnDict[columnName], isNullable, isView);
                     //check for primary key
                     if (property.IsPrimaryKey() &&
-                        //This remove TPH, Owned Types primary key checks 
+                        //This remove TPH, Owned Types primary key checks
                         !isView != primaryKeyDict.ContainsKey(columnName))
                     {
                         if (!primaryKeyDict.ContainsKey(columnName))
@@ -285,7 +315,7 @@ namespace EfSchemaCompare.Internal
                 pKeyLogger.MarkAsOk(efPKeyConstraintName);
         }
 
-        private bool ComparePropertyToColumn(CompareLogger2 logger, IProperty property, DatabaseColumn column, bool isNullable, bool isView)
+        private bool ComparePropertyToColumn(IEntityType entityType, CompareLogger2 logger, IProperty property, DatabaseColumn column, bool isNullable, bool isView)
         {
             var error = logger.CheckDifferent(property.GetColumnType(), column.StoreType, CompareAttributes.ColumnType, _caseComparison);
             error |= logger.CheckDifferent((property.IsNullable || isNullable).NullableAsString(), 
@@ -302,7 +332,7 @@ namespace EfSchemaCompare.Internal
                 : property.GetDefaultValueSql().RemoveUnnecessaryBrackets();
             error |= logger.CheckDifferent(defaultValue,
                     column.DefaultValueSql.RemoveUnnecessaryBrackets(), CompareAttributes.DefaultValueSql, _caseComparison);
-            if (!isView)
+            if (!isView && !IsTpT(entityType))
                 error |= CheckValueGenerated(logger, property, column);
             return error;
         }

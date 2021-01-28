@@ -49,7 +49,6 @@ The EfCore.SchemaCompare library (shortened to EfSchemaCompare in the documentat
 ## List of limitations
 
 - Because I use EF Core's scaffolder I cannot check if an index is applied to a foreign key (the scaffolder assumes EF Core will do that by default). EF Core adds indexes to foreign keys.
-- Cannot detect [Owned Type with `Required` option](https://docs.microsoft.com/en-us/ef/core/what-is-new/ef-core-5.0/whatsnew#required-11-dependents) (i.e. not null) - This is a limitation of EF Core (see EF Core issue [#23758](https://github.com/dotnet/efcore/issues/23758)).
 - Cannot correctly check Table-per-Type classes. I need to look into this in more detail.
 - Cannot compare database tables/columns using InvariantCultureIgnoreCase. That is a EF Core 5 limitation.
 

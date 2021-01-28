@@ -132,8 +132,12 @@ namespace Test.Helpers
             var c2List = EnumerableToList(c2PropIEnumerable);
 
             if (c1List.Count != c2List.Count)
+            {
                 LoggedDiffs.Add(new CompareLog(CompareStatuses.DifferentCount, higherLevelName,
                     null, c1PropIEnumerable.GetType()));
+                return;
+            }
+            
 
             for (int i = 0; i < c1List.Count; i++)
             {
