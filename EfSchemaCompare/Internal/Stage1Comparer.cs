@@ -71,8 +71,6 @@ namespace EfSchemaCompare.Internal
                     var log = logger.MarkAsOk(entityType.FormSchemaTableFromModel());
                     if(entityType.GetTableName() != null)
                     {
-                        var xx = entityType.FindPrimaryKey().GetReferencingForeignKeys().ToList();
-                        var yy = entityType.FindPrimaryKey();
                         //Its not a view
                         logger.CheckDifferent(entityType.FindPrimaryKey()?.GetName() ?? NoPrimaryKey,
                             databaseTable.PrimaryKey?.Name ?? NoPrimaryKey,
@@ -231,16 +229,14 @@ namespace EfSchemaCompare.Internal
                 {
                     //We are in a Nested Owned Types and table splitting
 
-                    //This will find if the nested Owned Type is Require, in which case no properties are forced to nullable
+                    //This will find if the nested Owned Type is optional. If its ISN'T options no properties are forced to nullable
+                    //see https://github.com/dotnet/efcore/issues/23758#issuecomment-769536051
                     var thisTableRelational = _model.GetRelationalModel().Tables.Single(x =>
                         x.FormSchemaTableFromITable(_defaultSchema) == table.FormSchemaTableFromDatabase(_defaultSchema));
-                    var isRequired = thisTableRelational.PrimaryKey.MappedKeys.FirstOrDefault()?
-                        .GetReferencingForeignKeys().FirstOrDefault()?.IsRequiredDependent ?? false;
-                    if(isRequired)
+                    if(!thisTableRelational.IsOptional(entityType))
                         //Owned Type is marked as required, so add all the properties as not forces to nullable
                         pkPropsColumnNames.AddRange(entityType.GetProperties()
                             .Select(x => GetColumnNameTakingIntoAccountSchema(x, table)));
-
 
                     return pkPropsColumnNames;
                 }
@@ -332,7 +328,7 @@ namespace EfSchemaCompare.Internal
                 : property.GetDefaultValueSql().RemoveUnnecessaryBrackets();
             error |= logger.CheckDifferent(defaultValue,
                     column.DefaultValueSql.RemoveUnnecessaryBrackets(), CompareAttributes.DefaultValueSql, _caseComparison);
-            if (!isView && !IsTpT(entityType))
+            if (!isView)
                 error |= CheckValueGenerated(logger, property, column);
             return error;
         }

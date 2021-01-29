@@ -99,5 +99,35 @@ namespace Test.UnitTests
             }
         }
 
+        [Fact]
+        public void TestGetModelOutputOk()
+        {
+            //SETUP
+            var options = this.CreateUniqueClassOptions<OwnedTypeDbContext>(
+                builder => builder.ReplaceService<IModelCacheKeyFactory, OwnedTypeModelCacheKeyFactory>());
+            using var context = new OwnedTypeDbContext(options, OwnedTypeDbContext.Configs.NestedNull);
+
+            //ATTEMPT 
+            var modelString = context.Model.ToDebugString(MetadataDebugStringOptions.LongDefault);
+
+            //VERIFY
+            _output.WriteLine(modelString);
+        }
+
+        [Fact]
+        public void TestGetRelationalModelOutputOk()
+        {
+            //SETUP
+            var options = this.CreateUniqueClassOptions<OwnedTypeDbContext>(
+                builder => builder.ReplaceService<IModelCacheKeyFactory, OwnedTypeModelCacheKeyFactory>());
+            using var context = new OwnedTypeDbContext(options, OwnedTypeDbContext.Configs.NestedNull);
+
+            //ATTEMPT 
+            var modelString = context.Model.GetRelationalModel().ToDebugString(MetadataDebugStringOptions.LongDefault);
+
+            //VERIFY
+            _output.WriteLine(modelString);
+        }
+
     }
 }
