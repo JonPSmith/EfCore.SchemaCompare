@@ -14,11 +14,11 @@ using Xunit.Extensions.AssertExtensions;
 
 namespace Test.UnitTests
 {
-    public class ComparerReadOnly
+    public class TestComparerReadOnly
     {
         private readonly ITestOutputHelper _output;
 
-        public ComparerReadOnly(ITestOutputHelper output)
+        public TestComparerReadOnly(ITestOutputHelper output)
         {
             _output = output;
         }

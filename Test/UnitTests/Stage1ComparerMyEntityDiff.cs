@@ -351,11 +351,11 @@ namespace Test.UnitTests
                 var errors = CompareLog.ListAllErrors(handler.Logs).ToList();
                 errors.Count.ShouldEqual(4);
                 errors[0].ShouldEqual(
-                    "DIFFERENT: MyEntity->Property 'MyDateTime', default value sql. Expected = 2000-01-01T00:00:00, found = <null>");
+                    "DIFFERENT: MyEntity->Property 'MyDateTime', default value sql. Expected = '2000-01-01T00:00:00.0000000', found = <null>");
                 errors[1].ShouldEqual(
                     "DIFFERENT: MyEntity->Property 'MyDateTime', value generated. Expected = OnAdd, found = Never");
                 errors[2].ShouldEqual(
-                    "DIFFERENT: MyEntity->Property 'MyString', default value sql. Expected = Hello!, found = <null>");
+                    "DIFFERENT: MyEntity->Property 'MyString', default value sql. Expected = N'Hello!', found = <null>");
                 errors[3].ShouldEqual(
                     "DIFFERENT: MyEntity->Property 'MyString', value generated. Expected = OnAdd, found = Never");
             }

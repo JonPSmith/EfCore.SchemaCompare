@@ -100,6 +100,23 @@ namespace Test.UnitTests
         }
 
         [Fact]
+        public void TestContextModelGetRelationalModelColumnsOk()
+        {
+            //SETUP
+            var options = this.CreateUniqueClassOptions<OwnedTypeDbContext>(
+                builder => builder.ReplaceService<IModelCacheKeyFactory, OwnedTypeModelCacheKeyFactory>());
+            using var contextNNull = new OwnedTypeDbContext(options, OwnedTypeDbContext.Configs.NestedNull);
+            using var contextNNot = new OwnedTypeDbContext(options, OwnedTypeDbContext.Configs.NestedNotNull);
+
+            //ATTEMPT 
+            var relationalNNull = contextNNull.Model.GetRelationalModel().Tables.Single().Columns.ToList();
+            var relationalNNot = contextNNot.Model.GetRelationalModel().Tables.Single().Columns.ToList();
+
+            //VERIFY
+
+        }
+
+        [Fact]
         public void TestGetModelOutputOk()
         {
             //SETUP

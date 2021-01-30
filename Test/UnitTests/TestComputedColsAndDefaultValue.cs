@@ -10,7 +10,7 @@ using Xunit.Extensions.AssertExtensions;
 
 namespace Test.UnitTests
 {
-    public class TestComputedColumns
+    public class TestComputedColsAndDefaultValue
     {
         [Fact]
         public void CompareComputedColumn()
@@ -37,6 +37,24 @@ namespace Test.UnitTests
             var options = this.CreateUniqueClassOptions<MyEntityDbContext>(
                 builder => builder.ReplaceService<IModelCacheKeyFactory, MyEntityModelCacheKeyFactory>());
             using var context = new MyEntityDbContext(options, MyEntityDbContext.Configs.PersistentComputedColumn);
+            context.Database.EnsureClean();
+
+            var comparer = new CompareEfSql();
+
+            //ATTEMPT
+            var hasErrors = comparer.CompareEfWithDb(context);
+
+            //VERIFY
+            hasErrors.ShouldBeFalse(comparer.GetAllErrors);
+        }
+
+        [Fact]
+        public void CompareDefaultValueColumn()
+        {
+            //SETUP
+            var options = this.CreateUniqueClassOptions<MyEntityDbContext>(
+                builder => builder.ReplaceService<IModelCacheKeyFactory, MyEntityModelCacheKeyFactory>());
+            using var context = new MyEntityDbContext(options, MyEntityDbContext.Configs.DefaultValue);
             context.Database.EnsureClean();
 
             var comparer = new CompareEfSql();

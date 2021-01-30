@@ -63,9 +63,9 @@ namespace DataLayer.MyEntityDb
                 case Configs.DefaultValue:
                     modelBuilder.Entity<MyEntity>().ToTable("MyEntites");
                     modelBuilder.Entity<MyEntity>()
-                        .Property(p => p.MyString).HasDefaultValueSql("Hello!");
+                        .Property(p => p.MyString).HasDefaultValueSql("N'Hello!'");
                     modelBuilder.Entity<MyEntity>()
-                        .Property(p => p.MyDateTime).HasDefaultValueSql(new DateTime(2000,1,1).ToString("s"));
+                        .Property(p => p.MyDateTime).HasDefaultValue(new DateTime(2000,1,1).ToString("s"));
                     break;
                 case Configs.ShadowProp:
                     modelBuilder.Entity<MyEntity>().ToTable("MyEntites");
