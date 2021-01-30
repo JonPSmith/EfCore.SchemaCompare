@@ -48,8 +48,8 @@ The EfCore.SchemaCompare library (shortened to EfSchemaCompare in the documentat
 
 ## List of limitations
 
-- Because I use EF Core's scaffolder I cannot check if an index is applied to a foreign key (the scaffolder assumes EF Core will do that by default and doesn't read in any index on the foreign key). That means I can't check that ther is an index on a foreign key.
-- Cannot correctly check Table-per-Type classes. I need to look into this in more detail.
+- The EF Core's scaffolder doesn't read in any index on the foreign key (the scaffolder assumes EF Core will do that by default). That means I can't check that there is an index on a foreign key.
+- Cannot correctly check Table-per-Type classes beacause EF Core doesn't currently hold that data. This is tracked by [Ef Core #19811](https://github.com/dotnet/efcore/issues/19811).
 - Cannot compare database tables/columns using InvariantCultureIgnoreCase. That is a EF Core 5 limitation.
 
 The following are things I haven't bothered to check.
