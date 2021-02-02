@@ -15,7 +15,7 @@
 
   <PropertyGroup>
     <PackageId>EfCore.SchemaCompare</PackageId>
-    <PackageVersion>5.1.0-preview001</PackageVersion>
+    <PackageVersion>5.1.0</PackageVersion>
     <Version>5.1.0</Version>
     <AssemblyVersion>5.1.0.0</AssemblyVersion>
     <FileVersion>5.1.0.0</FileVersion>
@@ -23,20 +23,7 @@
     <Description>Useful tool if you  are changing the schema of your database's schema outside of EF Core' migrations, say by using SQL change scripts. See readme file on github.</Description>
     <PackageRequireLicenseAcceptance>false</PackageRequireLicenseAcceptance>
     <PackageReleaseNotes>
-      - Moved from EfCore.TestSupport to become a separate library 
-      - Bitg tidy up and improve this feature
-      - Improvement: Support for EF Core 5 database features
-      - EF Core 5 - direct many-to-many
-      - EF Core 5 - property bag
-      - EF Core 5 - Same type mapped to different tables
-      - EF Core 5 - persistent computed column
-      - EF Core 5 - Entity to SQL query is marked as not checked
-      - New Feature: Checks Views
-      - Improvement: Uses IRelationalTypeMappingSource for constants - see EF Core #21731
-      - Bug fix: Nested Owned Type properties are tested as nullable
-      - Bug fix: Nested table splitting optional class properties as nullable
-      - Bug fix: TPH properties being nullable
-      - BREAKING CHANGE: Cannot compare tables/views using IgnoreCase
+      - Fixed bug in Owned Types with `IsRequired` where properties aren't forced to nullable
     </PackageReleaseNotes>
     <Copyright>Copyright (c) 2020 Jon P Smith. Licenced under MIT licence</Copyright>
     <PackageTags>Entity Framework Core, Database</PackageTags>

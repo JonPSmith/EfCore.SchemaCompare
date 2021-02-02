@@ -3,7 +3,7 @@
 
 ## 5.1.0
 
-- Fixed bug in TPH with `IsRequired` where properties aren't forced to nullable
+- Fixed bug in Owned Types with `IsRequired` where properties aren't forced to nullable
 
 ## 5.0.1
 
