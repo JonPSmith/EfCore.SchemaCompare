@@ -1,6 +1,10 @@
 # Release notes
 
 
+## 5.1.1
+
+- Bug fix - Table with incorrect name threw an exception. See issue #2
+
 ## 5.1.0
 
 - Fixed bug in Owned Types with `IsRequired` where properties aren't forced to nullable

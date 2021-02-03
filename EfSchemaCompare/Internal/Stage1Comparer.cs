@@ -20,7 +20,6 @@ namespace EfSchemaCompare.Internal
     internal class Stage1Comparer
     {
         private const string NoPrimaryKey = "- no primary key -";
-        private const string ViewPrimaryKey = "- view primary key -";
 
         private readonly IModel _model;
         private readonly string _dbContextName;
@@ -101,7 +100,7 @@ namespace EfSchemaCompare.Internal
 
             foreach (var entityFKey in entityType.GetForeignKeys())
             {
-                var entityFKeyprops = entityFKey.Properties;
+                var entityFKeyProps = entityFKey.Properties;
                 var constraintName = entityFKey.GetConstraintName();
                 var logger = new CompareLogger2(CompareType.ForeignKey, constraintName, log.SubLogs, _ignoreList, () => _hasErrors = true);
                 if (IgnoreForeignKeyIfInSameTableOrTpT(entityType, entityFKey, table))
@@ -111,7 +110,7 @@ namespace EfSchemaCompare.Internal
                     //Now check every foreign key
                     var error = false;
                     var thisKeyCols = fKeyDict[constraintName].Columns.ToDictionary(x => x.Name, _caseComparer);
-                    foreach (var fKeyProp in entityFKeyprops)
+                    foreach (var fKeyProp in entityFKeyProps)
                     {
                         var columnName = GetColumnNameTakingIntoAccountSchema( fKeyProp, table);
                         if (!thisKeyCols.ContainsKey(columnName))
@@ -133,23 +132,24 @@ namespace EfSchemaCompare.Internal
             }
         }
 
-        
         private bool IgnoreForeignKeyIfInSameTableOrTpT(IEntityType entityType, IForeignKey entityFKey, DatabaseTable table)
         {
             //see https://github.com/aspnet/EntityFrameworkCore/issues/10345#issuecomment-345841191
             var fksPropsInOneTable = entityFKey.Properties.All(x =>
                 string.Equals(x.DeclaringEntityType.FormSchemaTableFromModel(), table.FormSchemaTableFromDatabase(_defaultSchema), _caseComparison));
             var fksPropsColumnNames = entityFKey.Properties.Select(p => GetColumnNameTakingIntoAccountSchema(p, table));
-            var pkPropsColumnNames =
-                entityFKey.PrincipalKey.Properties.Select(p => GetColumnNameTakingIntoAccountSchema(p, 
-                    _tableViewDict[p.DeclaringEntityType.FormSchemaTableFromModel()]));
+            var pkPropsColumnNames = new List<string>();
+            foreach (var principalKeyProperty in entityFKey.PrincipalKey.Properties)
+            {
+                var declaringSchemaTable = principalKeyProperty.DeclaringEntityType.FormSchemaTableFromModel();
+                if (!_tableViewDict.ContainsKey(declaringSchemaTable))
+                    //There is a missing table problem, but we don't handle it here. returns false which means the calling code will find the problem.
+                    return false;
+                pkPropsColumnNames.Add(GetColumnNameTakingIntoAccountSchema(principalKeyProperty,
+                    _tableViewDict[declaringSchemaTable]));
+            }
             
             return fksPropsInOneTable && fksPropsColumnNames.SequenceEqual(pkPropsColumnNames);
-        }
-
-        private bool IsTpT(IEntityType entityType)
-        {
-            return entityType.BaseType != null && entityType.FormSchemaTableFromModel() != entityType.BaseType.FormSchemaTableFromModel();
         }
 
         private void CompareIndexes(CompareLog log, IEntityType entityType, DatabaseTable table)
