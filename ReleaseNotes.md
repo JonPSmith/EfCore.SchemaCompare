@@ -1,6 +1,10 @@
 # Release notes
 
 
+## 5.1.2
+
+- Bug fix - looking for appsettings.json file throws an exception if it can't find the folder. See issue #3
+
 ## 5.1.1
 
 - Bug fix - Table with incorrect name threw an exception. See issue #2

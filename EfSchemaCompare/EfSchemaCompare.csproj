@@ -15,15 +15,15 @@
 
   <PropertyGroup>
     <PackageId>EfCore.SchemaCompare</PackageId>
-    <PackageVersion>5.1.1</PackageVersion>
-    <Version>5.1.1</Version>
-    <AssemblyVersion>5.1.1.0</AssemblyVersion>
-    <FileVersion>5.1.1.0</FileVersion>
+    <PackageVersion>5.1.2</PackageVersion>
+    <Version>5.1.2</Version>
+    <AssemblyVersion>5.1.2.0</AssemblyVersion>
+    <FileVersion>5.1.2.0</FileVersion>
     <Authors>Jon P Smith</Authors>
     <Description>Useful tool if you  are changing the schema of your database's schema outside of EF Core' migrations, say by using SQL change scripts. See readme file on github.</Description>
     <PackageRequireLicenseAcceptance>false</PackageRequireLicenseAcceptance>
     <PackageReleaseNotes>
-      - Bug fix - Table with incorrect name threw an exception. See issue #2
+      - Bug fix - looking for appsettings.json file throws an exception if it can't find the folder. See issue #3
     </PackageReleaseNotes>
     <Copyright>Copyright (c) 2020 Jon P Smith. Licenced under MIT licence</Copyright>
     <PackageTags>Entity Framework Core, Database</PackageTags>
