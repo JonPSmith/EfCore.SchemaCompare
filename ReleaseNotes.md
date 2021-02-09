@@ -1,6 +1,10 @@
 # Release notes
 
 
+## TODO
+
+- Updated the exception message about how to use another database type.
+
 ## 5.1.2
 
 - Bug fix - looking for appsettings.json file throws an exception if it can't find the folder. See issue #3
