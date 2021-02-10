@@ -1,8 +1,9 @@
 # Release notes
 
 
-## TODO
+## 5.1.3
 
+- Make package a development dependency - see issue #4
 - Updated the exception message about how to use another database type.
 
 ## 5.1.2
