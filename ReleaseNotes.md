@@ -2,7 +2,7 @@
 
 ## 5.1.4
 
-- Removed development dependency of package. It makes it harder to use in unit tests
+- Removed development dependency of package. It made it harder to EfCore.SchemaCompare in unit tests
 
 ## 5.1.3
 
