@@ -1,5 +1,8 @@
 # Release notes
 
+## 5.1.4
+
+- Removed development dependency of package. It makes it harder to use in unit tests
 
 ## 5.1.3
 

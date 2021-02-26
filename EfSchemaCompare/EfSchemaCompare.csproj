@@ -2,7 +2,6 @@
 
   <PropertyGroup>
     <TargetFramework>netstandard2.1</TargetFramework>
-    <DevelopmentDependency>True</DevelopmentDependency>
   </PropertyGroup>
 
   <ItemGroup>
@@ -14,16 +13,15 @@
 
   <PropertyGroup>
     <PackageId>EfCore.SchemaCompare</PackageId>
-    <PackageVersion>5.1.3</PackageVersion>
-    <Version>5.1.3</Version>
-    <AssemblyVersion>5.1.3.0</AssemblyVersion>
-    <FileVersion>5.1.3.0</FileVersion>
+    <PackageVersion>5.1.4</PackageVersion>
+    <Version>5.1.4</Version>
+    <AssemblyVersion>5.1.4.0</AssemblyVersion>
+    <FileVersion>5.1.4.0</FileVersion>
     <Authors>Jon P Smith</Authors>
     <Description>Useful tool if you  are changing the schema of your database's schema outside of EF Core' migrations, say by using SQL change scripts. See readme file on github.</Description>
     <PackageRequireLicenseAcceptance>false</PackageRequireLicenseAcceptance>
     <PackageReleaseNotes>
-      - Make package a development dependency - see issue #5
-      - Updated the exception message about how to use another database type.
+      - Removed development dependency of package. It makes it harder to use in unit tests
     </PackageReleaseNotes>
     <Copyright>Copyright (c) 2020 Jon P Smith. Licenced under MIT licence</Copyright>
     <PackageTags>Entity Framework Core, Database</PackageTags>
