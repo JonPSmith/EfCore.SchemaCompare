@@ -1,5 +1,9 @@
 # Release notes
 
+## 6.0.0-rc2
+
+- Updated solution to .NET 6.0 RC2
+
 ## 5.1.4
 
 - Removed development dependency of package. It made it harder to EfCore.SchemaCompare in unit tests
