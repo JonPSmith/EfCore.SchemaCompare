@@ -24,7 +24,7 @@ namespace EfSchemaCompare.Internal
         public static string FormSchemaTableFromModel(this IEntityType entityType)
         {
             var viewAnnotations = entityType.GetAnnotations()
-                .Where(a => a.Name == RelationalAnnotationNames.ViewName ||
+                .Where(a => a.Name == RelationalAnnotationNames.TableName ||
                             a.Name == RelationalAnnotationNames.ViewSchema)
                 .OrderBy(a =>a.Name)
                 .Select(a => (string)a.Value)
