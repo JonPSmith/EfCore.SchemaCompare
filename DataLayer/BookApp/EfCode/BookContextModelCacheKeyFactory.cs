@@ -9,9 +9,12 @@ namespace DataLayer.BookApp.EfCode
     //see https://docs.microsoft.com/en-us/ef/core/modeling/dynamic-model
     public class BookContextModelCacheKeyFactory : IModelCacheKeyFactory
     {
-        public object Create(DbContext context)
+        public object Create(DbContext context, bool designTime)
             => context is BookContext dynamicContext
-                ? (context.GetType(), dynamicContext.Config)
+                ? (context.GetType(), dynamicContext.Config, designTime)
                 : (object)context.GetType();
+
+        public object Create(DbContext context)
+            => Create(context, false);
     }
 }

@@ -9,9 +9,12 @@ namespace DataLayer.MyEntityDb
     //see https://docs.microsoft.com/en-us/ef/core/modeling/dynamic-model
     public class MyEntityModelCacheKeyFactory : IModelCacheKeyFactory
     {
-        public object Create(DbContext context)
+        public object Create(DbContext context, bool designTime)
             => context is MyEntityDbContext dynamicContext
-                ? (context.GetType(), dynamicContext.Config)
+                ? (context.GetType(), dynamicContext.Config, designTime)
                 : (object)context.GetType();
+
+        public object Create(DbContext context)
+            => Create(context, false);
     }
 }
