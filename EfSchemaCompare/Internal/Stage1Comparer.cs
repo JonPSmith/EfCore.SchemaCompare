@@ -264,9 +264,9 @@ namespace EfSchemaCompare.Internal
                 error |= logger.CheckDifferent(property.GetIsStored()?.ToString() ?? false.ToString()
                     , column.IsStored.ToString(),
                     CompareAttributes.PersistentComputedColumn, _caseComparison);
-            var defaultValue = property.GetDefaultValue() != null
-                ? _relationalTypeMapping.FindMapping(property.GetDefaultValue().GetType())
-                    .GenerateSqlLiteral(property.GetDefaultValue())
+            var defaultValue = property.TryGetDefaultValue(out var propDefaultValue)
+                ? _relationalTypeMapping.FindMapping(propDefaultValue.GetType())
+                   .GenerateSqlLiteral(propDefaultValue)
                 : property.GetDefaultValueSql().RemoveUnnecessaryBrackets();
             error |= logger.CheckDifferent(defaultValue,
                     column.DefaultValueSql.RemoveUnnecessaryBrackets(), CompareAttributes.DefaultValueSql, _caseComparison);
