@@ -300,8 +300,12 @@ namespace EfSchemaCompare.Internal
 
         private bool CheckValueGenerated(CompareLogger2 logger, IProperty property, DatabaseColumn column)
         {
-            // Owned properties are checked by the owner entity
-            if (property.DeclaringEntityType.IsOwned())
+            // Leave owned value generated properties to be checked by the owning entity
+            if (property.IsPrimaryKey() && property.DeclaringEntityType.IsOwned())
+                return false;
+
+            // Not strictly owned, but acts like owned - Specialized DB Context
+            if (property.IsPrimaryKey() && property.FindFirstPrincipal() != null && property.FindFirstPrincipal().DeclaringEntityType != property.DeclaringEntityType)
                 return false;
 
             var colValGen = column.ValueGenerated.ConvertNullableValueGenerated(column.ComputedColumnSql, column.DefaultValueSql);
