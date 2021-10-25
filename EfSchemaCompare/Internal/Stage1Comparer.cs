@@ -11,6 +11,7 @@ using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Infrastructure;
 using Microsoft.EntityFrameworkCore.Metadata;
 using Microsoft.EntityFrameworkCore.Scaffolding.Metadata;
+using Microsoft.EntityFrameworkCore.SqlServer.Metadata.Internal;
 using Microsoft.EntityFrameworkCore.Storage;
 
 [assembly: InternalsVisibleTo("Test")]
@@ -207,9 +208,20 @@ namespace EfSchemaCompare.Internal
 
             var columnDict = table.Columns.ToDictionary(x => x.Name, _caseComparer);
 
+            // SQL Server only feature. Will not affect other databases
+            var temporalColumnIgnores = table.GetAnnotations()
+               .Where(a => a.Name == SqlServerAnnotationNames.TemporalPeriodStartPropertyName ||
+                           a.Name == SqlServerAnnotationNames.TemporalPeriodEndPropertyName)
+               .Select(a => (string)a.Value)
+               .ToArray();
+
             //This finds all the Owned Types and THP
             foreach (var property in entityType.GetProperties())
             {
+                // Ignore temporal shadow properties (SQL Server)
+                if (property.IsShadowProperty() && temporalColumnIgnores.Contains(property.Name))
+                    continue;
+
                 var colLogger = new CompareLogger2(CompareType.Property, property.Name, log.SubLogs, _ignoreList, () => _hasErrors = true);
                 var columnName = GetColumnNameTakingIntoAccountSchema(property, table, isView);
                 if (columnName == null)
