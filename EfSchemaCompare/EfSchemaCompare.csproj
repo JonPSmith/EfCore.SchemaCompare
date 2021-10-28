@@ -2,7 +2,9 @@
 
   <PropertyGroup>
     <TargetFramework>net6.0</TargetFramework>
+    <GenerateDocumentationFile>true</GenerateDocumentationFile>
   </PropertyGroup>
+
 
   <ItemGroup>
     <PackageReference Include="Microsoft.EntityFrameworkCore.Design" Version="6.0.0-rc.2.21480.5" />
@@ -10,7 +12,6 @@
     <PackageReference Include="Microsoft.EntityFrameworkCore.SqlServer" Version="6.0.0-rc.2.21480.5" />
     <PackageReference Include="Microsoft.Extensions.Configuration.Json" Version="6.0.0-rc.2.21480.5" />
     <PackageReference Include="Newtonsoft.Json" Version="12.0.3" />
-  </ItemGroup>
 
   <PropertyGroup>
     <PackageId>EfCore.SchemaCompare</PackageId>
@@ -32,10 +33,6 @@
     <RepositoryUrl>https://github.com/JonPSmith/EfCore.SchemaCompare</RepositoryUrl>
     <PackageIcon>EfSchemaCompareNuGetIcon128.png</PackageIcon>
     <PackageLicenseExpression>MIT</PackageLicenseExpression>
-  </PropertyGroup>
-
-  <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Release|AnyCPU'">
-    <DocumentationFile>bin\Release\EfSchemaCompare.xml</DocumentationFile>
   </PropertyGroup>
 
   <ItemGroup>
