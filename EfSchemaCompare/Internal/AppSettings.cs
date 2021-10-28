@@ -16,22 +16,25 @@ namespace EfSchemaCompare.Internal
         /// </summary>
         /// <param name="callingAssembly">If called by an internal method you must provide the other calling assembly</param>
         /// <param name="settingsFilename">This allows you to open a json configuration file of this given name</param>
-        /// <returns></returns>
+        /// <returns>Returns the IConfigurationRoot, or null if can't find the directory</returns>
         public static IConfigurationRoot GetConfiguration(Assembly callingAssembly = null, string settingsFilename = "appsettings.json") 
         {
-            var callingProjectPath =                      //#B
-                GetCallingAssemblyTopLevelDir(callingAssembly ?? Assembly.GetCallingAssembly()); //#B
-            var builder = new ConfigurationBuilder()               //#C
-                .SetBasePath(callingProjectPath)                   //#C
-                .AddJsonFile(settingsFilename, optional: true); //#C
-            return builder.Build(); //#D
+            var callingProjectPath =                  
+                GetCallingAssemblyTopLevelDir(callingAssembly ?? Assembly.GetCallingAssembly());
+            if (callingProjectPath == null)
+                return null;
+            
+            var builder = new ConfigurationBuilder()   
+                .SetBasePath(callingProjectPath)  
+                .AddJsonFile(settingsFilename, optional: true); 
+            return builder.Build(); 
         }
 
         /// <summary>
         /// This will return the absolute file path of the calling assembly, or the assembly provided 
         /// </summary>
         /// <param name="callingAssembly">optional: provide the calling assembly. default is to use the current calling assembly</param>
-        /// <returns></returns>
+        /// <returns>The directory, or null if can't be found</returns>
         [MethodImpl(MethodImplOptions.NoInlining)] //see https://docs.microsoft.com/en-gb/dotnet/api/system.reflection.assembly.getcallingassembly?view=netstandard-2.0#System_Reflection_Assembly_GetCallingAssembly
         private static string GetCallingAssemblyTopLevelDir(Assembly callingAssembly = null)
         {
@@ -40,7 +43,8 @@ namespace EfSchemaCompare.Internal
 
             var indexOfPart = pathToManipulate.IndexOf(binDir, StringComparison.OrdinalIgnoreCase);
             if (indexOfPart <= 0)
-                throw new Exception($"Did not find '{binDir}' in the assembly. Do you need to provide the callingAssembly parameter?");
+                //could not find the folder
+                return null;
 
             return pathToManipulate.Substring(0, indexOfPart);
         }

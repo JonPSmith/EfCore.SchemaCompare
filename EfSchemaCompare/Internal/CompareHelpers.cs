@@ -23,15 +23,21 @@ namespace EfSchemaCompare.Internal
         /// <returns></returns>
         public static string FormSchemaTableFromModel(this IEntityType entityType)
         {
+            var tableOrViewName = !string.IsNullOrEmpty((string?)entityType.GetAnnotation(RelationalAnnotationNames.TableName).Value)
+                ? RelationalAnnotationNames.TableName
+                : RelationalAnnotationNames.ViewName;
+
+            var tableOrViewSchema = !string.IsNullOrEmpty((string?)entityType.GetAnnotation(RelationalAnnotationNames.TableName).Value)
+                ? RelationalAnnotationNames.Schema
+                : RelationalAnnotationNames.ViewSchema;
+
             var viewAnnotations = entityType.GetAnnotations()
-                .Where(a => a.Name == RelationalAnnotationNames.ViewName ||
-                            a.Name == RelationalAnnotationNames.ViewSchema)
-                .OrderBy(a =>a.Name)
-                .Select(a => (string)a.Value)
-                .ToList();
+                .Where(a => a.Name == tableOrViewName ||
+                            a.Name == tableOrViewSchema)
+                .ToArray();
 
             return viewAnnotations.Any()
-                ? FormSchemaTable(viewAnnotations.Last(), viewAnnotations.First())
+                ? FormSchemaTable((string)viewAnnotations.First(a => a.Name == tableOrViewSchema).Value, (string)viewAnnotations.First(a => a.Name == tableOrViewName).Value)
                 : entityType.GetTableName() == null
                     ? null
                     : FormSchemaTable(entityType.GetSchema(), entityType.GetTableName());

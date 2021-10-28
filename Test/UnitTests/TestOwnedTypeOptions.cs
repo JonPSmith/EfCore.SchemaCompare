@@ -6,6 +6,7 @@ using DataLayer.OwnedTypes.EfCode;
 using EfSchemaCompare;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Infrastructure;
+using Microsoft.EntityFrameworkCore.Metadata;
 using Test.Helpers;
 using TestSupport.EfHelpers;
 using Xunit;
@@ -139,8 +140,8 @@ namespace Test.UnitTests
                 builder => builder.ReplaceService<IModelCacheKeyFactory, OwnedTypeModelCacheKeyFactory>());
             using var context = new OwnedTypeDbContext(options, OwnedTypeDbContext.Configs.NestedNull);
 
-            //ATTEMPT 
-            var modelString = context.Model.GetRelationalModel().ToDebugString(MetadataDebugStringOptions.LongDefault);
+            //ATTEMPT
+            var modelString = context.GetService<IDesignTimeModel>().Model.ToDebugString(MetadataDebugStringOptions.LongDefault);
 
             //VERIFY
             _output.WriteLine(modelString);

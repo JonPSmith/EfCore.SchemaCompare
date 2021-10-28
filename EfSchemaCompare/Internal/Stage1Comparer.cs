@@ -11,6 +11,7 @@ using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Infrastructure;
 using Microsoft.EntityFrameworkCore.Metadata;
 using Microsoft.EntityFrameworkCore.Scaffolding.Metadata;
+using Microsoft.EntityFrameworkCore.SqlServer.Metadata.Internal;
 using Microsoft.EntityFrameworkCore.Storage;
 
 [assembly: InternalsVisibleTo("Test")]
@@ -207,9 +208,20 @@ namespace EfSchemaCompare.Internal
 
             var columnDict = table.Columns.ToDictionary(x => x.Name, _caseComparer);
 
+            // SQL Server only feature. Will not affect other databases
+            var temporalColumnIgnores = table.GetAnnotations()
+               .Where(a => a.Name == SqlServerAnnotationNames.TemporalPeriodStartPropertyName ||
+                           a.Name == SqlServerAnnotationNames.TemporalPeriodEndPropertyName)
+               .Select(a => (string)a.Value)
+               .ToArray();
+
             //This finds all the Owned Types and THP
             foreach (var property in entityType.GetProperties())
             {
+                // Ignore temporal shadow properties (SQL Server)
+                if (property.IsShadowProperty() && temporalColumnIgnores.Contains(property.Name))
+                    continue;
+
                 var colLogger = new CompareLogger2(CompareType.Property, property.Name, log.SubLogs, _ignoreList, () => _hasErrors = true);
                 var columnName = GetColumnNameTakingIntoAccountSchema(property, table, isView);
                 if (columnName == null)
@@ -264,9 +276,9 @@ namespace EfSchemaCompare.Internal
                 error |= logger.CheckDifferent(property.GetIsStored()?.ToString() ?? false.ToString()
                     , column.IsStored.ToString(),
                     CompareAttributes.PersistentComputedColumn, _caseComparison);
-            var defaultValue = property.GetDefaultValue() != null
-                ? _relationalTypeMapping.FindMapping(property.GetDefaultValue().GetType())
-                    .GenerateSqlLiteral(property.GetDefaultValue())
+            var defaultValue = property.TryGetDefaultValue(out var propDefaultValue)
+                ? _relationalTypeMapping.FindMapping(propDefaultValue.GetType())
+                   .GenerateSqlLiteral(propDefaultValue)
                 : property.GetDefaultValueSql().RemoveUnnecessaryBrackets();
             error |= logger.CheckDifferent(defaultValue,
                     column.DefaultValueSql.RemoveUnnecessaryBrackets(), CompareAttributes.DefaultValueSql, _caseComparison);
@@ -300,6 +312,14 @@ namespace EfSchemaCompare.Internal
 
         private bool CheckValueGenerated(CompareLogger2 logger, IProperty property, DatabaseColumn column)
         {
+            // Leave owned value generated properties to be checked by the owning entity
+            if (property.IsPrimaryKey() && property.DeclaringEntityType.IsOwned())
+                return false;
+
+            // Not strictly owned, but acts like owned - Specialized DB Context
+            if (property.IsPrimaryKey() && property.FindFirstPrincipal() != null && property.FindFirstPrincipal().DeclaringEntityType != property.DeclaringEntityType)
+                return false;
+
             var colValGen = column.ValueGenerated.ConvertNullableValueGenerated(column.ComputedColumnSql, column.DefaultValueSql);
             if (colValGen == ValueGenerated.Never.ToString()
                 //There is a case where the property is part of the primary key and the key is not set in the database

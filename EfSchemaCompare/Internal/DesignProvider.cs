@@ -43,7 +43,7 @@ namespace EfSchemaCompare.Internal
             throw new InvalidOperationException("Your database provider isn't built into EfCore.SchemaCompare. This means you need to\n"+
                                                 "use the CompareEfWithDb<T> method which takes in a design time class for your database. e.g.\n" +
                                                 "comparer.CompareEfWithDb<NpgsqlDesignTimeServices>(context) for a Npgsql PostgreSql database provider.\n" +
-                                                "Also look at the documentation in the EfCore.SchemaCompare repo's wiki");
+                                                "Also look at the documentation in the EfCore.SchemaCompare README file");
         }
 
         /// <summary>

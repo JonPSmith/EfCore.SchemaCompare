@@ -13,7 +13,7 @@ namespace DataLayer.MyEntityDb
             NormalTable, TableWithSchema, WholeSchemaSet, DifferentPk, 
             ComputedCol, PersistentComputedColumn, DefaultValue,
             ShadowProp, HasIndex, HasUniqueIndex, 
-            DifferentColName, StringIsRequired, StringIsAscii 
+            DifferentColName, StringIsRequired, StringIsAscii, Temporal
         }
         
         public Configs Config { get; }
@@ -91,6 +91,9 @@ namespace DataLayer.MyEntityDb
                 case Configs.StringIsAscii:
                     modelBuilder.Entity<MyEntity>().ToTable("MyEntites");
                     modelBuilder.Entity<MyEntity>().Property(p => p.MyString).IsUnicode(false);
+                    break;
+                case Configs.Temporal:
+                    modelBuilder.Entity<MyEntity>().ToTable("MyEntites", b => b.IsTemporal());
                     break;
                 default:
                     throw new ArgumentOutOfRangeException();

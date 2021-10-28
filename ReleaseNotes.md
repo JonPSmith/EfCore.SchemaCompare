@@ -1,5 +1,21 @@
 # Release notes
 
+## 6.0.0-rc2
+
+- Updated solution to .NET 6.0 RC2
+
+## 5.1.4
+
+- Removed development dependency of package. It made it harder to EfCore.SchemaCompare in unit tests
+
+## 5.1.3
+
+- Make package a development dependency - see issue #4
+- Updated the exception message about how to use another database type.
+
+## 5.1.2
+
+- Bug fix - looking for appsettings.json file throws an exception if it can't find the folder. See issue #3
 
 ## 5.1.1
 

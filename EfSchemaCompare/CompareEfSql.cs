@@ -188,7 +188,7 @@ namespace EfSchemaCompare
         private string GetConfigurationOrActualString(string configOrConnectionString)
         {
             var config = AppSettings.GetConfiguration(_callingAssembly);
-            var connectionFromConfigFile = config.GetConnectionString(configOrConnectionString);
+            var connectionFromConfigFile = config?.GetConnectionString(configOrConnectionString);
             return connectionFromConfigFile ?? configOrConnectionString;
         }
     }
