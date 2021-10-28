@@ -1,8 +1,8 @@
 # Release notes
 
-## 6.0.0-rc2
+## 6.0.0-preview001
 
-- Updated solution to .NET 6.0 RC2
+- Updated to .NET 6.0 preview RC.2 (thanks to Wade Baglin, GitHub @pleb)
 
 ## 5.1.4
 

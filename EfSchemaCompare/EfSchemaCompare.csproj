@@ -12,7 +12,8 @@
     <PackageReference Include="Microsoft.EntityFrameworkCore.SqlServer" Version="6.0.0-rc.2.21480.5" />
     <PackageReference Include="Microsoft.Extensions.Configuration.Json" Version="6.0.0-rc.2.21480.5" />
     <PackageReference Include="Newtonsoft.Json" Version="12.0.3" />
-
+  </ItemGroup>
+	
   <PropertyGroup>
     <PackageId>EfCore.SchemaCompare</PackageId>
     <PackageVersion>6.0.0-preview001</PackageVersion>
@@ -23,8 +24,8 @@
     <Description>Useful tool if you  are changing the schema of your database's schema outside of EF Core' migrations, say by using SQL change scripts. See readme file on github.</Description>
     <PackageRequireLicenseAcceptance>false</PackageRequireLicenseAcceptance>
     <PackageReleaseNotes>
-        - Updated to Net6 preview
-    </PackageReleaseNotes>
+		Updated to .NET 6.0 preview RC.2 (thanks to Wade Baglin, GitHub @pleb)
+	</PackageReleaseNotes>
     <Copyright>Copyright (c) 2020 Jon P Smith. Licenced under MIT licence</Copyright>
     <PackageTags>Entity Framework Core, Database</PackageTags>
     <IsPackable>true</IsPackable>

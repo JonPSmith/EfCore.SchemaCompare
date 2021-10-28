@@ -33,7 +33,7 @@ namespace Test.UnitTests
             var hasErrors = comparer.CompareEfWithDb(context);
 
             //VERIFY
-            hasErrors.ShouldBeFalse(comparer.GetAllErrors);
+            hasErrors.ShouldBeTrue(comparer.GetAllErrors);
         }
 
         [Fact]
