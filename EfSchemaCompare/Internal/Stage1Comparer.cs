@@ -210,8 +210,10 @@ namespace EfSchemaCompare.Internal
 
             // SQL Server only feature. Will not affect other databases
             var temporalColumnIgnores = table.GetAnnotations()
+#pragma warning disable EF1001 // Internal EF Core API usage.
                .Where(a => a.Name == SqlServerAnnotationNames.TemporalPeriodStartPropertyName ||
                            a.Name == SqlServerAnnotationNames.TemporalPeriodEndPropertyName)
+#pragma warning restore EF1001 // Internal EF Core API usage.
                .Select(a => (string)a.Value)
                .ToArray();
 
@@ -328,6 +330,7 @@ namespace EfSchemaCompare.Internal
                 //We assume that a integer of some form should be provided by the database
                 && !IntegerTypes.Contains(property.ClrType))
                 return false;
+
             return logger.CheckDifferent(property.ValueGenerated.ToString(),
                 colValGen, CompareAttributes.ValueGenerated, _caseComparison);
         }
