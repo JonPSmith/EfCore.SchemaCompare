@@ -19,6 +19,8 @@ namespace Test.UnitTests
             _output = output;
         }
 
+        // This unit test failes to show that EfCore.SchemaCompare
+        // doesn't currently handle Table-Per-Table entities
         [Fact]
         public void CompareTptContext()
         {
@@ -33,7 +35,7 @@ namespace Test.UnitTests
             var hasErrors = comparer.CompareEfWithDb(context);
 
             //VERIFY
-            hasErrors.ShouldBeTrue(comparer.GetAllErrors);
+            hasErrors.ShouldBeFalse(comparer.GetAllErrors);
         }
 
         [Fact]
