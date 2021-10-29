@@ -2,9 +2,14 @@
 
 If you are changing the schema of your database's schema outside of EF Core' migrations, say by using SQL change scripts, then this library can quickly tell you if the a specific database schema and EF Core's `Model` of the database are in step.
 
-The first number in the version number of this library defines what version of EF Core it works for. e.g. EfCore.SchemaCompare version 5 is works with to EF Core 5. If you are looking for the EfCore.SchemaCompare for EF Core version 2 or 3 you will find it in the [EfCore.TestSupport version 3.2.0](https://www.nuget.org/packages/EfCore.TestSupport/3.2.0) (NOTE: This older version has most, but not all the features this version has).
+The first number in the version number of this library defines what version of EF Core it works for. e.g. 
 
-The EfCore.SchemaCompare library (shortened to EfSchemaCompare in the documentations) is available on [NuGet as EfCore.SchemaCompare](https://www.nuget.org/packages/EfCore.SchemaCompare/) and is an open-source library under the MIT licence. See [ReleaseNotes](https://github.com/JonPSmith/EfCore.SchemaCompare/blob/master/ReleaseNotes.md) for details of changes and information on versions before EF Core 5.
+- EfCore.SchemaCompare version 5 is works with to EF Core 5. 
+- EfCore.SchemaCompare version 6 is works with to EF Core 6 ... an so on
+
+_If you are looking for the EfCore.SchemaCompare for EF Core version 2 or 3 you will find it in the [EfCore.TestSupport version 3.2.0](https://www.nuget.org/packages/EfCore.TestSupport/3.2.0) (NOTE: This older version has most, but not all the features this version has)._
+
+The EfCore.SchemaCompare library (shortened to EfSchemaCompare in the documentations) is available on [NuGet as EfCore.SchemaCompare](https://www.nuget.org/packages/EfCore.SchemaCompare/) and is an open-source library under the MIT licence. See [ReleaseNotes](https://github.com/JonPSmith/EfCore.SchemaCompare/blob/master/ReleaseNotes.md) for details of changes and information on versions from EF Core 5 onwards.
 
 **TABLE OF CONTENT**
 
