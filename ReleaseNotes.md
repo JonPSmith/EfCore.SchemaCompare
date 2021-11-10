@@ -1,5 +1,10 @@
 # Release notes
 
+## 6.0.0
+
+- Updated to EF Core 6.0 (thanks to Wade Baglin, GitHub @pleb)
+- Added TemporalTable to compare (thanks to Wade Baglin, GitHub @pleb)
+
 ## 6.0.0-preview001
 
 - Updated to .NET 6.0 preview RC.2 (thanks to Wade Baglin, GitHub @pleb)

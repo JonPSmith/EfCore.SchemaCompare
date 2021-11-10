@@ -19,7 +19,7 @@ namespace Test.UnitTests
             _output = output;
         }
 
-        // This unit test failes to show that EfCore.SchemaCompare
+        // This unit test FAILS to show that EfCore.SchemaCompare
         // doesn't currently handle Table-Per-Type entities
         [Fact]
         public void CompareTptContext()
@@ -35,6 +35,7 @@ namespace Test.UnitTests
             var hasErrors = comparer.CompareEfWithDb(context);
 
             //VERIFY
+            _output.WriteLine("THIS TEST FAILS to show that this library doesn't handle Table-Per-Type entities");
             hasErrors.ShouldBeFalse(comparer.GetAllErrors);
         }
 
