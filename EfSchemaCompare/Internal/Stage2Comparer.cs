@@ -23,7 +23,7 @@ namespace EfSchemaCompare.Internal
         {
             _databaseModel = databaseModel;
             _ignoreList = config?.LogsToIgnore ?? new List<CompareLog>();
-            _caseComparer = StringComparer.CurrentCulture;          //Turned off CaseComparer as doesn't work with EF Core 5
+            _caseComparer = config?.CaseComparer ?? StringComparer.CurrentCulture;//Turned off CaseComparer as doesn't work with EF Core 5
         }
 
         public IReadOnlyList<CompareLog> Logs => _logs.ToImmutableList();

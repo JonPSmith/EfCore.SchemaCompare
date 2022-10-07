@@ -37,6 +37,15 @@ namespace EfSchemaCompare
         public IReadOnlyList<CompareLog> LogsToIgnore => _logsToIgnore.ToImmutableList();
 
         /// <summary>
+        /// Specifies the culture, case, and sort rules to be used
+        /// </summary>
+        public StringComparison? CaseComparison { get; set; }
+        /// <summary>
+        /// Represents a string comparison operation that uses specific case and culture-based or ordinal comparison rules. 
+        /// </summary>
+        public StringComparer CaseComparer { get; set; }
+
+        /// <summary>
         /// This allows you to clip a set of errors strings and add them as ignore items
         /// </summary>
         /// <param name="textWithNewlineBetweenErrors"></param>

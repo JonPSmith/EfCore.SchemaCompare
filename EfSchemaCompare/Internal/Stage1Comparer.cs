@@ -43,8 +43,8 @@ namespace EfSchemaCompare.Internal
             _relationalTypeMapping = context.GetService<IRelationalTypeMappingSource>();
             _logs = logs ?? new List<CompareLog>();
             _ignoreList = config?.LogsToIgnore ?? new List<CompareLog>();
-            _caseComparer = StringComparer.CurrentCulture;          //Turned off CaseComparer as doesn't work with EF Core 5
-            _caseComparison = _caseComparer.GetStringComparison();
+            _caseComparer = config?.CaseComparer ?? StringComparer.CurrentCulture;          //Turned off CaseComparer as doesn't work with EF Core 5
+            _caseComparison = config?.CaseComparison ?? _caseComparer.GetStringComparison();
         }
 
 

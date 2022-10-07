@@ -58,7 +58,7 @@ namespace EfSchemaCompare.Internal
                 .AddEntityFrameworkDesignTimeServices()
                 .AddSingleton<IOperationReporter, OperationReporter>()
                 .AddSingleton<IOperationReportHandler, OperationReportHandler>();
-
+            
             designTimeService.ConfigureDesignTimeServices(serviceCollection);
             return serviceCollection.BuildServiceProvider();
         }
