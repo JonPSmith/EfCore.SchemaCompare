@@ -5,11 +5,17 @@ using System;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Design;
 using Microsoft.EntityFrameworkCore.Design.Internal;
+using Microsoft.EntityFrameworkCore.Diagnostics;
 using Microsoft.EntityFrameworkCore.Infrastructure;
+using Microsoft.EntityFrameworkCore.Scaffolding;
 using Microsoft.EntityFrameworkCore.Sqlite.Design.Internal;
 using Microsoft.EntityFrameworkCore.SqlServer.Design.Internal;
+using Microsoft.EntityFrameworkCore.SqlServer.Diagnostics.Internal;
+using Microsoft.EntityFrameworkCore.SqlServer.Scaffolding.Internal;
+using Microsoft.EntityFrameworkCore.SqlServer.Storage.Internal;
 using Microsoft.EntityFrameworkCore.Storage;
 using Microsoft.Extensions.DependencyInjection;
+using Microsoft.Extensions.DependencyInjection.Extensions;
 
 #pragma warning disable EF1001 // Internal EF Core API usage.
 namespace EfSchemaCompare.Internal
@@ -55,9 +61,11 @@ namespace EfSchemaCompare.Internal
         {
             // Add base services for scaffolding
             var serviceCollection = new ServiceCollection()
-                .AddEntityFrameworkDesignTimeServices()
-                .AddSingleton<IOperationReporter, OperationReporter>()
-                .AddSingleton<IOperationReportHandler, OperationReportHandler>();
+                    .AddSingleton<LoggingDefinitions, SqlServerLoggingDefinitions>()
+                    .AddSingleton<IRelationalTypeMappingSource, SqlServerTypeMappingSource>()
+                    .AddSingleton<IDatabaseModelFactory, SqlServerDatabaseModelFactory>()
+                    .AddSingleton<IProviderConfigurationCodeGenerator, SqlServerCodeGenerator>()
+                    .AddSingleton<IAnnotationCodeGenerator, SqlServerAnnotationCodeGenerator>();
 
             designTimeService.ConfigureDesignTimeServices(serviceCollection);
             return serviceCollection.BuildServiceProvider();
