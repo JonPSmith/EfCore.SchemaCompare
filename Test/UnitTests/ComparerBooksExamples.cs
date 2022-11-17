@@ -93,41 +93,6 @@ namespace Test.UnitTests
         }
 
         [Fact]
-        public void CompareViaType()
-        {
-            //SETUP
-            var options = this.CreateUniqueClassOptions<BookContext>();
-            using var context = new BookContext(options);
-            context.Database.EnsureClean();
-
-            var comparer = new CompareEfSql();
-
-            //ATTEMPT
-            var hasErrors = comparer.CompareEfWithDb<SqlServerDesignTimeServices>(context);
-
-            //VERIFY
-            hasErrors.ShouldBeFalse(comparer.GetAllErrors);
-        }
-
-        [Fact]
-        public void CompareViaTypeWithConnection()
-        {
-            //SETUP
-            var options = this.CreateUniqueClassOptions<BookContext>();
-            using var context = new BookContext(options);
-            context.Database.EnsureClean();
-
-            var comparer = new CompareEfSql();
-
-            //ATTEMPT
-            var hasErrors =
-                comparer.CompareEfWithDb<SqlServerDesignTimeServices>(context.Database.GetConnectionString(), context);
-
-            //VERIFY
-            hasErrors.ShouldBeFalse(comparer.GetAllErrors);
-        }
-
-        [Fact]
         public void CompareBadConnection()
         {
             //SETUP

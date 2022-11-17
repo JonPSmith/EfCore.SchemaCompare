@@ -61,22 +61,6 @@ namespace EfSchemaCompare
         }
 
         /// <summary>
-        /// This will compare one or more DbContext against database pointed to the first DbContext
-        /// using the DesignTimeServices type for T.
-        /// </summary>
-        /// <typeparam name="T">Must be the design time provider for the database provider you want to use, e.g. MySqlDesignTimeServices</typeparam>
-        /// <param name="dbContexts">One or more dbContext instances to be compared with the database</param>
-        /// <returns>true if any errors found, otherwise false</returns>
-        public bool CompareEfWithDb<T>(params DbContext[] dbContexts) where T : IDesignTimeServices, new()
-        {
-            if (dbContexts == null) throw new ArgumentNullException(nameof(dbContexts));
-            if (dbContexts.Length == 0)
-                throw new ArgumentException("You must provide at least one DbContext instance.", nameof(dbContexts));
-            var designTimeService = new T();
-            return FinishRestOfCompare(dbContexts[0].Database.GetDbConnection().ConnectionString, dbContexts, designTimeService);
-        }
-
-        /// <summary>
         /// This will compare one or more DbContext against database pointed to by the connectionString.
         /// </summary>
         /// <param name="configOrConnectionString">This should either be a 
@@ -90,38 +74,15 @@ namespace EfSchemaCompare
             if (dbContexts.Length == 0)
                 throw new ArgumentException("You must provide at least one DbContext instance.", nameof(dbContexts));
 
-            var designTimeService = dbContexts[0].GetDesignTimeService();
-            return FinishRestOfCompare(GetConfigurationOrActualString(configOrConnectionString), dbContexts, designTimeService);
-        }
-
-
-        /// <summary>
-        /// This will compare one or more DbContext against database pointed to by the connectionString 
-        /// using the DesignTimeServices type for T 
-        /// </summary>
-        /// <typeparam name="T">Must be the design time provider for the database provider you want to use, e.g. MySqlDesignTimeServices</typeparam>
-        /// <param name="configOrConnectionString">This should either be a 
-        /// connection string or the name of a connection string in the appsetting.json file.
-        /// </param>
-        /// <param name="dbContexts">One or more dbContext instances to be compared with the database</param>
-        /// <returns>true if any errors found, otherwise false</returns>
-        public bool CompareEfWithDb<T>(string configOrConnectionString, params DbContext[] dbContexts) where T: IDesignTimeServices, new()
-        {
-            if (configOrConnectionString == null) throw new ArgumentNullException(nameof(configOrConnectionString));
-            if (dbContexts == null) throw new ArgumentNullException(nameof(dbContexts));
-            if (dbContexts.Length == 0)
-                throw new ArgumentException("You must provide at least one DbContext instance.", nameof(dbContexts));
-
-            var designTimeService = new T();
-            return FinishRestOfCompare(GetConfigurationOrActualString(configOrConnectionString), dbContexts, designTimeService);
+            return FinishRestOfCompare(GetConfigurationOrActualString(configOrConnectionString), dbContexts);
         }
 
         //------------------------------------------------------
         //private methods
 
-        private bool FinishRestOfCompare(string connectionString, DbContext[] dbContexts, IDesignTimeServices designTimeService)
+        private bool FinishRestOfCompare(string connectionString, DbContext[] dbContexts)
         {
-            var databaseModel = GetDatabaseModelViaScaffolder(dbContexts, connectionString, designTimeService);
+            var databaseModel = GetDatabaseModelViaScaffolder(dbContexts, connectionString);
             bool hasErrors = false;
             foreach (var context in dbContexts)
             {
@@ -138,12 +99,11 @@ namespace EfSchemaCompare
             return hasErrors;
         }
 
-        private  DatabaseModel GetDatabaseModelViaScaffolder(DbContext[] contexts, string connectionString, IDesignTimeServices designTimeService)
+        private  DatabaseModel GetDatabaseModelViaScaffolder(DbContext[] contexts, string connectionString)
         {
-            var serviceProvider = designTimeService.GetDesignTimeProvider();
-            var factory = (IDatabaseModelFactory) serviceProvider.GetService(typeof(IDatabaseModelFactory));
+            var databaseFactory = contexts[0].GetDatabaseModelFactory();
 
-            var databaseModel = factory.Create(connectionString,
+            var databaseModel = databaseFactory.Create(connectionString,
                 new DatabaseModelFactoryOptions(new string[] { }, new string[] { }));
             RemoveAnyTableToIgnore(databaseModel, contexts);
             return databaseModel;

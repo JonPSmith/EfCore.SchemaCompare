@@ -33,11 +33,8 @@ namespace Test.UnitTests
                 builder => builder.ReplaceService<IModelCacheKeyFactory, MyEntityModelCacheKeyFactory>());
             using var context = new MyEntityDbContext(options, config);
             context.Database.EnsureClean();
-            
-            var dtService = context.GetDesignTimeService();
-            var serviceProvider = dtService.GetDesignTimeProvider();
-            var factory = serviceProvider.GetService<IDatabaseModelFactory>();
 
+            var factory = context.GetDatabaseModelFactory();
 
             //ATTEMPT
             var database = factory.Create(context.Database.GetConnectionString(),
@@ -58,9 +55,7 @@ namespace Test.UnitTests
             using var context = new MyEntityDbContext(options, config);
             context.Database.EnsureCreated();
 
-            var dtService = context.GetDesignTimeService();
-            var serviceProvider = dtService.GetDesignTimeProvider();
-            var factory = serviceProvider.GetService<IDatabaseModelFactory>();
+            var factory = context.GetDatabaseModelFactory();
 
             //ATTEMPT
             var database = factory.Create(context.Database.GetConnectionString(),

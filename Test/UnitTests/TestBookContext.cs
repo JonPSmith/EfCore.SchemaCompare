@@ -5,8 +5,12 @@ using System.Linq;
 using DataLayer.BookApp.EfCode;
 using EfSchemaCompare.Internal;
 using Microsoft.EntityFrameworkCore;
+using Microsoft.EntityFrameworkCore.Diagnostics;
+using Microsoft.EntityFrameworkCore.Infrastructure;
 using Microsoft.EntityFrameworkCore.Scaffolding;
 using Microsoft.EntityFrameworkCore.SqlServer.Design.Internal;
+using Microsoft.EntityFrameworkCore.SqlServer.Scaffolding.Internal;
+using Microsoft.EntityFrameworkCore.Storage;
 using Microsoft.Extensions.DependencyInjection;
 using Test.Helpers;
 using TestSupport.EfHelpers;
@@ -17,6 +21,24 @@ namespace Test.UnitTests
 {
     public class TestBookContext
     {
+
+        [Fact]
+        public void Test()
+        {
+            //SETUP
+            var options = SqliteInMemory.CreateOptions<BookContext>();
+            using var context = new BookContext(options);
+            context.Database.EnsureCreated();
+
+            //ATTEMPT 
+            var dbProvider = context.GetService<IDatabaseProvider>();
+            var x = context.GetService<IDiagnosticsLogger < DbLoggerCategory.Scaffolding >>();
+            var databaseProvider = new SqlServerDatabaseModelFactory(x);
+
+            //VERIFY
+        }
+
+
         [Fact]
         public void TestSeedContextOk()
         {
@@ -95,8 +117,7 @@ namespace Test.UnitTests
             context.Database.EnsureCreated();
 
             //ATTEMPT 
-            var serviceProvider = new SqlServerDesignTimeServices().GetDesignTimeProvider();
-            var factory = serviceProvider.GetService<IDatabaseModelFactory>();
+            var factory = context.GetDatabaseModelFactory();
 
             //ATTEMPT 
 

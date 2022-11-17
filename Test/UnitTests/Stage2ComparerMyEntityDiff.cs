@@ -33,14 +33,12 @@ namespace Test.UnitTests
             _output = output;
             var options = this
                 .CreateUniqueClassOptions<MyEntityDbContext>();
-            var serviceProvider = new SqlServerDesignTimeServices().GetDesignTimeProvider();
-            var factory = serviceProvider.GetService<IDatabaseModelFactory>();
 
             using (var context = new MyEntityDbContext(options, MyEntityDbContext.Configs.NormalTable))
             {
                 var connectionString = context.Database.GetDbConnection().ConnectionString;
                 context.Database.EnsureClean();
-
+                var factory = context.GetDatabaseModelFactory();
                 _databaseModel = factory.Create(connectionString,
                     new DatabaseModelFactoryOptions(new string[] { }, new string[] { }));
             }
@@ -110,9 +108,7 @@ namespace Test.UnitTests
                 builder => builder.ReplaceService<IModelCacheKeyFactory, MyEntityModelCacheKeyFactory>());
             using (var context = new MyEntityDbContext(options, MyEntityDbContext.Configs.HasIndex))
             {
-                var dtService = context.GetDesignTimeService();
-                var serviceProvider = dtService.GetDesignTimeProvider();
-                var factory = serviceProvider.GetService<IDatabaseModelFactory>();
+                var factory = context.GetDatabaseModelFactory();
                 var connectionString = context.Database.GetDbConnection().ConnectionString;
 
                 context.Database.EnsureClean();

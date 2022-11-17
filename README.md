@@ -17,6 +17,7 @@ The EfCore.SchemaCompare library (shortened to EfSchemaCompare in the documentat
 2. [List of limitations](#List-of-limitations)
 3. [Introduction to how EfSchemaCompare works](#Introduction-to-how-EfSchemaCompare-works)
 4. [How to use EfSchemaCompare](#How-to-use-EfSchemaCompare)
+5. [Different parameters to the `CompareEfWithDb` method](#different-parameters-to-the-compareefwithdb-method)
 5. [Understanding the error messages](#Understanding-the-error-messages)
 6. [How to suppress certain error messages](#How-to-suppress-certain-error-messages)
 7. [Other configuration options](#Other-configuration-options)
@@ -54,8 +55,9 @@ The EfCore.SchemaCompare library (shortened to EfSchemaCompare in the documentat
 ## List of limitations
 
 - The EF Core's scaffolder doesn't read in any index on the foreign key (the scaffolder assumes EF Core will do that by default). That means I can't check that there is an index on a foreign key.
-- Cannot correctly check Table-per-Type classes beacause EF Core doesn't currently hold that data. This is tracked by [Ef Core #19811](https://github.com/dotnet/efcore/issues/19811).
-- Cannot compare database tables/columns using InvariantCultureIgnoreCase. That is a EF Core 5 limitation.
+- Cannot correctly check Table-per-Type or Table-per-Class classes because EF Core doesn't currently hold that data. This is tracked by [Ef Core #19811](https://github.com/dotnet/efcore/issues/19811).
+- Cannot compare database tables/columns using InvariantCultureIgnoreCase. That is a EF Core 5+ limitation.
+- At the moment this library only supports SQL Server, Sqlite and PostgresSql.
 
 The following are things I haven't bothered to check.
 
@@ -126,29 +128,6 @@ public void CompareBookThenOrderAgainstBookOrderDatabaseViaAppSettings()
         //ATTEMPT
         //Its starts with the connection string/name  and then you can have as many contexts as you like
         var hasErrors = comparer.CompareEfWithDb(connectionStringName, context1, context2);
-
-        //VERIFY
-        hasErrors.ShouldBeFalse(comparer.GetAllErrors);
-    }
-}
-```
-
-### Using with database provider not installed in `EfCore.SchemaCompare` library
-
-The `EfCore.SchemaCompare` library only contains the SqlServer and Sqlite database providers. But if you want to run the compare with a specific database provider you can do that using the version with takes in a `IDesignTimeServices` for your database provider which contains the reverse engineering feature. For instance if you wanted to check a PostgreSql database you would use the following code shown below.
-
-```c#
-[Fact]
-public void TestCompareEfSqlPostgreSql()
-{
-    //SETUP
-    using (var context = new BookContext(_options))
-    {
-        var comparer = new CompareEfSql();
-
-        //ATTEMPT
-        //This will use the database provider design time type you gave to get the database information
-        var hasErrors = comparer.CompareEfWithDb<NpgsqlDesignTimeServices>(context));
 
         //VERIFY
         hasErrors.ShouldBeFalse(comparer.GetAllErrors);

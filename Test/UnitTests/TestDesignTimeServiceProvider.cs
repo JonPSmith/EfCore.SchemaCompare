@@ -3,16 +3,10 @@
 
 using DataLayer.BookApp.EfCode;
 using EfSchemaCompare.Internal;
-using Microsoft.EntityFrameworkCore;
-using Microsoft.EntityFrameworkCore.Infrastructure;
-using Microsoft.EntityFrameworkCore.Scaffolding;
-using Microsoft.EntityFrameworkCore.Scaffolding.Internal;
-using Microsoft.EntityFrameworkCore.Sqlite.Design.Internal;
 using Microsoft.EntityFrameworkCore.Sqlite.Scaffolding.Internal;
-using Microsoft.EntityFrameworkCore.SqlServer.Design.Internal;
 using Microsoft.EntityFrameworkCore.SqlServer.Scaffolding.Internal;
-using Microsoft.EntityFrameworkCore.Storage;
-using Microsoft.Extensions.DependencyInjection;
+using Npgsql.EntityFrameworkCore.PostgreSQL.Scaffolding.Internal;
+using Test.Helpers;
 using TestSupport.EfHelpers;
 using Xunit;
 using Xunit.Abstractions;
@@ -23,36 +17,25 @@ namespace Test.UnitTests
 {
     public class TestDesignTimeServiceProvider
     {
-        private readonly string _connectionString;
-        private readonly DbContextOptions<BookContext> _options;
-
         private readonly ITestOutputHelper _output;
 
         public TestDesignTimeServiceProvider(ITestOutputHelper output)
         {
             _output = output;
-            _options = this
-                .CreateUniqueClassOptions<BookContext>();
-
-            using (var context = new BookContext(_options))
-            {
-                _connectionString = context.Database.GetDbConnection().ConnectionString;
-                context.Database.EnsureCreated();
-            }
         }
 
         [Fact]
         public void GetDatabaseProviderSqlServer()
         {
             //SETUP
-            using (var context = new BookContext(_options))
+            var options = this.CreateUniqueClassOptions<BookContext>();
+            using (var context = new BookContext(options))
             {
                 //ATTEMPT 
-                var dbProvider = context.GetService<IDatabaseProvider>();
+                var providerName = context.Database.ProviderName;
 
                 //VERIFY
-                dbProvider.ShouldNotBeNull();
-                dbProvider.Name.ShouldEqual("Microsoft.EntityFrameworkCore.SqlServer");
+                providerName.ShouldEqual("Microsoft.EntityFrameworkCore.SqlServer");
             }
         }
 
@@ -64,31 +47,46 @@ namespace Test.UnitTests
             using (var context = new BookContext(optionsBuilder))
             {
                 //ATTEMPT 
-                var dbProvider = context.GetService<IDatabaseProvider>();
+                var providerName = context.Database.ProviderName;
 
                 //VERIFY
-                dbProvider.ShouldNotBeNull();
-                dbProvider.Name.ShouldEqual("Microsoft.EntityFrameworkCore.Sqlite");
+                providerName.ShouldEqual("Microsoft.EntityFrameworkCore.Sqlite");
             }
         }
 
         [Fact]
-        public void GetDesignTimeServiceProviderSqlServer()
+        public void GetDatabaseProviderPostgres()
         {
             //SETUP
-            using (var context = new BookContext(_options))
+            var options = this.CreatePostgreSqlUniqueClassOptions<BookContext>();
+            using (var context = new BookContext(options))
             {
                 //ATTEMPT 
-                var service = context.GetDesignTimeService();
+                var providerName = context.Database.ProviderName;
+
+                //VERIFY
+                providerName.ShouldEqual("Npgsql.EntityFrameworkCore.PostgreSQL");
+            }
+        }
+
+        [Fact]
+        public void GetDatabaseModelFactorySqlServer()
+        {
+            //SETUP
+            var options = this.CreateUniqueClassOptions<BookContext>();
+            using (var context = new BookContext(options))
+            {
+                //ATTEMPT 
+                var service = context.GetDatabaseModelFactory();
 
                 //VERIFY
                 service.ShouldNotBeNull();
-                service.ShouldBeType<SqlServerDesignTimeServices>();
+                service.ShouldBeType<SqlServerDatabaseModelFactory>();
             }
         }
 
         [Fact]
-        public void GetDesignTimeServiceProviderSqlite()
+        public void GetDatabaseModelFactorySqlite()
         {
             //SETUP
             var options = SqliteInMemory
@@ -96,87 +94,29 @@ namespace Test.UnitTests
             using (var context = new BookContext(options))
             {
                 //ATTEMPT 
-                var service = context.GetDesignTimeService();
+                var service = context.GetDatabaseModelFactory();
 
                 //VERIFY
                 service.ShouldNotBeNull();
-                service.ShouldBeType<SqliteDesignTimeServices>();
+                service.ShouldBeType<SqliteDatabaseModelFactory>();
             }
         }
 
         [Fact]
-        public void GetIDatabaseModelFactorySqlServer()
+        public void GetDatabaseModelFactoryPostgres()
         {
             //SETUP
-            using (var context = new BookContext(_options))
-            {
-                var dtService = context.GetDesignTimeService();
-                var serviceProvider = dtService.GetDesignTimeProvider();
-
-                //ATTEMPT 
-                var factory = serviceProvider.GetService<IDatabaseModelFactory>();
-
-                //VERIFY
-                factory.ShouldNotBeNull();
-                factory.ShouldBeType<SqlServerDatabaseModelFactory>();
-            }
-        }
-
-        [Fact]
-        public void GetIDatabaseModelFactorySqlite()
-        {
-            //SETUP
-            var options = SqliteInMemory
-                .CreateOptions<BookContext>();
+            var options = this.CreatePostgreSqlUniqueClassOptions<BookContext>();
             using (var context = new BookContext(options))
             {
-                var dtService = context.GetDesignTimeService();
-                var serviceProvider = dtService.GetDesignTimeProvider();
-
                 //ATTEMPT 
-                var factory = serviceProvider.GetService<IDatabaseModelFactory>();
+                var service = context.GetDatabaseModelFactory();
 
                 //VERIFY
-                factory.ShouldNotBeNull();
-                factory.ShouldBeType<SqliteDatabaseModelFactory>();
+                service.ShouldNotBeNull();
+                service.ShouldBeType<NpgsqlDatabaseModelFactory>();
             }
         }
 
-        [Fact]
-        public void GetIDatabaseModelFactoryDatabaseModel()
-        {
-            //SETUP
-            using (var context = new BookContext(_options))
-            {
-                var dtService = context.GetDesignTimeService();
-                var serviceProvider = dtService.GetDesignTimeProvider();
-                var factory = serviceProvider.GetService<IDatabaseModelFactory>();
-
-                //ATTEMPT
-
-                var databaseModel = factory.Create(context.Database.GetConnectionString(),
-                    new DatabaseModelFactoryOptions(new string[] { }, new string[] { }));
-
-                //VERIFY
-                foreach (var databaseModelTable in databaseModel.Tables)
-                {
-                    _output.WriteLine(databaseModelTable.Name);
-                }
-            }
-        }
-
-        [Fact]
-        public void GetIScaffoldingModelFactory()
-        {
-            //SETUP
-            var serviceProvider = new SqlServerDesignTimeServices().GetDesignTimeProvider();
-
-            //ATTEMPT 
-            var factory = serviceProvider.GetService<IScaffoldingModelFactory>();
-
-            //VERIFY
-            factory.ShouldNotBeNull();
-            factory.ShouldBeType<RelationalScaffoldingModelFactory>();
-        }
     }
 }

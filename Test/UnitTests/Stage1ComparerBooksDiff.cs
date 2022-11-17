@@ -39,9 +39,7 @@ namespace Test.UnitTests
             //SETUP
             using (var context = new BookContext(_options))
             {
-                var dtService = context.GetDesignTimeService();
-                var serviceProvider = dtService.GetDesignTimeProvider();
-                var factory = serviceProvider.GetService<IDatabaseModelFactory>();
+                var factory = context.GetDatabaseModelFactory();
                 var database = factory.Create(_connectionString,
                     new DatabaseModelFactoryOptions(new string[] { }, new string[] { }));
 

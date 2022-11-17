@@ -1,5 +1,9 @@
 # Release notes
 
+## 7.0.0
+
+- Updated to EF Core 7.0
+
 ## 6.0.0
 
 - Updated to EF Core 6.0 (thanks to Wade Baglin, GitHub @pleb)

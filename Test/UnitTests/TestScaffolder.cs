@@ -11,6 +11,7 @@ using Microsoft.EntityFrameworkCore.Scaffolding;
 using Microsoft.EntityFrameworkCore.SqlServer.Design.Internal;
 using Microsoft.Extensions.DependencyInjection;
 using Npgsql.EntityFrameworkCore.PostgreSQL.Design.Internal;
+using Test.Helpers;
 using TestSupport.EfHelpers;
 using TestSupport.Helpers;
 using Xunit;
@@ -31,8 +32,7 @@ namespace Test.UnitTests
             using var context = new BookContext(options);
             context.Database.EnsureClean();
 
-            var serviceProvider = new SqlServerDesignTimeServices().GetDesignTimeProvider();
-            var factory = serviceProvider.GetService<IDatabaseModelFactory>();
+            var factory = context.GetDatabaseModelFactory();
 
             //ATTEMPT 
             var model = factory.Create(context.Database.GetConnectionString(),
@@ -56,8 +56,7 @@ namespace Test.UnitTests
             var filepath = TestData.GetFilePath("AddViewToBookContext.sql");
             context.ExecuteScriptFileInTransaction(filepath);
 
-            var serviceProvider = new SqlServerDesignTimeServices().GetDesignTimeProvider();
-            var factory = serviceProvider.GetService<IDatabaseModelFactory>();
+            var factory = context.GetDatabaseModelFactory();
 
             //ATTEMPT 
             var model = factory.Create(context.Database.GetConnectionString(),
@@ -74,17 +73,20 @@ namespace Test.UnitTests
         public void TestCompareEfSqlPostgreSql()
         {
             //SETUP
-            var builder = new DbContextOptionsBuilder<BookContext>()
-                .UseNpgsql(null);
-            using var context = new BookContext(builder.Options);
+            var options = this.CreatePostgreSqlUniqueClassOptions<BookContext>();
+            using var context = new BookContext(options);
+            context.Database.EnsureClean();
 
-            var comparer = new CompareEfSql();
+            var factory = context.GetDatabaseModelFactory();
 
             //ATTEMPT 
-            var ex = Assert.Throws<InvalidOperationException>(() => comparer.CompareEfWithDb<NpgsqlDesignTimeServices>(context));
+            var model = factory.Create(context.Database.GetConnectionString(),
+                new DatabaseModelFactoryOptions(new string[] { }, new string[] { }));
 
             //VERIFY
-            ex.Message.ShouldEqual("A relational store has been configured without specifying either the DbConnection or connection string to use.");
+            model.ShouldNotBeNull();
+            model.Tables.Select(x => x.Name).OrderBy(x => x).ToArray()
+                .ShouldEqual(new[] { "Authors", "BookAuthor", "Books", "BookTag", "PriceOffers", "Review", "Tags" });
         }
     }
 }
