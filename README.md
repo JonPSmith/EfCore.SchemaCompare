@@ -112,8 +112,8 @@ public void CompareViaContext()
 
 1. The `CompareEfWithDb` method can take multiple DbContexts, known as *bounded contexts* (see chapter 13, section 13.4.8 in my book [Entity Framework Core in Action, second edition](https://bit.ly/EfCoreBookEd2)). You can add as many contexts as you'd like and they will all be compared to one database.
 2. You can also provide a string that points to the database as the first parameter. It can have two forms:
-   - It will try using the string as a connection string name in the test's `appsetting.json` file.
-   - If no connection string is found in the `appsetting.json` file under that key, or there is no `appsetting.json`, then it will assume the string is a connection string.
+   - It will try using the string as a connection string name in the test's `appsettings.json` file.
+   - If no connection string is found in the `appsettings.json` file under that key, or there is no `appsettings.json`, then it will assume the string is a connection string.
 
 See below for an example of both of of these options:
 ```c#
@@ -122,7 +122,7 @@ public void CompareBookThenOrderAgainstBookOrderDatabaseViaAppSettings()
 {
     //SETUP
     //... I have left out how the options are created
-    //This is the name of a connection string in the appsetting.json file in your test project.
+    //This is the name of a connection string in the appsettings.json file in your test project.
     const string connectionStringName = "BookOrderConnection";
     using (var context1 = new BookContext(options1))
     using (var context2 = new OrderContext(options2))
