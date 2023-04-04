@@ -1,6 +1,6 @@
 # EfCore.SchemaCompare
 
-If you change the schema of your database outside of EF Core' migrations, say by using SQL change scripts, then this library can quickly tell you if your database schema and the EF Core's `Model` of the database are in step with each other.
+If you change the schema of your database outside of EF Core's migrations, say by using SQL change scripts, then this library can quickly tell you if your database schema and the EF Core's `Model` of the database are in step with each other.
 
 The first number in the version of this library refers to the version of EF Core it's designed to be used with, e.g. 
 
