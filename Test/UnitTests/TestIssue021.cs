@@ -1,13 +1,9 @@
 ﻿// Copyright (c) 2023 Jon P Smith, GitHub: JonPSmith, web: http://www.thereformedprogrammer.net/
 // Licensed under MIT license. See License.txt in the project root for license information.
 
-using DataLayer.BookApp.EfCode;
+using System.Linq;
 using EfSchemaCompare;
 using Microsoft.EntityFrameworkCore;
-using Microsoft.EntityFrameworkCore.Diagnostics;
-using Microsoft.EntityFrameworkCore.Infrastructure;
-using Microsoft.EntityFrameworkCore.SqlServer.Scaffolding.Internal;
-using Microsoft.EntityFrameworkCore.Storage;
 using TestSupport.EfHelpers;
 using Xunit;
 using Xunit.Extensions.AssertExtensions;
@@ -66,6 +62,41 @@ public class TestIssue021
         }
     }
 
+    private const string AddViewSql = @"CREATE VIEW [dbo].[VW_BlogPosts]
+AS
+(
+SELECT
+    b.BlogId,
+	p.PostId,
+	b.[Name] AS 'BlogName',
+	p.[Title] AS 'PostTitle'
+FROM
+    [Blogs] b
+    INNER JOIN [Posts] p ON b.BlogId = p.PostId
+)
+";
+
+    [Fact]
+    public void CheckThatViewWorks()
+    {
+        //SETUP
+        var options = this.CreateUniqueClassOptions<Test021DbContext>();
+        using var context = new Test021DbContext(options);
+        context.Database.EnsureClean();
+        context.Database.ExecuteSqlRaw(AddViewSql);
+
+        //ATTEMPT 
+        context.Add(new Blog { Name = "Blog" });
+        context.Add(new Post { Title = "Post" });
+        context.SaveChanges();
+
+        //VERIFY
+        var view = context.VwBlogPostMany.SingleOrDefault();
+        view.ShouldNotBeNull();
+        view.BlogName.ShouldEqual("Blog");
+        view.PostTitle.ShouldEqual("Post");
+    }
+
     [Fact]
     public void Test()
     {
@@ -73,11 +104,10 @@ public class TestIssue021
         var options = this.CreateUniqueClassOptions<Test021DbContext>();
         using var context = new Test021DbContext(options);
         context.Database.EnsureClean();
+        context.Database.ExecuteSqlRaw(AddViewSql);
 
         //ATTEMPT 
         var comparer = new CompareEfSql();
-
-        //ATTEMPT
         var hasErrors = comparer.CompareEfWithDb(context);
 
         //VERIFY
