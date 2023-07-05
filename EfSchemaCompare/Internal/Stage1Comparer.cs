@@ -2,7 +2,6 @@
 // Licensed under MIT license. See License.txt in the project root for license information.
 
 using System;
-using System.Collections;
 using System.Collections.Generic;
 using System.Collections.Immutable;
 using System.Linq;
@@ -104,7 +103,8 @@ namespace EfSchemaCompare.Internal
                 var entityFKeyProps = entityFKey.Properties;
                 var constraintName = entityFKey.GetConstraintName();
                 var logger = new CompareLogger2(CompareType.ForeignKey, constraintName, log.SubLogs, _ignoreList, () => _hasErrors = true);
-                if (IgnoreForeignKeyIfInSameTableOrTpT(entityType, entityFKey, table))
+                if (IgnoreForeignKeyIfInSameTableOrTpT(entityType, entityFKey, table) 
+                    || constraintName == null) //constraintName is null if the entity isn't linked to a table (some views are like that)
                     continue;
                 if (fKeyDict.ContainsKey(constraintName))
                 {
@@ -162,12 +162,14 @@ namespace EfSchemaCompare.Internal
                 var allColumnNames = string.Join(",", entityIdxprops
                     .Select(x => GetColumnNameTakingIntoAccountSchema(x, table)));
                 var logger = new CompareLogger2(CompareType.Index, allColumnNames, log.SubLogs, _ignoreList, () => _hasErrors = true);
-                var constraintName = entityIdx.GetDatabaseName();
-                if (indexDict.ContainsKey(constraintName))
+                var indexName = entityIdx.GetDatabaseName();
+                if (indexName == null)
+                    continue; //Some views aren't linked directly to a index
+                if (indexDict.ContainsKey(indexName))
                 {
                     //Now check every column in an index
                     var error = false;
-                    var thisIdxCols = indexDict[constraintName].Columns.ToDictionary(x => x.Name, _caseComparer);
+                    var thisIdxCols = indexDict[indexName].Columns.ToDictionary(x => x.Name, _caseComparer);
                     foreach (var idxProp in entityIdxprops)
                     {
                         var columnName = GetColumnNameTakingIntoAccountSchema(idxProp, table);
@@ -178,13 +180,13 @@ namespace EfSchemaCompare.Internal
                         }
                     }
                     error |= logger.CheckDifferent(entityIdx.IsUnique.ToString(),
-                        indexDict[constraintName].IsUnique.ToString(), CompareAttributes.Unique, _caseComparison);
+                        indexDict[indexName].IsUnique.ToString(), CompareAttributes.Unique, _caseComparison);
                     if (!error)
-                        logger.MarkAsOk(constraintName);
+                        logger.MarkAsOk(indexName);
                 }
                 else
                 {
-                    logger.NotInDatabase(constraintName, CompareAttributes.IndexConstraintName);
+                    logger.NotInDatabase(indexName, CompareAttributes.IndexConstraintName);
                 }
             }
         }

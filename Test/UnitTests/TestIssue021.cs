@@ -106,7 +106,7 @@ FROM
         context.Database.EnsureClean();
         context.Database.ExecuteSqlRaw(AddViewSql);
 
-        //ATTEMPT 
+        //ATTEMPT
         var comparer = new CompareEfSql();
         var hasErrors = comparer.CompareEfWithDb(context);
 
