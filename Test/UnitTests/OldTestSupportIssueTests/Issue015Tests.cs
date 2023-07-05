@@ -50,7 +50,9 @@ DIFFERENT: Message->Property 'BoolRequiredDefaultTrue', default value sql. Expec
 DIFFERENT: Message->Property 'EnumRequiredDefaultZero', default value sql. Expected = 0, found = <null>
 DIFFERENT: Message->Property 'EnumRequiredDefaultZero', value generated. Expected = OnAdd, found = Never
 DIFFERENT: Message->Property 'IntRequiredDefault0', default value sql. Expected = 0, found = <null>
-DIFFERENT: Message->Property 'IntRequiredDefault0', value generated. Expected = OnAdd, found = Never");
+DIFFERENT: Message->Property 'IntRequiredDefault0', value generated. Expected = OnAdd, found = Never
+DIFFERENT: Message->Property 'XmlRequiredDefaultEmpty', default value sql. Expected = N'', found = ''
+DIFFERENT: Message->Property 'XmlRequiredDefaultSomething', default value sql. Expected = N'<something />', found = '<something />'");
 
             }
         }

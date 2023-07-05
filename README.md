@@ -7,11 +7,11 @@ The first number in the version of this library refers to the version of EF Core
 - EfCore.SchemaCompare version 5 works with EF Core 5, 
 - EfCore.SchemaCompare version 6 works with EF Core 6, etc.
 
-_If you are looking for the version of EfCore.SchemaCompare for EF Core version 2 or 3, you can find it in the [EfCore.TestSupport version 3.2.0](https://www.nuget.org/packages/EfCore.TestSupport/3.2.0) (NOTE: This older version has most, but not all of the features that are supported by the latest version)._
-
 The EfCore.SchemaCompare library (shortened to EfSchemaCompare in the documentation) is available on [NuGet as EfCore.SchemaCompare](https://www.nuget.org/packages/EfCore.SchemaCompare/).
 Is an open-source library under the MIT licence.
 See [ReleaseNotes](https://github.com/JonPSmith/EfCore.SchemaCompare/blob/master/ReleaseNotes.md) for details of changes and information on versions from EF Core 5 onwards.
+
+The EfCore.SchemaCompare library (shortened to EfSchemaCompare in the documentations) is available on [NuGet as EfCore.SchemaCompare](https://www.nuget.org/packages/EfCore.SchemaCompare/) and is an open-source library under the MIT licence. See [ReleaseNotes](https://github.com/JonPSmith/EfCore.SchemaCompare/blob/master/ReleaseNotes.md) for details of changes and information on versions from EF Core 5 onwards.
 
 **TABLE OF CONTENT**
 
