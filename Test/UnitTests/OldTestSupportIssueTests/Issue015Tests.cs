@@ -53,7 +53,6 @@ DIFFERENT: Message->Property 'IntRequiredDefault0', default value sql. Expected 
 DIFFERENT: Message->Property 'IntRequiredDefault0', value generated. Expected = OnAdd, found = Never
 DIFFERENT: Message->Property 'XmlRequiredDefaultEmpty', default value sql. Expected = N'', found = ''
 DIFFERENT: Message->Property 'XmlRequiredDefaultSomething', default value sql. Expected = N'<something />', found = '<something />'");
-
             }
         }
 

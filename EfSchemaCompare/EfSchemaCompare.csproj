@@ -21,15 +21,15 @@
 	
   <PropertyGroup>
     <PackageId>EfCore.SchemaCompare</PackageId>
-    <PackageVersion>6.0.2</PackageVersion>
-    <Version>6.0.2</Version>
-    <AssemblyVersion>6.0.2</AssemblyVersion>
-    <FileVersion>6.0.2</FileVersion>
+    <PackageVersion>6.0.3</PackageVersion>
+    <Version>6.0.3</Version>
+    <AssemblyVersion>6.0.3</AssemblyVersion>
+    <FileVersion>6.0.3</FileVersion>
     <Authors>Jon P Smith</Authors>
     <Description>Useful tool if you  are changing the schema of your database's schema outside of EF Core' migrations, say by using SQL change scripts. See readme file on github.</Description>
     <PackageRequireLicenseAcceptance>false</PackageRequireLicenseAcceptance>
     <PackageReleaseNotes>
-Fix to issue #21 - this time with the correct .NET version
+Fix to issue #21, but now catches "Not In Database" errors, as seen in issue #25
 	</PackageReleaseNotes>
     <Copyright>Copyright (c) 2020 Jon P Smith. Licenced under MIT licence</Copyright>
     <PackageTags>Entity Framework Core, Database</PackageTags>

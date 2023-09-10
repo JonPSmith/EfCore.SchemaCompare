@@ -22,7 +22,7 @@ namespace Test.UnitTests
         // This unit test FAILS to show that EfCore.SchemaCompare
         // doesn't currently handle Table-Per-Type entities
         [Fact]
-        public void CompareTptContext()
+        public void CompareTptContext_WILL_FAIL()
         {
             //SETUP
             var options = this.CreateUniqueClassOptions<TptDbContext>();

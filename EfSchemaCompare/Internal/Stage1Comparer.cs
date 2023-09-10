@@ -163,9 +163,7 @@ namespace EfSchemaCompare.Internal
                     .Select(x => GetColumnNameTakingIntoAccountSchema(x, table)));
                 var logger = new CompareLogger2(CompareType.Index, allColumnNames, log.SubLogs, _ignoreList, () => _hasErrors = true);
                 var indexName = entityIdx.GetDatabaseName();
-                if (indexName == null)
-                    continue; //Some views aren't linked directly to a index
-                if (indexDict.ContainsKey(indexName))
+                if (indexName != null && indexDict.ContainsKey(indexName))
                 {
                     //Now check every column in an index
                     var error = false;

@@ -98,7 +98,7 @@ FROM
     }
 
     [Fact]
-    public void Test()
+    public void TestCreateErrors()
     {
         //SETUP
         var options = this.CreateUniqueClassOptions<Test021DbContext>();
@@ -108,6 +108,30 @@ FROM
 
         //ATTEMPT
         var comparer = new CompareEfSql();
+        var hasErrors = comparer.CompareEfWithDb(context);
+
+        //VERIFY
+        hasErrors.ShouldBeTrue();
+        var errors = CompareLog.ListAllErrors(comparer.Logs).ToList();
+        errors.Count.ShouldEqual(2);
+        errors[0].ShouldEqual("NOT IN DATABASE: VwBlogPosts->Index '', index constraint name. Expected = <null>");
+        errors[1].ShouldEqual("NOT IN DATABASE: VwBlogPosts->Index '', index constraint name. Expected = <null>");
+    }
+
+    [Fact]
+    public void TestErrorsSuppressed()
+    {
+        //SETUP
+        var options = this.CreateUniqueClassOptions<Test021DbContext>();
+        using var context = new Test021DbContext(options);
+        context.Database.EnsureClean();
+        context.Database.ExecuteSqlRaw(AddViewSql);
+
+        //ATTEMPT
+        var config = new CompareEfSqlConfig();
+        config.IgnoreTheseErrors(@"NOT IN DATABASE: VwBlogPosts->Index '', index constraint name. Expected = <null>
+NOT IN DATABASE: VwBlogPosts->Index '', index constraint name. Expected = <null>");
+        var comparer = new CompareEfSql(config);
         var hasErrors = comparer.CompareEfWithDb(context);
 
         //VERIFY
