@@ -1,5 +1,9 @@
 # Release notes
 
+## 8.0.0-rc1-0001
+
+- First build using NET 8-rc1
+
 ## 7.0.0
 
 - Updated to EF Core 7.0

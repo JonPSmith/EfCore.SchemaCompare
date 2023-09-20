@@ -26,13 +26,11 @@ internal static class DatabaseModelFinder
 
         var logger = context.GetService<IDiagnosticsLogger<DbLoggerCategory.Scaffolding>>();
 
+        var typeMapper = context.GetService<IRelationalTypeMappingSource>();
         if (providerName == SqlServerProviderName)
-            return new SqlServerDatabaseModelFactory(logger);
+            return new SqlServerDatabaseModelFactory(logger, typeMapper);
         if (providerName == SqliteProviderName)
-        {
-            var typeMapper = context.GetService<IRelationalTypeMappingSource>();
             return new SqliteDatabaseModelFactory(logger, typeMapper);
-        }
         if (providerName == PostgresSqlProviderName)
             return new NpgsqlDatabaseModelFactory(logger);
 

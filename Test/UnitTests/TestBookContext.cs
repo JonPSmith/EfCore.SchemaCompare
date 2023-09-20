@@ -28,10 +28,10 @@ namespace Test.UnitTests
             using var context = new BookContext(options);
             context.Database.EnsureCreated();
 
-            //ATTEMPT 
-            var dbProvider = context.GetService<IDatabaseProvider>();
+            //ATTEMPT
+            var typeMapper = context.GetService<IRelationalTypeMappingSource>();
             var x = context.GetService<IDiagnosticsLogger < DbLoggerCategory.Scaffolding >>();
-            var databaseProvider = new SqlServerDatabaseModelFactory(x);
+            var databaseProvider = new SqlServerDatabaseModelFactory(x, typeMapper);
 
             //VERIFY
         }
