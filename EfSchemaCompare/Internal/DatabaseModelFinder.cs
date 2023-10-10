@@ -4,12 +4,12 @@
 using Microsoft.EntityFrameworkCore.Storage;
 using Microsoft.EntityFrameworkCore;
 using System;
+using System.Diagnostics.CodeAnalysis;
+using System.Linq;
+using System.Reflection;
 using Microsoft.EntityFrameworkCore.Infrastructure;
 using Microsoft.EntityFrameworkCore.Scaffolding;
 using Microsoft.EntityFrameworkCore.Diagnostics;
-using Microsoft.EntityFrameworkCore.Sqlite.Scaffolding.Internal;
-using Microsoft.EntityFrameworkCore.SqlServer.Scaffolding.Internal;
-using Npgsql.EntityFrameworkCore.PostgreSQL.Scaffolding.Internal;
 
 namespace EfSchemaCompare.Internal;
 
@@ -21,22 +21,64 @@ internal static class DatabaseModelFinder
 
     public static IDatabaseModelFactory GetDatabaseModelFactory(this DbContext context)
     {
-
         var providerName = context.Database.ProviderName;
 
         var logger = context.GetService<IDiagnosticsLogger<DbLoggerCategory.Scaffolding>>();
 
-        if (providerName == SqlServerProviderName)
-            return new SqlServerDatabaseModelFactory(logger);
-        if (providerName == SqliteProviderName)
+        var providerAssembly = Assembly.Load(providerName!);
+        var factoryType = providerAssembly.ExportedTypes.First(x => x.BaseType == typeof(DatabaseModelFactory));
+        
+        object factoryObject;
+        switch (providerName)
         {
-            var typeMapper = context.GetService<IRelationalTypeMappingSource>();
-            return new SqliteDatabaseModelFactory(logger, typeMapper);
+            case SqliteProviderName:
+                var typeMapper = context.GetService<IRelationalTypeMappingSource>();
+                factoryObject = Activator.CreateInstance(factoryType, logger, typeMapper);
+                break;
+            case SqlServerProviderName:
+            case PostgresSqlProviderName:
+                factoryObject = Activator.CreateInstance(factoryType, logger);
+                break;
+            default:
+                // This is not a known provider. Try creating the factory anyhow and throw if it fails
+                factoryObject = TryCreateUnknownFactory(factoryType, logger);
+                break;
         }
-        if (providerName == PostgresSqlProviderName)
-            return new NpgsqlDatabaseModelFactory(logger);
 
-        throw new InvalidOperationException("Your database provider isn't supported by the EfCore.SchemaCompare library. " +
-                                            "Please provide an issue about the database type you would like and I may be able to add it.");
+        if (factoryObject is IDatabaseModelFactory factory)
+            return factory;
+
+        ThrowException();
+        return (IDatabaseModelFactory) new object();
+    }
+
+    private static object TryCreateUnknownFactory(Type factoryType,
+        IDiagnosticsLogger<DbLoggerCategory.Scaffolding> logger)
+    {
+        try
+        {
+            return Activator.CreateInstance(factoryType);
+        }
+        catch
+        {
+            try
+            {
+                return Activator.CreateInstance(factoryType, logger);
+            }
+            catch
+            {
+                ThrowException();
+            }
+        }
+
+        return null;
+    }
+
+    [DoesNotReturn]
+    private static void ThrowException()
+    {
+        throw new InvalidOperationException(
+            "Your database provider isn't supported by the EfCore.SchemaCompare library. "
+            + "Please provide an issue about the database type you would like and I may be able to add it.");
     }
 }
