@@ -25,15 +25,6 @@ internal static class DatabaseModelFinder
 
         var logger = context.GetService<IDiagnosticsLogger<DbLoggerCategory.Scaffolding>>();
 
-<<<<<<< HEAD
-        var typeMapper = context.GetService<IRelationalTypeMappingSource>();
-        if (providerName == SqlServerProviderName)
-            return new SqlServerDatabaseModelFactory(logger, typeMapper);
-        if (providerName == SqliteProviderName)
-            return new SqliteDatabaseModelFactory(logger, typeMapper);
-        if (providerName == PostgresSqlProviderName)
-            return new NpgsqlDatabaseModelFactory(logger);
-=======
         var providerAssembly = Assembly.Load(providerName!);
         var factoryType = providerAssembly.ExportedTypes.First(x => x.BaseType == typeof(DatabaseModelFactory));
         
@@ -53,7 +44,6 @@ internal static class DatabaseModelFinder
                 factoryObject = TryCreateUnknownFactory(factoryType, logger, providerName);
                 break;
         }
->>>>>>> master
 
         if (factoryObject is IDatabaseModelFactory factory)
             return factory;
