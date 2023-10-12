@@ -41,19 +41,19 @@ internal static class DatabaseModelFinder
                 break;
             default:
                 // This is not a known provider. Try creating the factory anyhow and throw if it fails
-                factoryObject = TryCreateUnknownFactory(factoryType, logger);
+                factoryObject = TryCreateUnknownFactory(factoryType, logger, providerName);
                 break;
         }
 
         if (factoryObject is IDatabaseModelFactory factory)
             return factory;
 
-        ThrowException();
+        ThrowException(providerName);
         return (IDatabaseModelFactory) new object();
     }
 
     private static object TryCreateUnknownFactory(Type factoryType,
-        IDiagnosticsLogger<DbLoggerCategory.Scaffolding> logger)
+        IDiagnosticsLogger<DbLoggerCategory.Scaffolding> logger, string providerName)
     {
         try
         {
@@ -67,7 +67,7 @@ internal static class DatabaseModelFinder
             }
             catch
             {
-                ThrowException();
+                ThrowException(providerName);
             }
         }
 
@@ -75,10 +75,9 @@ internal static class DatabaseModelFinder
     }
 
     [DoesNotReturn]
-    private static void ThrowException()
+    private static void ThrowException(string providerName)
     {
         throw new InvalidOperationException(
-            "Your database provider isn't supported by the EfCore.SchemaCompare library. "
-            + "Please provide an issue about the database type you would like and I may be able to add it.");
+            $"It could not find the correct EF Core code to support the {providerName} database.");
     }
 }
