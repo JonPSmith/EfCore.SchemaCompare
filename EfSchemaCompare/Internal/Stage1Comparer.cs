@@ -10,7 +10,6 @@ using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Infrastructure;
 using Microsoft.EntityFrameworkCore.Metadata;
 using Microsoft.EntityFrameworkCore.Scaffolding.Metadata;
-using Microsoft.EntityFrameworkCore.SqlServer.Metadata.Internal;
 using Microsoft.EntityFrameworkCore.Storage;
 
 [assembly: InternalsVisibleTo("Test")]
@@ -208,11 +207,15 @@ namespace EfSchemaCompare.Internal
 
             var columnDict = table.Columns.ToDictionary(x => x.Name, _caseComparer);
 
+            // Imported from SqlServerAnnotationNames from SqlServer provider
+            const string sqlServerTemporalPeriodStartPropertyName = "SqlServer:TemporalPeriodStartPropertyName";
+            const string sqlServerTemporalPeriodEndPropertyName = "SqlServer:TemporalPeriodEndPropertyName";
+            
             // SQL Server only feature. Will not affect other databases
             var temporalColumnIgnores = table.GetAnnotations()
 #pragma warning disable EF1001 // Internal EF Core API usage.
-               .Where(a => a.Name == SqlServerAnnotationNames.TemporalPeriodStartPropertyName ||
-                           a.Name == SqlServerAnnotationNames.TemporalPeriodEndPropertyName)
+               .Where(a => a.Name == sqlServerTemporalPeriodStartPropertyName ||
+                           a.Name == sqlServerTemporalPeriodEndPropertyName)
 #pragma warning restore EF1001 // Internal EF Core API usage.
                .Select(a => (string)a.Value)
                .ToArray();

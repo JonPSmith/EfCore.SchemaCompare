@@ -7,6 +7,10 @@
 ## 7.0.0
 
 - Updated to EF Core 7.0
+ 
+## 6.0.1
+
+Fix to issue #21
 
 ## 6.0.1
 

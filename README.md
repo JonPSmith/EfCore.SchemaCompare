@@ -4,8 +4,13 @@ If you are changing the schema of your database's schema outside of EF Core' mig
 
 The first number in the version number of this library defines what version of NET framework it works for. e.g. 
 
+<<<<<<< HEAD
 - EfCore.SchemaCompare version 6 is works with to NET 6. 
 - EfCore.SchemaCompare version 7 is works with to NET 7 ... an so on
+=======
+- EfCore.SchemaCompare version 5 is works with to EF Core 5. 
+- EfCore.SchemaCompare version 6 is works with to EF Core 6 ... an so on
+>>>>>>> master
 
 The EfCore.SchemaCompare library (shortened to EfSchemaCompare in the documentations) is available on [NuGet as EfCore.SchemaCompare](https://www.nuget.org/packages/EfCore.SchemaCompare/) and is an open-source library under the MIT licence. See [ReleaseNotes](https://github.com/JonPSmith/EfCore.SchemaCompare/blob/master/ReleaseNotes.md) for details of changes and information on versions from EF Core 5 onwards.
 
