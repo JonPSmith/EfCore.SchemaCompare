@@ -27,15 +27,17 @@ internal static class DatabaseModelFinder
 
         var providerAssembly = Assembly.Load(providerName!);
         var factoryType = providerAssembly.ExportedTypes.First(x => x.BaseType == typeof(DatabaseModelFactory));
-        
+        var typeMapper = context.GetService<IRelationalTypeMappingSource>();
+
         object factoryObject;
         switch (providerName)
         {
             case SqliteProviderName:
-                var typeMapper = context.GetService<IRelationalTypeMappingSource>();
                 factoryObject = Activator.CreateInstance(factoryType, logger, typeMapper);
                 break;
             case SqlServerProviderName:
+                factoryObject = Activator.CreateInstance(factoryType, logger, typeMapper);
+                break;
             case PostgresSqlProviderName:
                 factoryObject = Activator.CreateInstance(factoryType, logger);
                 break;
