@@ -1,6 +1,6 @@
 # EfCore.SchemaCompare
 
-If you are changing the schema of your database's schema outside of EF Core' migrations, say by using SQL change scripts, then this library can quickly tell you if the a specific database schema and EF Core's `Model` of the database are in step.
+If you are changing the schema of your database's schema outside of EF Core' migrations, say by using SQL change scripts, then this library can quickly tell you if the a specific database schema and EF Core's `Model` of the database are in step. Versions below 8  this library 
 
 The first number in the version number of this library defines what version of NET framework it works for. e.g. 
 
@@ -11,16 +11,25 @@ The EfCore.SchemaCompare library (shortened to EfSchemaCompare in the documentat
 
 **TABLE OF CONTENT**
 
-1. [What does EfSchemaCompare check?](#what-does-EfSchemaCompare-check)
-2. [List of limitations](#List-of-limitations)
-3. [Introduction to how EfSchemaCompare works](#Introduction-to-how-EfSchemaCompare-works)
-4. [How to use EfSchemaCompare](#How-to-use-EfSchemaCompare)
+1. [What database providers does it support](#what-database-providers-does-it-support)
+2. [What does EfSchemaCompare check?](#what-does-EfSchemaCompare-check)
+3. [List of limitations](#List-of-limitations)
+4. [Introduction to how EfSchemaCompare works](#Introduction-to-how-EfSchemaCompare-works)
+5. [How to use EfSchemaCompare](#How-to-use-EfSchemaCompare)
 5. [Different parameters to the `CompareEfWithDb` method](#different-parameters-to-the-compareefwithdb-method)
-5. [Understanding the error messages](#Understanding-the-error-messages)
-6. [How to suppress certain error messages](#How-to-suppress-certain-error-messages)
-7. [Other configuration options](#Other-configuration-options)
+6. [Understanding the error messages](#Understanding-the-error-messages)
+7. [How to suppress certain error messages](#How-to-suppress-certain-error-messages)
+8. [Other configuration options](#Other-configuration-options)
 
 **NOTE:** I use the term *entity class* for classes mapped to the database by EF Core.
+
+## What database providers does it support
+
+- Version 8 now compares all EF Core database providers that can be [be scaffolded](https://learn.microsoft.com/en-us/ef/core/managing-schemas/scaffolding/). However some database providers may show incorrect match errors, because some database providers don't follow the SqlServer style, e.g. CosmosDB 
+- Versions below 8 support:
+   - SqlServer
+   - Sqlite
+   - Npgsql.EntityFrameworkCore.PostgreSQL
 
 ## What does EfSchemaCompare check?
 
@@ -55,7 +64,8 @@ The EfCore.SchemaCompare library (shortened to EfSchemaCompare in the documentat
 - The EF Core's scaffolder doesn't read in any index on the foreign key (the scaffolder assumes EF Core will do that by default). That means I can't check that there is an index on a foreign key.
 - Cannot correctly check Table-per-Type or Table-per-Class classes because EF Core doesn't currently hold that data. This is tracked by [Ef Core #19811](https://github.com/dotnet/efcore/issues/19811).
 - Cannot compare database tables/columns using InvariantCultureIgnoreCase. That is a EF Core 5+ limitation.
-- At the moment this library only supports SQL Server, Sqlite and PostgresSql.
+- EfCore.SchemaCompare versions below 8 only support SQL Server, Sqlite and PostgresSql, but version 8 supports all EF Core database providers that can be be scaffolded. However some database providers may show incorrect match errors, because some database providers don't follow the SqlServer style, e.g. CosmosDB
+- Version 8 doesn't handle EF Core 8's [Value objects](https://learn.microsoft.com/en-us/ef/core/what-is-new/ef-core-8.0/whatsnew#value-objects-using-complex-types).
 
 The following are things I haven't bothered to check.
 

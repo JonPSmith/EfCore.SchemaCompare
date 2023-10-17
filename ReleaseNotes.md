@@ -1,20 +1,23 @@
 # Release notes
 
-## 8.0.0-rc1-0001
+## 8.0.0-rc2-0002
 
-- First build using NET 8-rc1
+- Supports .NET 8-rc.2 - please try this version and report any problems
+- NEW FEATURE: Now compares all EF Core database providers, but some database providers may show incorrect match errors
+- BREAKING CHANGE: You need to add the Microsoft.EntityFrameworkCore.Design NuGet to your 
+- Bug Fix: Fix to issue #21
 
 ## 7.0.0
 
 - Updated to EF Core 7.0
  
+## 6.0.2
+
+- Fix to issue #21, but now catches "Not In Database" errors, as seen in issue #25
+
 ## 6.0.1
 
-Fix to issue #21
-
-## 6.0.1
-
-Fix to issue #21
+- Fix to issue #21
 
 ## 6.0.0
 
