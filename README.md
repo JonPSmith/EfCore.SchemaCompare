@@ -26,6 +26,9 @@ The EfCore.SchemaCompare library (shortened to EfSchemaCompare in the documentat
 ## What database providers does it support
 
 - Version 8 now compares all EF Core database providers that can be [be scaffolded](https://learn.microsoft.com/en-us/ef/core/managing-schemas/scaffolding/). However some database providers may show incorrect match errors, because some database providers don't follow the SqlServer style, e.g. CosmosDB 
+
+_Thanks to GitHub @bgrauer-atacom and @lweberprb for suggesting that this library could support extra database providers. See the [issue #26](https://github.com/JonPSmith/EfCore.SchemaCompare/pull/26) to see the code that these two people provided to add this feature._
+
 - Versions below 8 support:
    - SqlServer
    - Sqlite
