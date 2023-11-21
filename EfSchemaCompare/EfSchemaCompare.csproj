@@ -20,7 +20,7 @@
 	
   <PropertyGroup>
     <PackageId>EfCore.SchemaCompare</PackageId>
-    <PackageVersion>8.0.0-rc2-0002</PackageVersion>
+    <PackageVersion>8.0.0</PackageVersion>
     <Version>8.0.0</Version>
     <AssemblyVersion>8.0.0</AssemblyVersion>
     <FileVersion>8.0.0</FileVersion>
@@ -30,7 +30,7 @@
     <PackageReleaseNotes>
 		- Supports .NET 8
 		- NEW FEATURE: Now compares all EF Core database providers, but some database providers may show incorrect match errors
-		- BREAKING CHANGE: You need to add the Microsoft.EntityFrameworkCore.Design NuGet to your
+		- BREAKING CHANGE: You need to add the Microsoft.EntityFrameworkCore.Design NuGet to the application that uses this library
 		- Bug Fix: Fix to issue #21
 	</PackageReleaseNotes>
     <Copyright>Copyright (c) 2020 Jon P Smith. Licenced under MIT licence</Copyright>
