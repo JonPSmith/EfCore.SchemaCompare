@@ -1,5 +1,11 @@
 # Release notes
 
+## 8.0.0
+
+- Supports .NET 8
+- NEW FEATURE: Now compares all EF Core database providers, but some database providers may show incorrect match errors
+- BREAKING CHANGE: You need to add the Microsoft.EntityFrameworkCore.Design NuGet to your 
+
 ## 8.0.0-rc2-0002
 
 - Supports .NET 8-rc.2 - please try this version and report any problems
