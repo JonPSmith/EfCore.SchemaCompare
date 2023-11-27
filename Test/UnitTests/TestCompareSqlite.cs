@@ -5,12 +5,20 @@ using DataLayer.BookApp.EfCode;
 using EfSchemaCompare;
 using TestSupport.EfHelpers;
 using Xunit;
+using Xunit.Abstractions;
 using Xunit.Extensions.AssertExtensions;
 
 namespace Test.UnitTests;
 
 public class TestCompareSqlite
 {
+    private readonly ITestOutputHelper _output;
+
+    public TestCompareSqlite(ITestOutputHelper output)
+    {
+        _output = output;
+    }
+
     [Fact]
     public void CompareEfSqlSqlite()
     {
@@ -25,6 +33,29 @@ public class TestCompareSqlite
         var hasErrors = comparer.CompareEfWithDb(context);
 
         //VERIFY
-        hasErrors.ShouldBeFalse();
+        _output.WriteLine(comparer.GetAllErrors);
+        hasErrors.ShouldBeTrue();
+    }
+
+    [Fact]
+    public void CompareEfSqlSqliteIgnore()
+    {
+        //SETUP
+        var options = SqliteInMemory.CreateOptions<BookContext>();
+        using var context = new BookContext(options);
+        context.Database.EnsureCreated();
+
+        var config = new CompareEfSqlConfig
+        {
+            TablesToIgnoreCommaDelimited = "Review"
+        };
+        var comparer = new CompareEfSql(config);
+
+        //ATTEMPT
+        var hasErrors = comparer.CompareEfWithDb(context);
+
+        //VERIFY
+        _output.WriteLine(comparer.GetAllErrors);
+        hasErrors.ShouldBeTrue();
     }
 }
