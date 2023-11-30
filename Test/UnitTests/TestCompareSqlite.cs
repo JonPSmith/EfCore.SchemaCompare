@@ -3,7 +3,8 @@
 
 using DataLayer.BookApp.EfCode;
 using EfSchemaCompare;
-using TestSupport.EfHelpers;
+using Microsoft.EntityFrameworkCore;
+using TestSupport.Helpers;
 using Xunit;
 using Xunit.Abstractions;
 using Xunit.Extensions.AssertExtensions;
@@ -20,11 +21,13 @@ public class TestCompareSqlite
     }
 
     [Fact]
-    public void CompareEfSqlSqlite()
+    public void CompareEfSqlSqlite_FAILS() //SQLite FK names are null: see dotnet/efcore#8802
     {
         //SETUP
-        var options = SqliteInMemory.CreateOptions<BookContext>();
-        using var context = new BookContext(options);
+        var builder = new DbContextOptionsBuilder<BookContext>()
+            .UseSqlite($"Data Source={TestData.GetTestDataDir()}/CompareEfSqlSqlite.db");
+        using var context = new BookContext(builder.Options);
+        context.Database.EnsureDeleted();
         context.Database.EnsureCreated();
 
         var comparer = new CompareEfSql();
@@ -34,17 +37,20 @@ public class TestCompareSqlite
 
         //VERIFY
         _output.WriteLine(comparer.GetAllErrors);
-        hasErrors.ShouldBeTrue();
+        hasErrors.ShouldBeFalse();
     }
 
     [Fact]
-    public void CompareEfSqlSqliteIgnore()
+    public void CompareEfSqlSqliteIgnore_FAILS() //SQLite FK names are null: see dotnet/efcore#8802
     {
         //SETUP
-        var options = SqliteInMemory.CreateOptions<BookContext>();
-        using var context = new BookContext(options);
+        var builder = new DbContextOptionsBuilder<BookContext>()
+            .UseSqlite($"Data Source={TestData.GetTestDataDir()}/CompareEfSqlSqliteIgnore.db");
+        using var context = new BookContext(builder.Options);
+        context.Database.EnsureDeleted();
         context.Database.EnsureCreated();
 
+        //NOTE: the ignore of a tables DOES work with no schema
         var config = new CompareEfSqlConfig
         {
             TablesToIgnoreCommaDelimited = "Review"

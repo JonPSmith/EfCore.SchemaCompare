@@ -130,7 +130,7 @@ namespace EfSchemaCompare
                     var schema = split.Length == 1 ? databaseModel.DefaultSchema : split[0];
                     var tableName = split.Length == 1 ? split[0] : split[1];
                     var tableToRemove = databaseModel.Tables
-                        .SingleOrDefault(x => x.Schema.Equals(schema, StringComparison.InvariantCultureIgnoreCase)
+                        .SingleOrDefault(x => x.Schema?.Equals(schema, StringComparison.InvariantCultureIgnoreCase) ?? schema == null
                                            && x.Name.Equals(tableName, StringComparison.InvariantCultureIgnoreCase));
                     if (tableToRemove == null)
                         throw new InvalidOperationException(
