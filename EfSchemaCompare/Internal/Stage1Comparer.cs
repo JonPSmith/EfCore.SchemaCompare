@@ -9,8 +9,10 @@ using System.Runtime.CompilerServices;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Infrastructure;
 using Microsoft.EntityFrameworkCore.Metadata;
+using Microsoft.EntityFrameworkCore.Metadata.Internal;
 using Microsoft.EntityFrameworkCore.Scaffolding.Metadata;
 using Microsoft.EntityFrameworkCore.Storage;
+using Microsoft.IdentityModel.Tokens;
 
 [assembly: InternalsVisibleTo("Test")]
 
@@ -95,6 +97,13 @@ namespace EfSchemaCompare.Internal
 
         private void CompareForeignKeys(CompareLog log, IEntityType entityType, DatabaseTable table)
         {
+            if (table.ForeignKeys.Any(x => x.Name.IsNullOrEmpty()))
+            {
+                var logger = new CompareLogger2(CompareType.ForeignKey, entityType.ClrType.Name, _logs.Last().SubLogs, _ignoreList, () => _hasErrors = true);
+                logger.MarkAsNotChecked(null, entityType.ClrType.Name, CompareAttributes.ConstraintName);
+                return;
+            }
+   
             var fKeyDict = table.ForeignKeys.ToDictionary(x => x.Name, _caseComparer);
 
             foreach (var entityFKey in entityType.GetForeignKeys())

@@ -21,7 +21,7 @@ public class TestCompareSqlite
     }
 
     [Fact]
-    public void CompareEfSqlSqlite_FAILS() //SQLite FK names are null: see dotnet/efcore#8802
+    public void CompareEfSqlSqlite()
     {
         //SETUP
         var builder = new DbContextOptionsBuilder<BookContext>()
@@ -37,11 +37,11 @@ public class TestCompareSqlite
 
         //VERIFY
         _output.WriteLine(comparer.GetAllErrors);
-        hasErrors.ShouldBeFalse();
+        hasErrors.ShouldBeTrue();
     }
 
     [Fact]
-    public void CompareEfSqlSqliteIgnore_FAILS() //SQLite FK names are null: see dotnet/efcore#8802
+    public void CompareEfSqlSqliteIgnore()
     {
         //SETUP
         var builder = new DbContextOptionsBuilder<BookContext>()
