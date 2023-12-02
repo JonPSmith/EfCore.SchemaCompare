@@ -20,18 +20,15 @@
 	
   <PropertyGroup>
     <PackageId>EfCore.SchemaCompare</PackageId>
-    <PackageVersion>8.0.0</PackageVersion>
-    <Version>8.0.0</Version>
-    <AssemblyVersion>8.0.0</AssemblyVersion>
+    <PackageVersion>8.0.1</PackageVersion>
+    <Version>8.0.1</Version>
+    <AssemblyVersion>8.0.1</AssemblyVersion>
     <FileVersion>8.0.0</FileVersion>
     <Authors>Jon P Smith</Authors>
     <Description>Useful tool if you  are changing the schema of your database's schema outside of EF Core' migrations, say by using SQL change scripts. See readme file on github.</Description>
     <PackageRequireLicenseAcceptance>false</PackageRequireLicenseAcceptance>
     <PackageReleaseNotes>
-		- Supports .NET 8
-		- NEW FEATURE: Now compares all EF Core database providers, but some database providers may show incorrect match errors
-		- BREAKING CHANGE: You need to add the Microsoft.EntityFrameworkCore.Design NuGet to the application that uses this library
-		- Bug Fix: Fix to issue #21
+	    - Fixed problems with TablesToIgnoreCommaDelimited with databases not supporting schema - see issue #30
 	</PackageReleaseNotes>
     <Copyright>Copyright (c) 2020 Jon P Smith. Licenced under MIT licence</Copyright>
     <PackageTags>Entity Framework Core, Database</PackageTags>

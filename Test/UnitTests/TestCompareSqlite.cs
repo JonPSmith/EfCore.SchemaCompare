@@ -20,6 +20,8 @@ public class TestCompareSqlite
         _output = output;
     }
 
+    //NOTE: SchemaCompare doesn't work with Sqlite because the Model data isn't correct
+    //But it doesn't throw an exception.
     [Fact]
     public void CompareEfSqlSqlite()
     {

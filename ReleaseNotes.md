@@ -1,5 +1,9 @@
 # Release notes
 
+## 8.0.1
+
+- Fixed problems with TablesToIgnoreCommaDelimited with databases not supporting schema - see issue #30
+
 ## 8.0.0
 
 - Supports .NET 8

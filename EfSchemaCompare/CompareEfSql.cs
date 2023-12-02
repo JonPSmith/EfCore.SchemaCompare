@@ -11,6 +11,7 @@ using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Scaffolding;
 using Microsoft.EntityFrameworkCore.Scaffolding.Metadata;
 using Microsoft.Extensions.Configuration;
+using Microsoft.IdentityModel.Tokens;
 
 namespace EfSchemaCompare
 {
@@ -122,15 +123,14 @@ namespace EfSchemaCompare
             }
             else
             {
-                
                 foreach (var tableToIgnore in _config.TablesToIgnoreCommaDelimited.Split(',')
                     .Select(x => x.Trim()).Where(x => !string.IsNullOrEmpty(x)))
                 {
                     var split = tableToIgnore.Split('.').Select(x => x.Trim()).ToArray();
-                    var schema = split.Length == 1 ? databaseModel.DefaultSchema : split[0];
+                    var schemaName = split.Length == 1 ? databaseModel.DefaultSchema : split[0];
                     var tableName = split.Length == 1 ? split[0] : split[1];
                     var tableToRemove = databaseModel.Tables
-                        .SingleOrDefault(x => x.Schema?.Equals(schema, StringComparison.InvariantCultureIgnoreCase) ?? schema == null
+                        .SingleOrDefault(x => (x.Schema ?? "").Equals(schemaName ?? "", StringComparison.InvariantCultureIgnoreCase)
                                            && x.Name.Equals(tableName, StringComparison.InvariantCultureIgnoreCase));
                     if (tableToRemove == null)
                         throw new InvalidOperationException(
