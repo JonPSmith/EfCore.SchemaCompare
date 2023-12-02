@@ -5,7 +5,9 @@ If you are changing the schema of your database's schema outside of EF Core' mig
 The first number in the version number of this library defines what version of NET framework it works for. e.g. 
 
 - EfCore.SchemaCompare version 6 is works with to NET 6. 
-- EfCore.SchemaCompare version 7 is works with to NET 7 ... an so on
+- EfCore.SchemaCompare version 7 is works with to NET 7 ... an so 
+
+**WARNING**: Version 8 contains a **BREAKING CHANGE**. You need to add the Microsoft.EntityFrameworkCore.Design NuGet to your application when using this library. This is needed as the EfCore.SchemaCompare library now supports multiple database providers does - see [What database providers does it support](https://github.com/JonPSmith/EfCore.SchemaCompare/blob/master/README.md#what-database-providers-does-it-support).
 
 The EfCore.SchemaCompare library (shortened to EfSchemaCompare in the documentations) is available on [NuGet as EfCore.SchemaCompare](https://www.nuget.org/packages/EfCore.SchemaCompare/) and is an open-source library under the MIT licence. See [ReleaseNotes](https://github.com/JonPSmith/EfCore.SchemaCompare/blob/master/ReleaseNotes.md) for details of changes and information on versions from EF Core 5 onwards.
 
@@ -68,7 +70,7 @@ _Thanks to GitHub @bgrauer-atacom and @lweberprb for suggesting that this librar
 - Cannot correctly check Table-per-Type or Table-per-Class classes because EF Core doesn't currently hold that data. This is tracked by [Ef Core #19811](https://github.com/dotnet/efcore/issues/19811).
 - Cannot compare database tables/columns using InvariantCultureIgnoreCase. That is a EF Core 5+ limitation.
 - EfCore.SchemaCompare versions below 8 only support SQL Server, Sqlite and PostgresSql, but version 8 supports all EF Core database providers that can be be scaffolded. However some database providers may show incorrect match errors, because some database providers don't follow the SqlServer style, e.g. CosmosDB
-- Version 8 doesn't handle EF Core 8's [Value objects](https://learn.microsoft.com/en-us/ef/core/what-is-new/ef-core-8.0/whatsnew#value-objects-using-complex-types).
+- The EF Core 8 [new features](https://learn.microsoft.com/en-us/ef/core/what-is-new/ef-core-8.0/whatsnew) aren't compared in this release. I may add some later.  
 
 The following are things I haven't bothered to check.
 
