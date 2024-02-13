@@ -150,13 +150,11 @@ NOT IN DATABASE: Entity 'Review', table name. Expected = Schema2.SchemaTest");
     public void CompareEfPostgreSqlExcludeMultipleTables()
     {
         //SETUP
-        var options = this.CreatePostgreSqlUniqueClassOptions<SchemaDbContext>(
-            builder =>
-            {
-                builder.UseNpgsql(this.GetUniquePostgreSqlConnectionString(),
-                    o => o.SetPostgresVersion(12, 0));
-            });
-        using var context = new SchemaDbContext(options);
+        var postgresConnectionString = this.GetUniquePostgreSqlConnectionString();
+        var builder = new
+            DbContextOptionsBuilder<SchemaDbContext>();
+        builder.UseNpgsql(postgresConnectionString);
+        using var context = new SchemaDbContext(builder.Options);
         context.Database.EnsureDeleted();
         context.Database.EnsureCreated();
 
@@ -167,7 +165,7 @@ NOT IN DATABASE: Entity 'Review', table name. Expected = Schema2.SchemaTest");
         var comparer = new CompareEfSql(config);
 
         //ATTEMPT
-        var hasErrors = comparer.CompareEfWithDb(context);
+        var hasErrors = comparer.CompareEfWithDb(postgresConnectionString, context);
 
         //VERIFY
         _output.WriteLine(comparer.GetAllErrors);
