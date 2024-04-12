@@ -2,10 +2,8 @@
 // Licensed under MIT license. See License.txt in the project root for license information.
 
 using System;
-using DataLayer.MyEntityDb;
 using DataLayer.SchemaDb;
 using EfSchemaCompare;
-using Microsoft.EntityFrameworkCore.Infrastructure;
 using Microsoft.EntityFrameworkCore;
 using TestSupport.EfHelpers;
 using TestSupport.Helpers;

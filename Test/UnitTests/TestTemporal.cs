@@ -21,6 +21,7 @@ namespace Test.UnitTests
             var options = this.CreateUniqueClassOptions<MyEntityDbContext>(
                 builder => builder.ReplaceService<IModelCacheKeyFactory, MyEntityModelCacheKeyFactory>());
             using var context = new MyEntityDbContext(options, MyEntityDbContext.Configs.Temporal);
+            context.Database.EnsureDeleted();
             context.Database.EnsureCreated();
             foreach (var entityType in context.GetService<IDesignTimeModel>().Model.GetEntityTypes())
                 context.Database.ExecuteSqlRaw(

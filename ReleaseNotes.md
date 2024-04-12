@@ -1,5 +1,10 @@
 # Release notes
 
+## 8.0.2
+
+- Removed vulnerable NuGets
+- Removed EF Core database NuGets, e.g. Microsoft.EntityFrameworkCore.SqlServer, because its uses provided DbContext
+
 ## 8.0.1
 
 - Fixed problems with TablesToIgnoreCommaDelimited with databases not supporting schema - see issue #30
