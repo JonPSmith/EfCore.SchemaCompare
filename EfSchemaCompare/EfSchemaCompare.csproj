@@ -19,14 +19,13 @@
 	
   <PropertyGroup>
     <PackageId>EfCore.SchemaCompare</PackageId>
-    <PackageVersion>8.0.2</PackageVersion>
-    <Version>8.0.2</Version>
+    <PackageVersion>8.0.3</PackageVersion>
+    <Version>8.0.3</Version>
     <Authors>Jon P Smith</Authors>
     <Description>Useful tool if you  are changing the schema of your database's schema outside of EF Core' migrations, say by using SQL change scripts. See readme file on github.</Description>
     <PackageRequireLicenseAcceptance>false</PackageRequireLicenseAcceptance>
     <PackageReleaseNotes>
-		- Removed vulnerable NuGets
-		- Removed EF Core database NuGets, e.g. Microsoft.EntityFrameworkCore.SqlServer, because its uses provided DbContext
+		- Removed Microsoft.IdentityModel.Tokens NuGet as not correct (see issue #36)
 	</PackageReleaseNotes>
     <Copyright>Copyright (c) 2020 Jon P Smith. Licenced under MIT licence</Copyright>
     <PackageTags>Entity Framework Core, Database</PackageTags>

@@ -1,5 +1,9 @@
 # Release notes
 
+## 8.0.3
+
+- Removed Microsoft.IdentityModel.Tokens NuGet as not correct (see issue #36)
+
 ## 8.0.2
 
 - Removed vulnerable NuGets
