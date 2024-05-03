@@ -1,6 +1,10 @@
 # Release notes
 
-## 8.0.3
+## 8.0.4
+
+- REALLY removed Microsoft.IdentityModel.Tokens NuGet as not correct (see issue #36)
+
+## 8.0.3: ERROR - use 8.0.4
 
 - Removed Microsoft.IdentityModel.Tokens NuGet as not correct (see issue #36)
 
