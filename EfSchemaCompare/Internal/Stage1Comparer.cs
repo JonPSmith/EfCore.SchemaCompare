@@ -45,7 +45,6 @@ namespace EfSchemaCompare.Internal
             _caseComparison = _caseComparer.GetStringComparison();
         }
 
-
         public bool CompareModelToDatabase(DatabaseModel databaseModel)
         {
             _defaultSchema = databaseModel.DefaultSchema;
@@ -70,7 +69,7 @@ namespace EfSchemaCompare.Internal
                     var log = logger.MarkAsOk(entityType.FormSchemaTableFromModel());
                     if(entityType.GetTableName() != null)
                     {
-                        //Its not a view
+                        //It's not a view
                         logger.CheckDifferent(entityType.FindPrimaryKey()?.GetName() ?? NoPrimaryKey,
                             databaseTable.PrimaryKey?.Name ?? NoPrimaryKey,
                             CompareAttributes.ConstraintName, _caseComparison);
@@ -226,7 +225,7 @@ namespace EfSchemaCompare.Internal
 #pragma warning restore EF1001 // Internal EF Core API usage.
                .Select(a => (string)a.Value)
                .ToArray();
-
+            
             //This finds all the Owned Types and THP
             foreach (var property in entityType.GetProperties())
             {
@@ -234,31 +233,45 @@ namespace EfSchemaCompare.Internal
                 if (property.IsShadowProperty() && temporalColumnIgnores.Contains(property.Name))
                     continue;
 
+                // find if the properly is stored in a JSON string
+                var propertyInJson = false; 
+
                 var colLogger = new CompareLogger2(CompareType.Property, property.Name, log.SubLogs, _ignoreList, () => _hasErrors = true);
                 var columnName = GetColumnNameTakingIntoAccountSchema(property, table, isView);
-                if (columnName == null)
+                if (columnName == null && !propertyInJson)
                 {
                     //This catches properties in TPH, split tables, and Owned Types where the properties are not mapped to the current table
                     continue;
                 }
+
                 if (columnDict.ContainsKey(columnName))
                 {
-                    var reColumn = GetRelationalColumn(columnName, table, isView);
-                    var error = ComparePropertyToColumn(reColumn, colLogger, property, columnDict[columnName], isView);
-                    //check for primary key
-                    if (property.IsPrimaryKey() &&
-                        //This remove TPH, Owned Types primary key checks
-                        !isView != primaryKeyDict.ContainsKey(columnName))
+                    bool error = false;
+                    if (propertyInJson)
                     {
-                        if (!primaryKeyDict.ContainsKey(columnName))
+                        //the property is stored in a JONS string
+                    }
+                    else
+                    {
+                        //The property is stored in the database
+
+                        var reColumn = GetRelationalColumn(columnName, table, isView);
+                        error = ComparePropertyToColumn(reColumn, colLogger, property, columnDict[columnName], isView);
+                        //check for primary key
+                        if (property.IsPrimaryKey() &&
+                            //This remove TPH, Owned Types primary key checks
+                            !isView != primaryKeyDict.ContainsKey(columnName))
                         {
-                            pKeyLogger.NotInDatabase(columnName, CompareAttributes.ColumnName);
-                            error = true;
-                        }
-                        else
-                        {
-                            pKeyLogger.ExtraInDatabase(columnName, CompareAttributes.ColumnName,
-                                table.PrimaryKey.Name);
+                            if (!primaryKeyDict.ContainsKey(columnName))
+                            {
+                                pKeyLogger.NotInDatabase(columnName, CompareAttributes.ColumnName);
+                                error = true;
+                            }
+                            else
+                            {
+                                pKeyLogger.ExtraInDatabase(columnName, CompareAttributes.ColumnName,
+                                    table.PrimaryKey.Name);
+                            }
                         }
                     }
 
@@ -329,7 +342,8 @@ namespace EfSchemaCompare.Internal
                 return false;
 
             // Not strictly owned, but acts like owned - Specialized DB Context
-            if (property.IsPrimaryKey() && property.FindFirstPrincipal() != null && property.FindFirstPrincipal().DeclaringEntityType != property.DeclaringEntityType)
+            if (property.IsPrimaryKey() && property.FindFirstPrincipal() != null 
+                                        && property.FindFirstPrincipal().DeclaringEntityType != property.DeclaringEntityType)
                 return false;
 
             var colValGen = column.ValueGenerated.ConvertNullableValueGenerated(column.ComputedColumnSql, column.DefaultValueSql);

@@ -4,6 +4,7 @@
 using System.Collections.Generic;
 using EfSchemaCompare;
 using EfSchemaCompare.Internal;
+using Microsoft.EntityFrameworkCore.Metadata.Internal;
 using Xunit;
 using Xunit.Abstractions;
 using Xunit.Extensions.AssertExtensions;
@@ -38,24 +39,6 @@ namespace Test.UnitTests
         }
 
         [Fact]
-        public void LogDifference()
-        {
-            //SETUP
-            bool errorLogged = false;
-            var logs = new List<CompareLog>();
-            var logger = new CompareLogger2(CompareType.Entity, "Test", logs, null,
-                () => { errorLogged = true; });
-
-            //ATTEMPT
-            logger.Different("MyValue", "OtherValue", CompareAttributes.ColumnName);
-
-            //VERIFY
-            errorLogged.ShouldBeTrue();
-            logs.Count.ShouldEqual(1);
-            logs[0].ToString().ShouldEqual("DIFFERENT: Entity 'Test', column name. Expected = MyValue, found = OtherValue");
-        }
-
-        [Fact]
         public void LogNotInDatabase()
         {
             //SETUP
@@ -74,7 +57,7 @@ namespace Test.UnitTests
         }
 
         [Fact]
-        public void LogExtraInDatabase()
+        public void LogExtraEntityInDatabase()
         {
             //SETUP
             bool errorLogged = false;
@@ -89,6 +72,24 @@ namespace Test.UnitTests
             errorLogged.ShouldBeTrue();
             logs.Count.ShouldEqual(1);
             logs[0].ToString().ShouldEqual("EXTRA IN DATABASE: Entity 'Test', column name. Found = MyValue");
+        }
+
+        [Fact]
+        public void LogExtraDatabaseInDatabase()
+        {
+            //SETUP
+            bool errorLogged = false;
+            var logs = new List<CompareLog>();
+            var logger = new CompareLogger2(CompareType.Database, "MyDatabase", logs, null,
+                () => { errorLogged = true; });
+
+            //ATTEMPT
+            logger.ExtraInDatabase(null, CompareAttributes.NotSet, "MyDatabase");
+
+            //VERIFY
+            errorLogged.ShouldBeTrue();
+            logs.Count.ShouldEqual(1);
+            logs[0].ToString().ShouldEqual("EXTRA IN DATABASE: Database 'MyDatabase'");
         }
 
 

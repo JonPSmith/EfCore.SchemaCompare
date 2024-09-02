@@ -35,16 +35,11 @@ namespace EfSchemaCompare.Internal
             StringComparison caseComparison, string name = null)
         {
             if (!string.Equals(expected, found, caseComparison) && 
-                !string.Equals( expected?.Replace(" ", ""), found?.Replace(" ", ""), caseComparison))
+                !string.Equals(expected?.Replace(" ", ""), found?.Replace(" ", ""), caseComparison))
             {
                 return AddToLogsIfNotIgnored(new CompareLog(_type, CompareState.Different, name ?? _defaultName, attribute, expected, found));
             }
             return false;
-        }
-
-        public void Different(string expected, string found, CompareAttributes attribute, string name = null)
-        {
-            AddToLogsIfNotIgnored(new CompareLog(_type, CompareState.Different, name ?? _defaultName, attribute, expected, found));
         }
 
         public void NotInDatabase(string expected, CompareAttributes attribute = CompareAttributes.NotSet, string name = null)
@@ -73,13 +68,13 @@ namespace EfSchemaCompare.Internal
         //private methods
 
         /// <summary>
-        /// Only adds the 
+        /// Only adds the error if they aren't in the IgnoreTheseErrors
         /// </summary>
         /// <param name="log"></param>
         /// <returns></returns>
         private bool AddToLogsIfNotIgnored(CompareLog log)
         {
-            if (!log.ShouldIIgnoreThisLog(_ignoreList))
+            if (!log.ShouldIgnoreThisLog(_ignoreList))
             {
                 _compareLogs.Add(log);
                 _setErrorHasHappened();

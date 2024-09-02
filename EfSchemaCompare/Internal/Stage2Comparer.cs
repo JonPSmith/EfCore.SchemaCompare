@@ -58,13 +58,14 @@ namespace EfSchemaCompare.Internal
         {
             var logger = new CompareLogger2(CompareType.Column, null, _logs, _ignoreList, () => _hasErrors = true);
             var tableDict = _databaseModel.Tables.ToDictionary(x => x.FormSchemaTableFromDatabase(_databaseModel.DefaultSchema), _caseComparer);
-            //because of table splitting and TPH we need to groups properties by table name to correctly say what columns are missed
+            //because of table splitting and TPH we need to group properties by table name to correctly say what columns are missed
             var entityColsGrouped = firstStageLogs.SelectMany(p => p.SubLogs)
                 .Where(x => x.State == CompareState.Ok && x.Type == CompareType.Entity)
                 .GroupBy(x => x.Expected, y => y.SubLogs
                     .Where(x => x.State == CompareState.Ok && x.Type == CompareType.Property)
                     .Select(p => p.Expected));
-            var entityColsByTableDict = entityColsGrouped.ToDictionary(x => x.Key, y => y.SelectMany(x => x.ToList()), _caseComparer);
+            var entityColsByTableDict = entityColsGrouped.ToDictionary(x => x.Key, 
+                y => y.SelectMany(x => x.ToList()), _caseComparer);
 
             foreach (var entityLog in firstStageLogs.SelectMany(p => p.SubLogs)
                 .Where(x => x.State == CompareState.Ok && x.Type == CompareType.Entity))

@@ -23,21 +23,22 @@ namespace Test.UnitTests
         public void DecodeStringToCompareLog()
         {
             //SETUP
+            const string logOk = @"OK: DbContext 'BookContext'";
             const string logStr1 =
                 @"NOT IN DATABASE: BookDetail->ForeignKey 'FK_Books_Books_BookSummaryId', constraint name. Expected = FK_Books_Books_BookSummaryId";
             const string logStr2 =
                 @"DIFFERENT: BookSummary->Property 'BookSummaryId', value generated. Expected = OnAdd, found = Never";
-            const string logStr3 = @"OK: DbContext 'BookContext'";
-            const string logStr4 =
+            const string logStr3 =
                 @"NOT IN DATABASE: BookDetail->ForeignKey 'FK_Books_Books_BookSummaryId', constraint name. Expected = FK_Books_Books_BookSummaryId";
 
             //ATTEMPT
 
             //VERIFY
+            CompareLog.DecodeCompareTextToCompareLog(logOk).ToString().ShouldEqual(logOk);
             CompareLog.DecodeCompareTextToCompareLog(logStr1).ToString().ShouldEqual(logStr1.Replace("BookDetail->",""));
-            CompareLog.DecodeCompareTextToCompareLog(logStr2).ToString().ShouldEqual(logStr2.Replace("BookSummary->", ""));
-            CompareLog.DecodeCompareTextToCompareLog(logStr3).ToString().ShouldEqual(logStr3);
-            CompareLog.DecodeCompareTextToCompareLog(logStr4).ToString().ShouldEqual(logStr4.Replace("BookDetail->", ""));
+            CompareLog.DecodeCompareTextToCompareLog(logStr2).ToString().ShouldEqual(
+                "DIFFERENT: Property 'BookSummaryId', value generated. Expected = OnAdd, found = <null>");
+            CompareLog.DecodeCompareTextToCompareLog(logStr3).ToString().ShouldEqual(logStr3.Replace("BookDetail->", ""));
         }
 
         [Theory]
@@ -53,7 +54,7 @@ namespace Test.UnitTests
                 "Expected", "Found");
 
             //ATTEMPT
-            var ignoreThis = log.ShouldIIgnoreThisLog(list);
+            var ignoreThis = log.ShouldIgnoreThisLog(list);
 
             //VERIFY
             ignoreThis.ShouldEqual(shouldIgnore);

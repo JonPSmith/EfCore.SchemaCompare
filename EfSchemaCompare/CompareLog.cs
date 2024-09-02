@@ -51,7 +51,7 @@ namespace EfSchemaCompare
     public class CompareLog
     {
         /// <summary>
-        /// This constuctor either creates a new log (used internally) or allows the user to create a log for ignore matching
+        /// This constructor either creates a new log (used internally) or allows the user to create a log for ignore matching
         /// </summary>
         /// <param name="type"></param>
         /// <param name="state"></param>
@@ -188,6 +188,7 @@ namespace EfSchemaCompare
             var state = (CompareState)Enum.Parse(typeof(CompareState), str.Substring(0, indexOfColon).Replace(" ", ""), true);
             var type = (CompareType)Enum.Parse(typeof(CompareType), str.Substring(indexOfArrow + 2, indexOfFirstQuote - indexOfArrow - 3));
             var name = str.Substring(indexOfFirstQuote + 1, indexOfSecondQuote - indexOfFirstQuote - 1);
+
             var attribute = CompareAttributes.NotSet;
             string expected = null;
             string found = null;
@@ -202,25 +203,42 @@ namespace EfSchemaCompare
                         str.Substring(charIndex + 1, indexFullStop - charIndex - 1).Replace(" ",""), true);
                     charIndex = indexFullStop;
                 }
-                if (str.Substring(charIndex, 3) == ". E")
+                if (str.StartsWith("EXTRA IN DATABASE"))
                 {
+                    //Errors that have extra data
+
+                    var foundIndex = str.IndexOf("Found = ");
+                    if (foundIndex != -1)
+                    {
+                        //There is a found part
+                        //EXAMPLE1: "EXTRA IN DATABASE: Table 'Customers', column name. Found = Contact"
+
+                        type = CompareType.Column;
+                        var startOfString = foundIndex + nameof(Expected).Length;
+                        found = str.Substring(startOfString);
+                    }
+                    else
+                    {
+                        //EXAMPLE2: "EXTRA IN DATABASE: Database 'MyDatabase'"
+                        type = CompareType.Table;
+                    }
+                    
+                }
+                else if (str.Substring(charIndex).StartsWith(". Expected"))
+                {
+                    //errors that expected something
+
                     var endCharIndex = str.Substring(charIndex + 3).IndexOf(", f");
                     endCharIndex = endCharIndex < 0 ? str.Length : endCharIndex + charIndex + 3;
                     var startOfString = charIndex + nameof(Expected).Length + 5;
                     expected = ReplaceNullTokenWithNull(str.Substring(startOfString, endCharIndex - startOfString));
-                    charIndex = endCharIndex;
-                }
-                if (charIndex + 3 < str.Length && str.Substring(charIndex+1, 2).Equals(" F", StringComparison.CurrentCultureIgnoreCase))
-                {
-                    var startOfString = charIndex + nameof(Found).Length + 5;
-                    found = ReplaceNullTokenWithNull( str.Substring(startOfString));
                 }
             }
 
             return new CompareLog(type, state, name, attribute, expected, found);
         }
 
-        internal bool ShouldIIgnoreThisLog(IReadOnlyList<CompareLog> ignoreList)
+        internal bool ShouldIgnoreThisLog(IReadOnlyList<CompareLog> ignoreList)
         {
             return ignoreList.Any() && ignoreList.Any(ShouldBeIgnored);
         }
