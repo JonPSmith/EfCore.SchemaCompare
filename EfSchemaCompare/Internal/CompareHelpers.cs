@@ -21,7 +21,7 @@ namespace EfSchemaCompare.Internal
         /// </summary>
         /// <param name="entityType"></param>
         /// <returns></returns>
-        public static string FormSchemaTableFromModel(this IEntityType entityType)
+        public static string FormSchemaTableFromModel(this ITypeBase entityType)
         {
             var tableOrViewName = !string.IsNullOrEmpty((string?)entityType.GetAnnotation(RelationalAnnotationNames.TableName).Value)
                 ? RelationalAnnotationNames.TableName

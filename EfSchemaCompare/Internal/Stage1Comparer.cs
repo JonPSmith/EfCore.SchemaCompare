@@ -55,10 +55,13 @@ namespace EfSchemaCompare.Internal
             CheckDatabaseOk(_logs.Last(), _model, databaseModel);
 
             _tableViewDict = databaseModel.Tables.ToDictionary(x => x.FormSchemaTableFromDatabase(_defaultSchema), _caseComparer);
-            var entitiesNotMappedToTableOrView = _model.GetEntityTypes().Where(x => x.FormSchemaTableFromModel() == null).ToList();
+            var entitiesNotMappedToTableOrView = _model.GetEntityTypes().
+                Where(x => x.FormSchemaTableFromModel() == null).ToList();
             if (entitiesNotMappedToTableOrView.Any())
-                dbLogger.MarkAsNotChecked(null,
-                    string.Join(", ", entitiesNotMappedToTableOrView.Select(x => x.ClrType.Name)), CompareAttributes.NotMappedToDatabase);
+                dbLogger.MarkAsNotChecked(null, string.
+                    Join(", ", entitiesNotMappedToTableOrView.Select(x => x.ClrType.Name)), 
+                    CompareAttributes.NotMappedToDatabase);
+
             foreach (var entityType in _model.GetEntityTypes().Where(x => !entitiesNotMappedToTableOrView.Contains(x)))
             {
                 var logger = new CompareLogger2(CompareType.Entity, entityType.ClrType.Name, _logs.Last().SubLogs, _ignoreList, () => _hasErrors = true);
@@ -86,13 +89,14 @@ namespace EfSchemaCompare.Internal
             return _hasErrors;
         }
 
+        //Not implemented 
         private void CheckDatabaseOk(CompareLog log, IModel modelRel, DatabaseModel databaseModel)
         {
             //Check sequences
             //var logger = new CompareLogger2(CompareType.Sequence, <sequence name>, _logs);
         }
 
-        private void CompareForeignKeys(CompareLog log, IEntityType entityType, DatabaseTable table)
+        private void CompareForeignKeys(CompareLog log, ITypeBase entityType, DatabaseTable table)
         {
             if (table.ForeignKeys.Any(x => string.IsNullOrEmpty(x.Name)))
             {
@@ -103,7 +107,7 @@ namespace EfSchemaCompare.Internal
    
             var fKeyDict = table.ForeignKeys.ToDictionary(x => x.Name, _caseComparer);
 
-            foreach (var entityFKey in entityType.GetForeignKeys())
+            foreach (var entityFKey in entityType.ContainingEntityType.GetForeignKeys())
             {
                 var entityFKeyProps = entityFKey.Properties;
                 var constraintName = entityFKey.GetConstraintName();
@@ -138,16 +142,16 @@ namespace EfSchemaCompare.Internal
             }
         }
 
-        private bool IgnoreForeignKeyIfInSameTableOrTpT(IEntityType entityType, IForeignKey entityFKey, DatabaseTable table)
+        private bool IgnoreForeignKeyIfInSameTableOrTpT(ITypeBase entityType, IForeignKey entityFKey, DatabaseTable table)
         {
             //see https://github.com/aspnet/EntityFrameworkCore/issues/10345#issuecomment-345841191
             var fksPropsInOneTable = entityFKey.Properties.All(x =>
-                string.Equals(x.DeclaringEntityType.FormSchemaTableFromModel(), table.FormSchemaTableFromDatabase(_defaultSchema), _caseComparison));
+                string.Equals(x.DeclaringType.FormSchemaTableFromModel(), table.FormSchemaTableFromDatabase(_defaultSchema), _caseComparison));
             var fksPropsColumnNames = entityFKey.Properties.Select(p => GetColumnNameTakingIntoAccountSchema(p, table));
             var pkPropsColumnNames = new List<string>();
             foreach (var principalKeyProperty in entityFKey.PrincipalKey.Properties)
             {
-                var declaringSchemaTable = principalKeyProperty.DeclaringEntityType.FormSchemaTableFromModel();
+                var declaringSchemaTable = principalKeyProperty.DeclaringType.FormSchemaTableFromModel();
                 if (!_tableViewDict.ContainsKey(declaringSchemaTable))
                     //There is a missing table problem, but we don't handle it here. returns false which means the calling code will find the problem.
                     return false;
@@ -158,10 +162,10 @@ namespace EfSchemaCompare.Internal
             return fksPropsInOneTable && fksPropsColumnNames.SequenceEqual(pkPropsColumnNames);
         }
 
-        private void CompareIndexes(CompareLog log, IEntityType entityType, DatabaseTable table)
+        private void CompareIndexes(CompareLog log, ITypeBase entityType, DatabaseTable table)
         {
             var indexDict = DatabaseIndexData.GetIndexesAndUniqueConstraints(table).ToDictionary(x => x.Name, _caseComparer);
-            foreach (var entityIdx in entityType.GetIndexes())
+            foreach (var entityIdx in entityType.ContainingEntityType.GetIndexes())
             {
                 var entityIdxprops = entityIdx.Properties;
                 var allColumnNames = string.Join(",", entityIdxprops
@@ -194,12 +198,12 @@ namespace EfSchemaCompare.Internal
             }
         }
 
-        private void CompareColumns(CompareLog log, IEntityType entityType, DatabaseTable table)
+        private void CompareColumns(CompareLog log, ITypeBase entityType, DatabaseTable table)
         {
             var isView = entityType.GetTableName() == null;
             var primaryKeyDict = table.PrimaryKey?.Columns.ToDictionary(x => x.Name, _caseComparer)
                                  ?? new Dictionary<string, DatabaseColumn>();
-            var efPKeyConstraintName = isView ? NoPrimaryKey :  entityType.FindPrimaryKey()?.GetName() ?? NoPrimaryKey;
+            var efPKeyConstraintName = isView ? NoPrimaryKey :  entityType.ContainingEntityType.FindPrimaryKey()?.GetName() ?? NoPrimaryKey;
             bool pKeyError = false;
             var pKeyLogger = new CompareLogger2(CompareType.PrimaryKey, efPKeyConstraintName, log.SubLogs, _ignoreList,
                 () =>
@@ -225,8 +229,10 @@ namespace EfSchemaCompare.Internal
 #pragma warning restore EF1001 // Internal EF Core API usage.
                .Select(a => (string)a.Value)
                .ToArray();
-            
-            //This finds all the Owned Types and THP
+
+            var isOwned = entityType.ContainingEntityType.IsOwned();
+
+            //Now we look at each property  
             foreach (var property in entityType.GetProperties())
             {
                 // Ignore temporal shadow properties (SQL Server)
@@ -238,7 +244,7 @@ namespace EfSchemaCompare.Internal
 
                 var colLogger = new CompareLogger2(CompareType.Property, property.Name, log.SubLogs, _ignoreList, () => _hasErrors = true);
                 var columnName = GetColumnNameTakingIntoAccountSchema(property, table, isView);
-                if (columnName == null && !propertyInJson)
+                if (columnName == null)
                 {
                     //This catches properties in TPH, split tables, and Owned Types where the properties are not mapped to the current table
                     continue;
@@ -256,9 +262,9 @@ namespace EfSchemaCompare.Internal
                         //The property is stored in the database
 
                         var reColumn = GetRelationalColumn(columnName, table, isView);
-                        error = ComparePropertyToColumn(reColumn, colLogger, property, columnDict[columnName], isView);
+                        error = ComparePropertyToColumn(reColumn, colLogger, property, columnDict[columnName], isView, isOwned);
                         //check for primary key
-                        if (property.IsPrimaryKey() &&
+                        if ((property.FindContainingPrimaryKey() != null) &&
                             //This remove TPH, Owned Types primary key checks
                             !isView != primaryKeyDict.ContainsKey(columnName))
                         {
@@ -290,7 +296,8 @@ namespace EfSchemaCompare.Internal
                 pKeyLogger.MarkAsOk(efPKeyConstraintName);
         }
 
-        private bool ComparePropertyToColumn(IColumnBase relColumn, CompareLogger2 logger, IProperty property, DatabaseColumn column, bool isView)
+        private bool ComparePropertyToColumn(IColumnBase relColumn, CompareLogger2 logger, 
+            IProperty property, DatabaseColumn column, bool isView, bool isOwned)
         {
             var error = logger.CheckDifferent(property.GetColumnType(), column.StoreType, CompareAttributes.ColumnType, _caseComparison);
             error |= logger.CheckDifferent(relColumn.IsNullable.NullableAsString(), 
@@ -308,7 +315,7 @@ namespace EfSchemaCompare.Internal
             error |= logger.CheckDifferent(defaultValue,
                     column.DefaultValueSql.RemoveUnnecessaryBrackets(), CompareAttributes.DefaultValueSql, _caseComparison);
             if (!isView)
-                error |= CheckValueGenerated(logger, property, column);
+                error |= CheckValueGenerated(logger, property, column, isOwned);
             return error;
         }
 
@@ -330,20 +337,20 @@ namespace EfSchemaCompare.Internal
         }
 
         //thanks to https://stackoverflow.com/questions/1749966/c-sharp-how-to-determine-whether-a-type-is-a-number
-        private static HashSet<Type> IntegerTypes = new HashSet<Type>
-        {
-            typeof(byte), typeof(sbyte), typeof(short), typeof(ushort), typeof(int), typeof(uint), typeof(long), typeof(ulong)
-        };
+        private static readonly HashSet<Type> IntegerTypes =
+        [
+            typeof(byte), typeof(sbyte), typeof(short), typeof(ushort), typeof(int), typeof(uint), typeof(long),
+            typeof(ulong)
+        ];
 
-        private bool CheckValueGenerated(CompareLogger2 logger, IProperty property, DatabaseColumn column)
+        private bool CheckValueGenerated(CompareLogger2 logger, IProperty property, DatabaseColumn column, bool isOwned)
         {
             // Leave owned value generated properties to be checked by the owning entity
-            if (property.IsPrimaryKey() && property.DeclaringEntityType.IsOwned())
+            if (property.IsPrimaryKey() && isOwned)
                 return false;
 
             // Not strictly owned, but acts like owned - Specialized DB Context
-            if (property.IsPrimaryKey() && property.FindFirstPrincipal() != null 
-                                        && property.FindFirstPrincipal().DeclaringEntityType != property.DeclaringEntityType)
+            if (property.IsPrimaryKey() && property.FindFirstPrincipal()?.DeclaringType != property.DeclaringType)
                 return false;
 
             var colValGen = column.ValueGenerated.ConvertNullableValueGenerated(column.ComputedColumnSql, column.DefaultValueSql);

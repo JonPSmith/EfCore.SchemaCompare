@@ -64,14 +64,14 @@ public class TestJsonColumns
 
         var config = new CompareEfSqlConfig();
         config.IgnoreTheseErrors(
-            @"DIFFERENT: InnerJsonMap->PrimaryKey '- no primary key -', constraint name. Expected = - no primary key -, found = PK_Customers
-DIFFERENT: Entity 'InnerJsonMap', constraint name. Expected = - no primary key -, found = PK_Customers
-DIFFERENT: OuterJsonMap->PrimaryKey '- no primary key -', constraint name. Expected = - no primary key -, found = PK_Customers
-NOT IN DATABASE: OuterJsonMap->ForeignKey 'FK_Customers_Customers_CustomerId', constraint name. Expected = FK_Customers_Customers_CustomerId
-DIFFERENT: Entity 'OuterJsonMap', constraint name. Expected = - no primary key -, found = PK_Customers");
+            @"DIFFERENT: InnerJsonMap->PrimaryKey '- no primary key -', constraint name. Expected = - no primary key -, found = PK_HeadEntries
+DIFFERENT: Entity 'InnerJsonMap', constraint name. Expected = - no primary key -, found = PK_HeadEntries
+DIFFERENT: OuterJsonMap->PrimaryKey '- no primary key -', constraint name. Expected = - no primary key -, found = PK_HeadEntries
+NOT IN DATABASE: OuterJsonMap->ForeignKey 'FK_HeadEntries_HeadEntries_HeadEntryId', constraint name. Expected = FK_HeadEntries_HeadEntries_HeadEntryId
+DIFFERENT: Entity 'OuterJsonMap', constraint name. Expected = - no primary key -, found = PK_HeadEntries");
 //EXTRA IN DATABASE: Table 'HeadEntries', column name. Found = JsonParts
 //EXTRA IN DATABASE: Table 'HeadEntries', column name. Found = JsonParts
-//EXTRA IN DATABASE: Table 'HeadEntries', column name.");
+//EXTRA IN DATABASE: Table 'HeadEntries', column name. Found = JsonParts
 
         var comparer = new CompareEfSql(config);
 
@@ -98,14 +98,14 @@ EXTRA IN DATABASE: Table 'HeadEntries', column name. Found = JsonParts");
 
         var config = new CompareEfSqlConfig();
         config.IgnoreTheseErrors(
-            @"DIFFERENT: InnerJsonMap->PrimaryKey '- no primary key -', constraint name. Expected = - no primary key -, found = PK_Customers
-DIFFERENT: Entity 'InnerJsonMap', constraint name. Expected = - no primary key -, found = PK_Customers
-DIFFERENT: OuterJsonMap->PrimaryKey '- no primary key -', constraint name. Expected = - no primary key -, found = PK_Customers
-NOT IN DATABASE: OuterJsonMap->ForeignKey 'FK_Customers_Customers_CustomerId', constraint name. Expected = FK_Customers_Customers_CustomerId
-DIFFERENT: Entity 'OuterJsonMap', constraint name. Expected = - no primary key -, found = PK_Customers
+            @"DIFFERENT: InnerJsonMap->PrimaryKey '- no primary key -', constraint name. Expected = - no primary key -, found = PK_HeadEntries
+DIFFERENT: Entity 'InnerJsonMap', constraint name. Expected = - no primary key -, found = PK_HeadEntries
+DIFFERENT: OuterJsonMap->PrimaryKey '- no primary key -', constraint name. Expected = - no primary key -, found = PK_HeadEntries
+NOT IN DATABASE: OuterJsonMap->ForeignKey 'FK_HeadEntries_HeadEntries_HeadEntryId', constraint name. Expected = FK_HeadEntries_HeadEntries_HeadEntryId
+DIFFERENT: Entity 'OuterJsonMap', constraint name. Expected = - no primary key -, found = PK_HeadEntries
 EXTRA IN DATABASE: Table 'HeadEntries', column name. Found = JsonParts
 EXTRA IN DATABASE: Table 'HeadEntries', column name. Found = JsonParts
-EXTRA IN DATABASE: Table 'HeadEntries', column name.");
+EXTRA IN DATABASE: Table 'HeadEntries', column name. Found = JsonParts");
 
         var comparer = new CompareEfSql(config);
 
@@ -136,6 +136,7 @@ EXTRA IN DATABASE: Table 'HeadEntries', column name.");
 
         //VERIFY
         //Just print errors
-        hasErrors.ShouldBeFalse(comparer.GetAllErrors);
+        hasErrors.ShouldBeTrue();
+        _output.WriteLine(comparer.GetAllErrors);
     }
 }
