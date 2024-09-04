@@ -17,13 +17,14 @@
 	
   <PropertyGroup>
     <PackageId>EfCore.SchemaCompare</PackageId>
-    <PackageVersion>8.0.4</PackageVersion>
-    <Version>8.0.4</Version>
+    <PackageVersion>8.1.0</PackageVersion>
+    <Version>8.1.0</Version>
     <Authors>Jon P Smith</Authors>
     <Description>Useful tool if you  are changing the schema of your database's schema outside of EF Core' migrations, say by using SQL change scripts. See readme file on github.</Description>
     <PackageRequireLicenseAcceptance>false</PackageRequireLicenseAcceptance>
     <PackageReleaseNotes>
-		- REALLY removed Microsoft.IdentityModel.Tokens NuGet as not correct (see issue #36) 
+		- Fixed issue #18. i.e "columns that are extra in db are not excluded" is fixed 
+		- IEntityType is obsolete, moved to ITypeBase
 	</PackageReleaseNotes>
     <Copyright>Copyright (c) 2020 Jon P Smith. Licenced under MIT licence</Copyright>
     <PackageTags>Entity Framework Core, Database</PackageTags>

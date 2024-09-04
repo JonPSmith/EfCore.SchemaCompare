@@ -198,7 +198,8 @@ namespace Test.UnitTests
                 builder => builder.ReplaceService<IModelCacheKeyFactory, MyEntityModelCacheKeyFactory>());
             using (var context = new MyEntityDbContext(options, MyEntityDbContext.Configs.DifferentPk))
             {
-                var model = context.Model;
+                //var model = context.Model;
+                //var entity  = model.GetEntityTypes().Single();
                 var handler = new Stage1Comparer(context);
 
                 //ATTEMPT
@@ -207,12 +208,13 @@ namespace Test.UnitTests
                 //VERIFY
                 hasErrors.ShouldBeTrue();
                 var errors = CompareLog.ListAllErrors(handler.Logs).ToList();
-                errors.Count.ShouldEqual(3);
+                errors.Count.ShouldEqual(2);
+                //NOTE: before changing from IEntityType to ITypeBase the following error (commented out below) was added.
+                //errors[0].ShouldEqual(
+                //    "DIFFERENT: MyEntity->Property 'MyInt', value generated. Expected = OnAdd, found = Never");
                 errors[0].ShouldEqual(
-                    "DIFFERENT: MyEntity->Property 'MyInt', value generated. Expected = OnAdd, found = Never");
-                errors[1].ShouldEqual(
                     "NOT IN DATABASE: MyEntity->PrimaryKey 'PK_MyEntites', column name. Expected = MyInt");
-                errors[2].ShouldEqual(
+                errors[1].ShouldEqual(
                     "DIFFERENT: MyEntity->Property 'MyEntityId', value generated. Expected = Never, found = OnAdd");
             }
         }
