@@ -23,6 +23,7 @@ namespace EfSchemaCompare.Internal
         private readonly IModel _model;
         private readonly string _dbContextName;
         private readonly IRelationalTypeMappingSource _relationalTypeMapping;
+        private readonly Dictionary<IEntityType, INavigation> _jsonEntityDict = new Dictionary<IEntityType, INavigation>();
         private readonly IReadOnlyList<CompareLog> _ignoreList;
         private readonly StringComparer _caseComparer;
         private readonly StringComparison _caseComparison;
@@ -62,6 +63,24 @@ namespace EfSchemaCompare.Internal
                     Join(", ", entitiesNotMappedToTableOrView.Select(x => x.ClrType.Name)), 
                     CompareAttributes.NotMappedToDatabase);
 
+            
+            //Get a list of entities that are using Json Mapping. There are 
+            //1. Check that the top-level 
+            foreach (var entity in _model.GetEntityTypes())
+            {
+                foreach (var nav in entity.ContainingEntityType.GetNavigations()
+                             .Where(navigation => navigation.TargetEntityType.IsMappedToJson()))
+                {
+                    _jsonEntityDict.Add(entity, nav);
+                }
+            }
+            //Now we remove any json entities from the list of entries where the json data is held by a higher entity
+            foreach (var entityNav in _jsonEntityDict)
+            {
+                if (entityNav.Value.DeclaringEntityType != entityNav.Key)
+                    entitiesNotMappedToTableOrView.Add(entityNav.Key);
+            }
+
             foreach (var entityType in _model.GetEntityTypes().Where(x => !entitiesNotMappedToTableOrView.Contains(x)))
             {
                 var logger = new CompareLogger2(CompareType.Entity, entityType.ClrType.Name, _logs.Last().SubLogs, _ignoreList, () => _hasErrors = true);
@@ -86,6 +105,7 @@ namespace EfSchemaCompare.Internal
                     logger.NotInDatabase(entityType.FormSchemaTableFromModel(), CompareAttributes.TableName);
                 }
             }
+
             return _hasErrors;
         }
 
@@ -198,12 +218,13 @@ namespace EfSchemaCompare.Internal
             }
         }
 
-        private void CompareColumns(CompareLog log, ITypeBase entityType, DatabaseTable table)
+
+        private void CompareColumns(CompareLog log, ITypeBase TypeBase, DatabaseTable table)
         {
-            var isView = entityType.GetTableName() == null;
+            var isView = TypeBase.GetTableName() == null;
             var primaryKeyDict = table.PrimaryKey?.Columns.ToDictionary(x => x.Name, _caseComparer)
                                  ?? new Dictionary<string, DatabaseColumn>();
-            var efPKeyConstraintName = isView ? NoPrimaryKey :  entityType.ContainingEntityType.FindPrimaryKey()?.GetName() ?? NoPrimaryKey;
+            var efPKeyConstraintName = isView ? NoPrimaryKey :  TypeBase.ContainingEntityType.FindPrimaryKey()?.GetName() ?? NoPrimaryKey;
             bool pKeyError = false;
             var pKeyLogger = new CompareLogger2(CompareType.PrimaryKey, efPKeyConstraintName, log.SubLogs, _ignoreList,
                 () =>
@@ -214,8 +235,38 @@ namespace EfSchemaCompare.Internal
             if (!isView)
                 pKeyLogger.CheckDifferent(efPKeyConstraintName, table.PrimaryKey?.Name ?? NoPrimaryKey,
                     CompareAttributes.ConstraintName, _caseComparison);
+            
+            #region JsonMapping
 
-            var columnDict = table.Columns.ToDictionary(x => x.Name, _caseComparer);
+            //Json Mapping Start----------------------------------------------------------------------------
+            //Get all the entities with their navigations which are handling Json Mapping
+            Dictionary<IEntityType, INavigation> jsonEntityDict = new Dictionary<IEntityType, INavigation>();
+            foreach (var entity in _model.GetEntityTypes())
+            {
+                foreach (var nav in entity.ContainingEntityType.GetNavigations()
+                             .Where(navigation => navigation.TargetEntityType.IsMappedToJson()))
+                {
+                    jsonEntityDict.Add(entity, nav);
+                }
+            }
+
+            //Then look for top Json Mapping entities (i.e. we ignore Json Mapping entities that link to a higher son Mapping entity)
+            //and we ensure that there is a string column in their table 
+            foreach (var entityNav in jsonEntityDict)
+            {
+                //!!!!!!!!!!!!!!!!!!!!!!!!!!!!! TEST
+                var x = entityNav.Value.TargetEntityType;
+
+                if (entityNav.Value.TargetEntityType != entityNav.Value.DeclaringEntityType)
+                    //If the entity isn't holding Json data in the current entity, then its data is stored to a higher entity
+                    continue;
+
+                var logger = new CompareLogger2(CompareType.Column, entityNav.Value.Name, _logs.Last().SubLogs, _ignoreList, () => _hasErrors = true);
+                if (!entityNav.Key.GetProperties().Select(x => x.Name).Contains(entityNav.Value.Name))
+                    logger.NotInDatabase(entityNav.Value.Name);
+            }
+            //Json Mapping End------------------------------------------------------------------------------
+            #endregion JsonMapping
 
             // Imported from SqlServerAnnotationNames from SqlServer provider
             const string sqlServerTemporalPeriodStartPropertyName = "SqlServer:TemporalPeriodStartPropertyName";
@@ -230,17 +281,16 @@ namespace EfSchemaCompare.Internal
                .Select(a => (string)a.Value)
                .ToArray();
 
-            var isOwned = entityType.ContainingEntityType.IsOwned();
+            var columnDict = table.Columns.ToDictionary(x => x.Name, _caseComparer);
 
-            //Now we look at each property  
-            foreach (var property in entityType.GetProperties())
+            var isOwned = TypeBase.ContainingEntityType.IsOwned();
+
+            //Now we look at each property with 
+            foreach (var property in TypeBase.GetProperties())
             {
                 // Ignore temporal shadow properties (SQL Server)
                 if (property.IsShadowProperty() && temporalColumnIgnores.Contains(property.Name))
                     continue;
-
-                // find if the properly is stored in a JSON string
-                var propertyInJson = false; 
 
                 var colLogger = new CompareLogger2(CompareType.Property, property.Name, log.SubLogs, _ignoreList, () => _hasErrors = true);
                 var columnName = GetColumnNameTakingIntoAccountSchema(property, table, isView);
@@ -253,11 +303,6 @@ namespace EfSchemaCompare.Internal
                 if (columnDict.ContainsKey(columnName))
                 {
                     bool error = false;
-                    if (propertyInJson)
-                    {
-                        //the property is stored in a JONS string
-                    }
-                    else
                     {
                         //The property is stored in the database
 

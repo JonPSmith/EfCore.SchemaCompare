@@ -20,7 +20,9 @@ public class JsonCustomerContext : DbContext
             headEntry => headEntry.JsonParts, ownedNavigationBuilder =>
             {
                 ownedNavigationBuilder.ToJson();
-                ownedNavigationBuilder.OwnsOne(contactDetails => contactDetails.InnerJsonMap);
+                ownedNavigationBuilder.OwnsOne(x => x.MiddleJsonMap)
+                    .OwnsOne(x => x.BottomJsonMap);
             });
+        modelBuilder.Entity<HeadEntry>().OwnsOne(headEntry => headEntry.ExtraJsonParts);
     }
 }

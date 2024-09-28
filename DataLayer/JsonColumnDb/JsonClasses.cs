@@ -9,7 +9,8 @@ public class HeadEntry
 {
     public int Id { get; set; }
     public int HeadInt { get; set; }
-    public OuterJsonMap JsonParts { get; set; }
+    public TopJsonMap JsonParts { get; set; }
+    public ExtraJson ExtraJsonParts { get; set; }
 
     /// <summary>
     /// Useful for debugging
@@ -17,16 +18,13 @@ public class HeadEntry
     /// <returns></returns>
     public override string ToString()
     {
-        return $"{nameof(HeadInt)}: {HeadInt}, {nameof(JsonParts)}: {JsonParts}";
+        return $"{nameof(HeadInt)}: {HeadInt}, {nameof(JsonParts)}: {JsonParts}, {nameof(ExtraJsonParts)}: {ExtraJsonParts}";
     }
 }
 
-public class OuterJsonMap
+public class ExtraJson
 {
-    public int OuterInt { get; set; }
-    public string OuterString { get; set; }
-    public DateTime OuterDate { get; set; }
-    public InnerJsonMap InnerJsonMap { get; set; } = null!;
+    public string ExtraString { get; set; }
 
     /// <summary>
     /// Useful for debugging
@@ -34,15 +32,14 @@ public class OuterJsonMap
     /// <returns></returns>
     public override string ToString()
     {
-        return $"{OuterInt}, {OuterString}, {OuterDate}, {InnerJsonMap}";
+        return $"{ExtraString}";
     }
 }
 
-public class InnerJsonMap
+public class TopJsonMap
 {
-    public int InnerInt { get; set; }
-    public string InnerString { get; set; }
-    public DateTime InnerDate { get; set; }
+    public string TopString { get; set; }
+    public MiddleJsonMap MiddleJsonMap { get; set; } = null!;
 
     /// <summary>
     /// Useful for debugging
@@ -50,7 +47,36 @@ public class InnerJsonMap
     /// <returns></returns>
     public override string ToString()
     {
-        return $"{InnerInt}, {InnerString}, {InnerDate}";
+        return $"{TopString}, {MiddleJsonMap}";
+    }
+}
+
+public class MiddleJsonMap
+{
+    public string MiddleJsonString { get; set; }
+    public BottomJsonMap BottomJsonMap { get; set; }
+
+    /// <summary>
+    /// Useful for debugging
+    /// </summary>
+    /// <returns></returns>
+    public override string ToString()
+    {
+        return $"{MiddleJsonString}, {BottomJsonMap}";
+    }
+}
+
+public class BottomJsonMap
+{
+    public string BottomJsonString { get; set; }
+
+    /// <summary>
+    /// Useful for debugging
+    /// </summary>
+    /// <returns></returns>
+    public override string ToString()
+    {
+        return BottomJsonString;
     }
 }
 
