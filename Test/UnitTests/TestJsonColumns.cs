@@ -1,14 +1,10 @@
 ﻿// Copyright (c) 2024 Jon P Smith, GitHub: JonPSmith, web: http://www.thereformedprogrammer.net/
 // Licensed under MIT license. See License.txt in the project root for license information.
 
-using System;
 using System.Linq;
 using DataLayer.JsonColumnDb;
 using EfSchemaCompare;
 using Microsoft.EntityFrameworkCore;
-using Microsoft.EntityFrameworkCore.Infrastructure;
-using Microsoft.EntityFrameworkCore.Metadata.Internal;
-using Microsoft.EntityFrameworkCore.Storage;
 using TestSupport.EfHelpers;
 using Xunit;
 using Xunit.Abstractions;
@@ -38,21 +34,21 @@ public class TestJsonColumns
         context.Add(new HeadEntry
         {
             HeadInt = -1,
-            JsonParts = new TopJsonMap { TopString = "Top String",
+            TopJsonMap = new TopJsonMap { TopString = "Top String",
                 MiddleJsonMap = new MiddleJsonMap
                 {
                     MiddleJsonString = "Middle String",
                     BottomJsonMap = new BottomJsonMap{ BottomJsonString = "Bottom string"}
                 }},
-            ExtraJsonParts = new ExtraJson{ ExtraString = "Extra String"}
+            ExtraJsonParts = new ExtraJson{ ExtraString = "Extra String", ExtraInt = 123}
         });
-        context.Add(new Normal { NormalString = "Normal", NormalExtra = new NormalExtra { ExtraString = "Extra"}});
+        context.Add(new Normal { NormalString = "Normal", NormalExtra = new NormalExtra { ExtraString = "Extra", NormalExtraId = 123}});
         context.SaveChanges();
 
         //VERIFY
         context.ChangeTracker.Clear();
         context.HeadEntries.Single().ToString().ShouldEqual(
-            "HeadInt: -1, JsonParts: 1, Outer String, Top String, Bottom string");
+            "HeadInt: -1, TopJsonMap: Top String, Middle String, Bottom string, ExtraJsonParts: ExtraString: Extra String, ExtraInt: 123");
         var normal = context.Normals.Include(x => x.NormalExtra).Single();
         normal.NormalString.ShouldEqual("Normal");
         normal.NormalExtra.ExtraString.ShouldEqual("Extra");
@@ -76,13 +72,53 @@ public class TestJsonColumns
             {
                 _output.WriteLine($"  Property = {property.Name}, type = {property.GetColumnType()}");
             }
+
             var navigations = entityType.ContainingEntityType.GetNavigations().ToArray();
-            foreach (var navigation in navigations.Where(x => x.TargetEntityType.IsMappedToJson()))
+            if (navigations.Any())
             {
-                _output.WriteLine($"  Navigation = {navigation.Name}, " +
-                                  $"IsJson = {navigation.TargetEntityType.IsMappedToJson()}");
-                _output.WriteLine($"     TargetEntityType = {navigation.TargetEntityType.Name}, ");
-                _output.WriteLine($"     DeclaringEntityType = {navigation.DeclaringEntityType.Name}");
+                var num = 1;
+                foreach (var navigation in navigations)
+                {
+                    _output.WriteLine($"  {num++}");
+                    _output.WriteLine($"  Navigation = {navigation.Name}, " +
+                                      $"IsJson = {navigation.TargetEntityType.IsMappedToJson()}");
+                    _output.WriteLine($"     TargetEntityType = {navigation.TargetEntityType.Name}, ");
+                    _output.WriteLine($"     DeclaringEntityType = {navigation.DeclaringEntityType.Name}");
+                }
+            }
+        }
+    }
+
+    [Fact]
+    public void CheckNavigations()
+    {
+        //SETUP
+        var options = this.CreateUniqueClassOptions<JsonCustomerContext>();
+        using var context = new JsonCustomerContext(options);
+        context.Database.EnsureDeleted();
+        context.Database.EnsureCreated();
+
+        //ATTEMPT
+        foreach (var entityType in context.Model.GetEntityTypes())
+        {
+            _output.WriteLine($"Entity Name: {entityType.Name}");
+            var properties = entityType.GetProperties();
+            foreach (var property in properties)
+            {
+                _output.WriteLine($"  Property = {property.Name}, type = {property.GetColumnType()}");
+            }
+            var containerNavs = entityType.ContainingEntityType.GetNavigations().ToArray();
+            if (containerNavs.Any())
+            {
+                var num = 1;
+                foreach (var navigation in containerNavs)
+                {
+                    _output.WriteLine($"  {num++}");
+                    _output.WriteLine($"  Navigation = {navigation.Name}, " +
+                                      $"IsJson = {navigation.TargetEntityType.IsMappedToJson()}");
+                    _output.WriteLine($"     TargetEntityType = {navigation.TargetEntityType.Name}, ");
+                    _output.WriteLine($"     DeclaringEntityType = {navigation.DeclaringEntityType.Name}");
+                }
             }
         }
 
@@ -104,9 +140,9 @@ DIFFERENT: Entity 'TopJsonMap', constraint name. Expected = - no primary key -, 
 DIFFERENT: ContainsJsonMaps->PrimaryKey '- no primary key -', constraint name. Expected = - no primary key -, found = PK_HeadEntries
 NOT IN DATABASE: ContainsJsonMaps->ForeignKey 'FK_HeadEntries_HeadEntries_HeadEntryId', constraint name. Expected = FK_HeadEntries_HeadEntries_HeadEntryId
 DIFFERENT: Entity 'ContainsJsonMaps', constraint name. Expected = - no primary key -, found = PK_HeadEntries");
-//EXTRA IN DATABASE: Table 'HeadEntries', column name. Found = JsonParts
-//EXTRA IN DATABASE: Table 'HeadEntries', column name. Found = JsonParts
-//EXTRA IN DATABASE: Table 'HeadEntries', column name. Found = JsonParts
+//EXTRA IN DATABASE: Table 'HeadEntries', column name. Found = TopJsonMap
+//EXTRA IN DATABASE: Table 'HeadEntries', column name. Found = TopJsonMap
+//EXTRA IN DATABASE: Table 'HeadEntries', column name. Found = TopJsonMap
 
         var comparer = new CompareEfSql(config);
 
@@ -118,9 +154,9 @@ DIFFERENT: Entity 'ContainsJsonMaps', constraint name. Expected = - no primary k
         //VERIFY
         //Only stage 1 errors are removed 
         hasErrors.ShouldBeTrue();
-        comparer.GetAllErrors.ShouldEqual(@"EXTRA IN DATABASE: Table 'HeadEntries', column name. Found = JsonParts
-EXTRA IN DATABASE: Table 'HeadEntries', column name. Found = JsonParts
-EXTRA IN DATABASE: Table 'HeadEntries', column name. Found = JsonParts");
+        comparer.GetAllErrors.ShouldEqual(@"EXTRA IN DATABASE: Table 'HeadEntries', column name. Found = TopJsonMap
+EXTRA IN DATABASE: Table 'HeadEntries', column name. Found = TopJsonMap
+EXTRA IN DATABASE: Table 'HeadEntries', column name. Found = TopJsonMap");
     }
 
     [Fact]
@@ -138,9 +174,9 @@ DIFFERENT: Entity 'TopJsonMap', constraint name. Expected = - no primary key -, 
 DIFFERENT: ContainsJsonMaps->PrimaryKey '- no primary key -', constraint name. Expected = - no primary key -, found = PK_HeadEntries
 NOT IN DATABASE: ContainsJsonMaps->ForeignKey 'FK_HeadEntries_HeadEntries_HeadEntryId', constraint name. Expected = FK_HeadEntries_HeadEntries_HeadEntryId
 DIFFERENT: Entity 'ContainsJsonMaps', constraint name. Expected = - no primary key -, found = PK_HeadEntries
-EXTRA IN DATABASE: Table 'HeadEntries', column name. Found = JsonParts
-EXTRA IN DATABASE: Table 'HeadEntries', column name. Found = JsonParts
-EXTRA IN DATABASE: Table 'HeadEntries', column name. Found = JsonParts");
+EXTRA IN DATABASE: Table 'HeadEntries', column name. Found = TopJsonMap
+EXTRA IN DATABASE: Table 'HeadEntries', column name. Found = TopJsonMap
+EXTRA IN DATABASE: Table 'HeadEntries', column name. Found = TopJsonMap");
 
         var comparer = new CompareEfSql(config);
 

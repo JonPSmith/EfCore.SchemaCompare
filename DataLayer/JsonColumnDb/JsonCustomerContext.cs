@@ -13,16 +13,22 @@ public class JsonCustomerContext : DbContext
 
     public DbSet<HeadEntry> HeadEntries { get; set; }
     public DbSet<Normal> Normals { get; set; }
+    public DbSet<NormalExtra> NormalExtras { get; set; }
+
 
     protected override void OnModelCreating(ModelBuilder modelBuilder)
     {
         modelBuilder.Entity<HeadEntry>().OwnsOne(
-            headEntry => headEntry.JsonParts, ownedNavigationBuilder =>
+            headEntry => headEntry.TopJsonMap, ownedNavigationBuilder =>
             {
                 ownedNavigationBuilder.ToJson();
-                ownedNavigationBuilder.OwnsOne(x => x.MiddleJsonMap)
-                    .OwnsOne(x => x.BottomJsonMap);
+                ownedNavigationBuilder.OwnsOne(x => x.MiddleJsonMap).ToJson()
+                    .OwnsOne(x => x.BottomJsonMap).ToJson();
             });
-        modelBuilder.Entity<HeadEntry>().OwnsOne(headEntry => headEntry.ExtraJsonParts);
+        modelBuilder.Entity<HeadEntry>().OwnsOne(
+            headEntry => headEntry.ExtraJsonParts, ownedNavigationBuilder =>
+            {
+                ownedNavigationBuilder.ToJson();
+            });
     }
 }
