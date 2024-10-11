@@ -18,12 +18,13 @@ public class JsonCustomerContext : DbContext
 
     protected override void OnModelCreating(ModelBuilder modelBuilder)
     {
+        
         modelBuilder.Entity<HeadEntry>().OwnsOne(
             headEntry => headEntry.TopJsonMap, ownedNavigationBuilder =>
             {
                 ownedNavigationBuilder.ToJson();
-                ownedNavigationBuilder.OwnsOne(x => x.MiddleJsonMap).ToJson()
-                    .OwnsOne(x => x.BottomJsonMap).ToJson();
+                ownedNavigationBuilder.OwnsOne(x => x.MiddleJsonMap)
+                    .OwnsOne(x => x.BottomJsonMap);
             });
         modelBuilder.Entity<HeadEntry>().OwnsOne(
             headEntry => headEntry.ExtraJsonParts, ownedNavigationBuilder =>

@@ -23,7 +23,7 @@ namespace EfSchemaCompare.Internal
         private readonly IModel _model;
         private readonly string _dbContextName;
         private readonly IRelationalTypeMappingSource _relationalTypeMapping;
-        private readonly Dictionary<IEntityType, INavigation> _jsonEntityDict = new Dictionary<IEntityType, INavigation>();
+        private readonly List<IEntityType> _entitiesContainingJsonMappedStrings = new List<IEntityType>();
         private readonly IReadOnlyList<CompareLog> _ignoreList;
         private readonly StringComparer _caseComparer;
         private readonly StringComparison _caseComparison;
@@ -62,24 +62,23 @@ namespace EfSchemaCompare.Internal
                 dbLogger.MarkAsNotChecked(null, string.
                     Join(", ", entitiesNotMappedToTableOrView.Select(x => x.ClrType.Name)), 
                     CompareAttributes.NotMappedToDatabase);
-
             
-            //Get a list of entities that are using Json Mapping. There are 
-            //1. Check that the top-level 
-            foreach (var entity in _model.GetEntityTypes())
+            #region JsonMapping
+            //Json Mapping Start----------------------------------------------------------------------------
+            //Get a list of entities that are using Json Mapping. 
+            foreach (var entityType in _model.GetEntityTypes())
             {
-                foreach (var nav in entity.ContainingEntityType.GetNavigations()
-                             .Where(navigation => navigation.TargetEntityType.IsMappedToJson()))
+                foreach (var navigation in entityType.ContainingEntityType.GetNavigations()
+                             .Where(x => x.TargetEntityType.IsMappedToJson()))
                 {
-                    _jsonEntityDict.Add(entity, nav);
+                    //remove the Json Mapped entity 
+                    entitiesNotMappedToTableOrView.Add(navigation.TargetEntityType);
+                    //Remember the entities that has a string to hold the Json Mapped data
+                    _entitiesContainingJsonMappedStrings.Add(navigation.DeclaringEntityType);
                 }
             }
-            //Now we remove any json entities from the list of entries where the json data is held by a higher entity
-            foreach (var entityNav in _jsonEntityDict)
-            {
-                if (entityNav.Value.DeclaringEntityType != entityNav.Key)
-                    entitiesNotMappedToTableOrView.Add(entityNav.Key);
-            }
+            // Json Mapping End----------------------------------------------------------------------------
+            #endregion JsonMapping
 
             foreach (var entityType in _model.GetEntityTypes().Where(x => !entitiesNotMappedToTableOrView.Contains(x)))
             {
@@ -235,38 +234,6 @@ namespace EfSchemaCompare.Internal
             if (!isView)
                 pKeyLogger.CheckDifferent(efPKeyConstraintName, table.PrimaryKey?.Name ?? NoPrimaryKey,
                     CompareAttributes.ConstraintName, _caseComparison);
-            
-            #region JsonMapping
-
-            //Json Mapping Start----------------------------------------------------------------------------
-            //Get all the entities with their navigations which are handling Json Mapping
-            Dictionary<IEntityType, INavigation> jsonEntityDict = new Dictionary<IEntityType, INavigation>();
-            foreach (var entity in _model.GetEntityTypes())
-            {
-                foreach (var nav in entity.ContainingEntityType.GetNavigations()
-                             .Where(navigation => navigation.TargetEntityType.IsMappedToJson()))
-                {
-                    jsonEntityDict.Add(entity, nav);
-                }
-            }
-
-            //Then look for top Json Mapping entities (i.e. we ignore Json Mapping entities that link to a higher son Mapping entity)
-            //and we ensure that there is a string column in their table 
-            foreach (var entityNav in jsonEntityDict)
-            {
-                //!!!!!!!!!!!!!!!!!!!!!!!!!!!!! TEST
-                var x = entityNav.Value.TargetEntityType;
-
-                if (entityNav.Value.TargetEntityType != entityNav.Value.DeclaringEntityType)
-                    //If the entity isn't holding Json data in the current entity, then its data is stored to a higher entity
-                    continue;
-
-                var logger = new CompareLogger2(CompareType.Column, entityNav.Value.Name, _logs.Last().SubLogs, _ignoreList, () => _hasErrors = true);
-                if (!entityNav.Key.GetProperties().Select(x => x.Name).Contains(entityNav.Value.Name))
-                    logger.NotInDatabase(entityNav.Value.Name);
-            }
-            //Json Mapping End------------------------------------------------------------------------------
-            #endregion JsonMapping
 
             // Imported from SqlServerAnnotationNames from SqlServer provider
             const string sqlServerTemporalPeriodStartPropertyName = "SqlServer:TemporalPeriodStartPropertyName";
@@ -282,6 +249,11 @@ namespace EfSchemaCompare.Internal
                .ToArray();
 
             var columnDict = table.Columns.ToDictionary(x => x.Name, _caseComparer);
+            #region JsonMapping
+            //Json Mapping Start----------------------------------------------------------------------------
+            //???????????????????????????????????????????????????????????????????????????????????????????????
+            //Json Mapping end------------------------------------------------------------------------------
+            #endregion JsonMapping
 
             var isOwned = TypeBase.ContainingEntityType.IsOwned();
 

@@ -5,6 +5,7 @@ using System.Linq;
 using DataLayer.JsonColumnDb;
 using EfSchemaCompare;
 using Microsoft.EntityFrameworkCore;
+using Microsoft.EntityFrameworkCore.Metadata.Internal;
 using TestSupport.EfHelpers;
 using Xunit;
 using Xunit.Abstractions;
@@ -42,7 +43,7 @@ public class TestJsonColumns
                 }},
             ExtraJsonParts = new ExtraJson{ ExtraString = "Extra String", ExtraInt = 123}
         });
-        context.Add(new Normal { NormalString = "Normal", NormalExtra = new NormalExtra { ExtraString = "Extra", NormalExtraId = 123}});
+        context.Add(new Normal { NormalString = "Normal", NormalExtra = new NormalExtra { ExtraString = "Extra"}});
         context.SaveChanges();
 
         //VERIFY
@@ -55,7 +56,7 @@ public class TestJsonColumns
     }
 
     [Fact]
-    public void TestIsMappedToJson()
+    public void ShowEntitiesWithIsJson()
     {
         //SETUP
         var options = this.CreateUniqueClassOptions<JsonCustomerContext>();
@@ -85,6 +86,28 @@ public class TestJsonColumns
                     _output.WriteLine($"     TargetEntityType = {navigation.TargetEntityType.Name}, ");
                     _output.WriteLine($"     DeclaringEntityType = {navigation.DeclaringEntityType.Name}");
                 }
+            }
+        }
+    }
+
+    [Fact]
+    public void DetectJsonMappedEntities()
+    {
+        //SETUP
+        var options = this.CreateUniqueClassOptions<JsonCustomerContext>();
+        using var context = new JsonCustomerContext(options);
+        context.Database.EnsureDeleted();
+        context.Database.EnsureCreated();
+
+        //ATTEMPT
+        foreach (var entityType in context.Model.GetEntityTypes())
+        {
+            foreach (var navigation in entityType.ContainingEntityType.GetNavigations()
+                         .Where(x => x.TargetEntityType.IsMappedToJson()))
+            {
+                _output.WriteLine($"{navigation.TargetEntityType.Name} entity is stored as a Json string.");
+                _output.WriteLine($"And the {navigation.DeclaringEntityType.Name} has the string holding the Json.");
+                _output.WriteLine("");
             }
         }
     }

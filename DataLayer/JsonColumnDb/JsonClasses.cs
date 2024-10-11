@@ -91,6 +91,6 @@ public class Normal
 
 public class NormalExtra
 {
-    public int NormalExtraId { get; set; }
+    public int Id{ get; set; }
     public string ExtraString { get; set; }
 }
