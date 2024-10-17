@@ -5,7 +5,9 @@ using System.Linq;
 using DataLayer.JsonColumnDb;
 using EfSchemaCompare;
 using Microsoft.EntityFrameworkCore;
+using Microsoft.EntityFrameworkCore.Metadata;
 using Microsoft.EntityFrameworkCore.Metadata.Internal;
+using Microsoft.VisualStudio.TestPlatform.Utilities;
 using TestSupport.EfHelpers;
 using Xunit;
 using Xunit.Abstractions;
@@ -88,7 +90,52 @@ public class TestJsonColumns
                 }
             }
         }
+
     }
+
+    [Fact]
+    public void TestFindBackingField()
+    {
+        //SETUP
+        var options = this.CreateUniqueClassOptions<JsonCustomerContext>();
+        using var context = new JsonCustomerContext(options);
+        context.Database.EnsureDeleted();
+        context.Database.EnsureCreated();
+
+        //FIRST ATTEMPT
+        var headEntity = context.Model.GetEntityTypes().Single(x => x.ClrType == typeof(HeadEntry));
+        
+        var headEntityDeclaringEntityType = headEntity.ContainingEntityType.GetNavigations()
+            .Where(x => x.TargetEntityType.IsMappedToJson())
+            .Select(x => x.TargetEntityType.ClrType).ToArray();
+        var jsonProperties1 = headEntity.ClrType.GetProperties()
+            .Where(x => headEntityDeclaringEntityType.Contains(x.PropertyType)).ToArray();
+
+        //SECOND ATTEMPT
+        var declaringEntityTypes = headEntity.ContainingEntityType.GetNavigations()
+            .Where(x => x.TargetEntityType.IsMappedToJson())
+            .Select(x => x.TargetEntityType.ClrType).ToArray();
+        var jsonProperties2 = headEntity.ClrType.GetProperties()
+            .Where(x => declaringEntityTypes.Contains(x.PropertyType)).ToArray();
+
+
+        //VERIFY
+        _output.WriteLine("Normal Properties");
+        foreach (var property in headEntity.GetProperties())
+        {
+            _output.WriteLine($"  Name:{property.Name}");
+        }
+
+        _output.WriteLine("");
+        _output.WriteLine("Json Properties");
+        foreach (var propertyInfo in jsonProperties2)
+        {
+            _output.WriteLine($"  Name:{propertyInfo.Name}");
+        }
+
+
+    }
+ 
 
     [Fact]
     public void DetectJsonMappedEntities()
@@ -100,15 +147,16 @@ public class TestJsonColumns
         context.Database.EnsureCreated();
 
         //ATTEMPT
-        foreach (var entityType in context.Model.GetEntityTypes())
-        {
-            foreach (var navigation in entityType.ContainingEntityType.GetNavigations()
+        IEntityType topEntityType = context.Model.GetEntityTypes().Single(x => x.ClrType == typeof(HeadEntry));
+        foreach (var navigation in topEntityType.ContainingEntityType.GetNavigations()
                          .Where(x => x.TargetEntityType.IsMappedToJson()))
-            {
-                _output.WriteLine($"{navigation.TargetEntityType.Name} entity is stored as a Json string.");
-                _output.WriteLine($"And the {navigation.DeclaringEntityType.Name} has the string holding the Json.");
-                _output.WriteLine("");
-            }
+        {
+            _output.WriteLine($"{navigation.TargetEntityType.Name} entity is stored as a Json string.");
+            _output.WriteLine($"The {navigation.DeclaringEntityType.Name} has has a string to store the Json data.");
+            var properties = navigation.DeclaringEntityType.GetProperties().ToArray();
+            var property = properties.SingleOrDefault(x => x.ClrType.BaseType == navigation.TargetEntityType.ClrType);
+            _output.WriteLine($"The property {property?.Name ?? "- None -"} has has a string to store the Json data.");
+            _output.WriteLine("");
         }
     }
 
@@ -148,8 +196,9 @@ public class TestJsonColumns
         //VERIFY
     }
 
+
     [Fact]
-    public void CompareWithStage1ErrorsIgnored()
+    public void CompareWithErrorsIgnored()
     {
         //SETUP
         var options = this.CreateUniqueClassOptions<JsonCustomerContext>();
@@ -157,49 +206,7 @@ public class TestJsonColumns
         context.Database.EnsureClean();
 
         var config = new CompareEfSqlConfig();
-        config.IgnoreTheseErrors(
-            @"DIFFERENT: TopJsonMap->PrimaryKey '- no primary key -', constraint name. Expected = - no primary key -, found = PK_HeadEntries
-DIFFERENT: Entity 'TopJsonMap', constraint name. Expected = - no primary key -, found = PK_HeadEntries
-DIFFERENT: ContainsJsonMaps->PrimaryKey '- no primary key -', constraint name. Expected = - no primary key -, found = PK_HeadEntries
-NOT IN DATABASE: ContainsJsonMaps->ForeignKey 'FK_HeadEntries_HeadEntries_HeadEntryId', constraint name. Expected = FK_HeadEntries_HeadEntries_HeadEntryId
-DIFFERENT: Entity 'ContainsJsonMaps', constraint name. Expected = - no primary key -, found = PK_HeadEntries");
-//EXTRA IN DATABASE: Table 'HeadEntries', column name. Found = TopJsonMap
-//EXTRA IN DATABASE: Table 'HeadEntries', column name. Found = TopJsonMap
-//EXTRA IN DATABASE: Table 'HeadEntries', column name. Found = TopJsonMap
-
-        var comparer = new CompareEfSql(config);
-
-        //ATTEMPT
-        //This will compare EF Core model of the database 
-        //with the database that the context's connection points to
-        var hasErrors = comparer.CompareEfWithDb(context);
-
-        //VERIFY
-        //Only stage 1 errors are removed 
-        hasErrors.ShouldBeTrue();
-        comparer.GetAllErrors.ShouldEqual(@"EXTRA IN DATABASE: Table 'HeadEntries', column name. Found = TopJsonMap
-EXTRA IN DATABASE: Table 'HeadEntries', column name. Found = TopJsonMap
-EXTRA IN DATABASE: Table 'HeadEntries', column name. Found = TopJsonMap");
-    }
-
-    [Fact]
-    public void CompareWithStage1And2ErrorsIgnored()
-    {
-        //SETUP
-        var options = this.CreateUniqueClassOptions<JsonCustomerContext>();
-        using var context = new JsonCustomerContext(options);
-        context.Database.EnsureClean();
-
-        var config = new CompareEfSqlConfig();
-        config.IgnoreTheseErrors(
-            @"DIFFERENT: TopJsonMap->PrimaryKey '- no primary key -', constraint name. Expected = - no primary key -, found = PK_HeadEntries
-DIFFERENT: Entity 'TopJsonMap', constraint name. Expected = - no primary key -, found = PK_HeadEntries
-DIFFERENT: ContainsJsonMaps->PrimaryKey '- no primary key -', constraint name. Expected = - no primary key -, found = PK_HeadEntries
-NOT IN DATABASE: ContainsJsonMaps->ForeignKey 'FK_HeadEntries_HeadEntries_HeadEntryId', constraint name. Expected = FK_HeadEntries_HeadEntries_HeadEntryId
-DIFFERENT: Entity 'ContainsJsonMaps', constraint name. Expected = - no primary key -, found = PK_HeadEntries
-EXTRA IN DATABASE: Table 'HeadEntries', column name. Found = TopJsonMap
-EXTRA IN DATABASE: Table 'HeadEntries', column name. Found = TopJsonMap
-EXTRA IN DATABASE: Table 'HeadEntries', column name. Found = TopJsonMap");
+        config.IgnoreTheseErrors("EXTRA IN DATABASE: Table 'HeadEntries', column name. Found = DifferentColumnName");
 
         var comparer = new CompareEfSql(config);
 

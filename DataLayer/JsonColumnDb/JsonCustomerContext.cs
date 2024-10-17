@@ -29,7 +29,7 @@ public class JsonCustomerContext : DbContext
         modelBuilder.Entity<HeadEntry>().OwnsOne(
             headEntry => headEntry.ExtraJsonParts, ownedNavigationBuilder =>
             {
-                ownedNavigationBuilder.ToJson();
+                ownedNavigationBuilder.ToJson("DifferentColumnName");
             });
     }
 }

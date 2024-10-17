@@ -9,8 +9,10 @@ using System.Runtime.CompilerServices;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Infrastructure;
 using Microsoft.EntityFrameworkCore.Metadata;
+using Microsoft.EntityFrameworkCore.Metadata.Internal;
 using Microsoft.EntityFrameworkCore.Scaffolding.Metadata;
 using Microsoft.EntityFrameworkCore.Storage;
+using Microsoft.VisualBasic;
 
 [assembly: InternalsVisibleTo("Test")]
 
@@ -217,13 +219,12 @@ namespace EfSchemaCompare.Internal
             }
         }
 
-
-        private void CompareColumns(CompareLog log, ITypeBase TypeBase, DatabaseTable table)
+        private void CompareColumns(CompareLog log, ITypeBase typeBase, DatabaseTable table)
         {
-            var isView = TypeBase.GetTableName() == null;
+            var isView = typeBase.GetTableName() == null;
             var primaryKeyDict = table.PrimaryKey?.Columns.ToDictionary(x => x.Name, _caseComparer)
                                  ?? new Dictionary<string, DatabaseColumn>();
-            var efPKeyConstraintName = isView ? NoPrimaryKey :  TypeBase.ContainingEntityType.FindPrimaryKey()?.GetName() ?? NoPrimaryKey;
+            var efPKeyConstraintName = isView ? NoPrimaryKey :  typeBase.ContainingEntityType.FindPrimaryKey()?.GetName() ?? NoPrimaryKey;
             bool pKeyError = false;
             var pKeyLogger = new CompareLogger2(CompareType.PrimaryKey, efPKeyConstraintName, log.SubLogs, _ignoreList,
                 () =>
@@ -249,16 +250,30 @@ namespace EfSchemaCompare.Internal
                .ToArray();
 
             var columnDict = table.Columns.ToDictionary(x => x.Name, _caseComparer);
+            var isOwned = typeBase.ContainingEntityType.IsOwned();
+
             #region JsonMapping
             //Json Mapping Start----------------------------------------------------------------------------
-            //???????????????????????????????????????????????????????????????????????????????????????????????
+            //We look for entities that have Json Mapping and find out what properties holds the Json data
+            var declaringEntityTypes = typeBase.ContainingEntityType.GetNavigations()
+                .Where(x => x.TargetEntityType.IsMappedToJson())
+                .Select(x => x.TargetEntityType.ClrType).ToArray();
+            if (declaringEntityTypes.Any())
+            {
+                
+                //There are properties that have a string to hold the Json Data
+                foreach (var jsonProperty in typeBase.ClrType.GetProperties()
+                             .Where(x => declaringEntityTypes.Contains(x.PropertyType)))
+                {
+                    var colLogger = new CompareLogger2(CompareType.Property, jsonProperty.Name, log.SubLogs, _ignoreList, () => _hasErrors = true);
+                    colLogger.MarkAsOk(jsonProperty.Name);
+                }
+            }
             //Json Mapping end------------------------------------------------------------------------------
             #endregion JsonMapping
 
-            var isOwned = TypeBase.ContainingEntityType.IsOwned();
-
-            //Now we look at each property with 
-            foreach (var property in TypeBase.GetProperties())
+            //Now we look at each property in the entity (NOTE: this doesn't contain the Json Mapped properties 
+            foreach (var property in typeBase.GetProperties())
             {
                 // Ignore temporal shadow properties (SQL Server)
                 if (property.IsShadowProperty() && temporalColumnIgnores.Contains(property.Name))
