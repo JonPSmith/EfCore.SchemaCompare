@@ -11,8 +11,10 @@
 		  <IncludeAssets>runtime; build; native; contentfiles; analyzers; buildtransitive</IncludeAssets>
 	  </PackageReference>
     <PackageReference Include="Microsoft.EntityFrameworkCore.Relational" Version="8.0.0" />
+    <PackageReference Include="Microsoft.Extensions.Caching.Memory" Version="8.0.1" />
     <PackageReference Include="Microsoft.Extensions.Configuration.Json" Version="8.0.0" />
     <PackageReference Include="Newtonsoft.Json" Version="13.0.3" />
+    <PackageReference Include="System.Text.Json" Version="8.0.5" />
   </ItemGroup>
 	
   <PropertyGroup>
@@ -23,8 +25,10 @@
     <Description>Useful tool if you  are changing the schema of your database's schema outside of EF Core' migrations, say by using SQL change scripts. See readme file on github.</Description>
     <PackageRequireLicenseAcceptance>false</PackageRequireLicenseAcceptance>
     <PackageReleaseNotes>
-		- Fixed issue #18. i.e "columns that are extra in db are not excluded" is fixed 
-		- IEntityType is obsolete, moved to ITypeBase
+		- New feature: Checks Json Mapping data, see README for more. Limitation that only works with the default column name
+		- Fixed issue #18. i.e "columns that are extra in db are not excluded" is fixed
+		- IEntityType is obsolete, moved to ITypeBase - see https://github.com/dotnet/efcore/issues/34594
+		- Updated vunables NuGets System.Text.Json and Microsoft.Extensions.Caching.Memory
 	</PackageReleaseNotes>
     <Copyright>Copyright (c) 2020 Jon P Smith. Licenced under MIT licence</Copyright>
     <PackageTags>Entity Framework Core, Database</PackageTags>

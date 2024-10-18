@@ -1,5 +1,12 @@
 # Release notes
 
+## 8.1.0
+
+- New feature: Checks Json Mapping data, see README for more. Limitation that only works with the default column name
+- Fixed issue #18. i.e "columns that are extra in db are not excluded" is fixed
+- IEntityType is obsolete, moved to ITypeBase - see https://github.com/dotnet/efcore/issues/34594
+- Updated vunables NuGets System.Text.Json and Microsoft.Extensions.Caching.Memory
+
 ## 8.0.4
 
 - REALLY removed Microsoft.IdentityModel.Tokens NuGet as not correct (see issue #36)

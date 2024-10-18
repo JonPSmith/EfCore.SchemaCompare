@@ -220,6 +220,7 @@ public class TestJsonColumns
         //The comparer.GetAllErrors property returns a string
         //where each error is on a separate line
         hasErrors.ShouldBeFalse(comparer.GetAllErrors);
+
     }
 
     [Fact]
@@ -238,6 +239,7 @@ public class TestJsonColumns
         //VERIFY
         //Just print errors
         hasErrors.ShouldBeTrue();
+        comparer.GetAllErrors.ShouldEqual("EXTRA IN DATABASE: Table 'HeadEntries', column name. Found = DifferentColumnName");
         _output.WriteLine(comparer.GetAllErrors);
     }
 }

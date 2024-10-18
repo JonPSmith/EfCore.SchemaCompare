@@ -63,6 +63,7 @@ _Thanks to GitHub @bgrauer-atacom and @lweberprb for suggesting that this librar
 - Table-per-Hierarchy
 - Table splitting
 - Concurrency tokens
+- Json Mapping (see it limitation below)
 
 ## List of limitations
 
@@ -70,7 +71,8 @@ _Thanks to GitHub @bgrauer-atacom and @lweberprb for suggesting that this librar
 - Cannot correctly check Table-per-Type or Table-per-Class classes because EF Core doesn't currently hold that data. This is tracked by [Ef Core #19811](https://github.com/dotnet/efcore/issues/19811).
 - Cannot compare database tables/columns using InvariantCultureIgnoreCase. That is a EF Core 5+ limitation.
 - EfCore.SchemaCompare versions below 8 only support SQL Server, Sqlite and PostgresSql, but version 8 supports all EF Core database providers that can be be scaffolded. However some database providers may show incorrect match errors, because some database providers don't follow the SqlServer style, e.g. CosmosDB
-- The EF Core 8 [new features](https://learn.microsoft.com/en-us/ef/core/what-is-new/ef-core-8.0/whatsnew) aren't compared in this release. I may add some later.  
+- The EF Core 8 [new features](https://learn.microsoft.com/en-us/ef/core/what-is-new/ef-core-8.0/whatsnew) aren't compared in this release. I may add some later. 
+- The Json Mapping checking assumes you are using the default name for the column, which is the name of the property.
 
 The following are things I haven't bothered to check.
 
