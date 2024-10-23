@@ -25,8 +25,8 @@ internal static class DatabaseModelFinder
         // REVIEW: According to my understanding the assembly is where the DBContext is
         var assembly = context.GetType().Assembly;
 
-        // REVIEW: This is not the same behaviour as in the CLI but we don't know the real startup project. Using the test project
-        // assembly as stratup assembly hand enables the possibility to define design services inside of the test project for test purposes.
+        // REVIEW: This is not the same behaviour as in the CLI, but we don't know the real startup project. Using the test project
+        // assembly as startup assembly hand enables the possibility to define design services inside of the test project for test purposes.
         var startupAssembly = Assembly.GetEntryAssembly() ?? assembly;
 
         try
@@ -62,7 +62,7 @@ internal static class DatabaseModelFinder
                 })
                 .FirstOrDefault()
                 ?.Invoke(serviceBuilder, new object[] { context })
-                ?? throw new InvalidOperationException("Unable to bild design time service provider. Are you using a supported EntityFrameworkCore version?"); ;
+                ?? throw new InvalidOperationException("Unable to build design time service provider. Are you using a supported EntityFrameworkCore version?"); ;
 
             return serviceProvider.GetRequiredService<IDatabaseModelFactory>();
         }

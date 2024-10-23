@@ -6,8 +6,6 @@ using DataLayer.JsonColumnDb;
 using EfSchemaCompare;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Metadata;
-using Microsoft.EntityFrameworkCore.Metadata.Internal;
-using Microsoft.VisualStudio.TestPlatform.Utilities;
 using TestSupport.EfHelpers;
 using Xunit;
 using Xunit.Abstractions;
