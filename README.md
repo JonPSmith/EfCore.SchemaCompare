@@ -63,7 +63,7 @@ _Thanks to GitHub @bgrauer-atacom and @lweberprb for suggesting that this librar
 - Table-per-Hierarchy
 - Table splitting
 - Concurrency tokens
-- Json Mapping (see it limitation below)
+- Json Mapping added in V8.1.0 and above - see Json Mapping checking limitation below
 
 ## List of limitations
 
