@@ -179,6 +179,8 @@ This says that there is a column called `MyEntityId` in the table `MyEntites` th
 
 In a few cases you will get errors that aren't correct (see limitations) or not relevant. In these cases you might want to suppress those errors. There are two way to do this, with the first being the easiest. Both use the `CompareEfSqlConfig` class.
 
+_NOTE: The stage 2 check only runs if: either there was no errors in the first stage, or if you have suppressed all the errors in the first stage._
+
 ### Suppress errors via `IgnoreTheseErrors`
 
 In this approach you capture the error strings you want to ignore and return them as a string, with each error separated by the newline, `'\n'`, character. You feed the errors via the configuration's `IgnoreTheseErrors` method. See an example below
