@@ -165,7 +165,7 @@ The error above says
 - `Expected = varchar(max)` says what EF Core thought it should be
 - `found = nvarchar(max)` says what the database setting was
 
-Here is another error coming from stage 2 where it checks the database side.
+Here is another error coming from stage 2 where it checks the database side, i.e., Unused Tables, Columns and Indexes
 
 ```text
 EXTRA IN DATABASE: Table 'MyEntites', column name. Found = MyEntityId
