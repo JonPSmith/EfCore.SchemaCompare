@@ -21,6 +21,14 @@ public class TestExtraInDatabase
     }
 
     [Fact]
+    public void DecodeCompareTextToCompareLog_ExtraIndexInDatabase_Test()
+    {
+        var str = "EXTRA IN DATABASE: Index 'tenants', index constraint name. Found = ix_tenants_belongs_to_database_instance_id";
+        var compareLog = CompareLog.DecodeCompareTextToCompareLog(str);
+        compareLog.Type.ShouldEqual(CompareType.Index);
+    }
+
+    [Fact]
     public void TestExtraTable()
     {
         //SETUP
@@ -116,7 +124,7 @@ public class TestExtraInDatabase
             TablesToIgnoreCommaDelimited = "",
         };
         config.IgnoreTheseErrors(
-            "EXTRA IN DATABASE: Table 'Books', column name. Found = ExtraColumn");
+            "EXTRA IN DATABASE: Table 'Books', column. Found = ExtraColumn");
         var comparer = new CompareEfSql(config);
         var hasErrors = comparer.CompareEfWithDb(context);
 

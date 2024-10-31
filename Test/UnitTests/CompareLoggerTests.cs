@@ -4,7 +4,6 @@
 using System.Collections.Generic;
 using EfSchemaCompare;
 using EfSchemaCompare.Internal;
-using Microsoft.EntityFrameworkCore.Metadata.Internal;
 using Xunit;
 using Xunit.Abstractions;
 using Xunit.Extensions.AssertExtensions;

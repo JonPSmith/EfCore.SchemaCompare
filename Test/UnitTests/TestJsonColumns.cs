@@ -194,7 +194,6 @@ public class TestJsonColumns
         //VERIFY
     }
 
-
     [Fact]
     public void CompareWithErrorsIgnored()
     {
@@ -204,6 +203,7 @@ public class TestJsonColumns
         context.Database.EnsureClean();
 
         var config = new CompareEfSqlConfig();
+        //EXTRA IN DATABASE: Table 'HeadEntries', column name. Found = DifferentColumnName
         config.IgnoreTheseErrors("EXTRA IN DATABASE: Table 'HeadEntries', column name. Found = DifferentColumnName");
 
         var comparer = new CompareEfSql(config);
@@ -218,7 +218,6 @@ public class TestJsonColumns
         //The comparer.GetAllErrors property returns a string
         //where each error is on a separate line
         hasErrors.ShouldBeFalse(comparer.GetAllErrors);
-
     }
 
     [Fact]
