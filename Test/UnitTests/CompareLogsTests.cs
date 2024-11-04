@@ -4,6 +4,7 @@
 using System.Collections;
 using System.Collections.Generic;
 using EfSchemaCompare;
+using EfSchemaCompare.Internal;
 using Xunit;
 using Xunit.Abstractions;
 using Xunit.Extensions.AssertExtensions;
@@ -19,8 +20,9 @@ namespace Test.UnitTests
             _output = output;
         }
 
+
         [Fact]
-        public void DecodeStringToCompareLog()
+        public void Old_DecodeStringToCompareLog()
         {
             //SETUP
             const string logOk = @"OK: DbContext 'BookContext'";
@@ -35,10 +37,35 @@ namespace Test.UnitTests
 
             //VERIFY
             CompareLog.DecodeCompareTextToCompareLog(logOk).ToString().ShouldEqual(logOk);
-            CompareLog.DecodeCompareTextToCompareLog(logStr1).ToString().ShouldEqual(logStr1.Replace("BookDetail->",""));
-            CompareLog.DecodeCompareTextToCompareLog(logStr2).ToString().ShouldEqual(
-                "DIFFERENT: Property 'BookSummaryId', value generated. Expected = OnAdd, found = <null>");
+            CompareLog.DecodeCompareTextToCompareLog(logStr1).ToString().ShouldEqual(logStr1.Replace("BookDetail->", ""));
+            CompareLog.DecodeCompareTextToCompareLog(logStr2).ToString().ShouldEqual(logStr2.Replace("BookSummary->", ""));
             CompareLog.DecodeCompareTextToCompareLog(logStr3).ToString().ShouldEqual(logStr3.Replace("BookDetail->", ""));
+        }
+
+        [Fact]
+        public void DecodeCompareTextToCompareLog()
+        {
+            //SETUP
+            const string logOk = @"OK: DbContext 'BookContext'";
+            const string logStr1 =
+                @"NOT IN DATABASE: BookDetail->ForeignKey 'FK_Books_Books_BookSummaryId', constraint name. Expected = FK_Books_Books_BookSummaryId";
+            const string logStr2 =
+                @"DIFFERENT: BookSummary->Property 'BookSummaryId', value generated. Expected = OnAdd, found = Never";
+            const string logStr3 =
+                @"NOT IN DATABASE: BookDetail->ForeignKey 'FK_Books_Books_BookSummaryId', constraint name. Expected = FK_Books_Books_BookSummaryId";
+
+            //ATTEMPT
+            var resultOk = FindErrorsToIgnore.DecodeCompareTextToCompareLog(logOk).ToString();
+            var result1 = FindErrorsToIgnore.DecodeCompareTextToCompareLog(logStr1).ToString();
+            var result2 = FindErrorsToIgnore.DecodeCompareTextToCompareLog(logStr2).ToString();
+            var result3 = FindErrorsToIgnore.DecodeCompareTextToCompareLog(logStr3).ToString();
+
+            //VERIFY
+            resultOk.ShouldEqual(logOk);
+            result1.ShouldEqual(logStr1.Replace("BookDetail->",""));
+            result2.ShouldEqual(
+                "DIFFERENT: Property 'BookSummaryId', value generated. Expected = OnAdd, found = <null>");
+            result3.ShouldEqual(logStr3.Replace("BookDetail->", ""));
         }
 
         [Theory]
