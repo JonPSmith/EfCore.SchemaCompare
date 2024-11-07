@@ -20,11 +20,20 @@ internal class FindErrorsToIgnore
 
         //These parts of the errors are the same in all the error pattern
         var state = GetEnumType<CompareState>(errorString, null, ": ");
-        var attribute = GetEnumType<CompareAttributes>(errorString, " ,", ". ");
+        var attribute = GetEnumType<CompareAttributes>(errorString, ", ", ". ");
+
         //string items. Some errors don't have Expected or Found, in which case it has null 
-        var expected = GetStringInError(errorString, "Expected = ", null);
-        var found = GetStringInError(errorString, ". Found = ", null);
         var name = GetStringInError(errorString, "'", "'");
+        //"Expected" can either have a "Found" after it, or not,
+        //so we get everything to the end and take off the "Found" part if it's there
+        var expected = GetStringInError(errorString, "Expected = ", null);
+        if (expected != null)
+        {
+            var possibleFoundStart = expected.IndexOf(", ", StringComparison.Ordinal);
+            if (possibleFoundStart> 0)
+                expected = expected.Substring(0, possibleFoundStart);
+        }
+        var found = GetStringInError(errorString, " found = ", null, true);
 
         //The type part has two patterns
         //1. "OK: DbContext ...", where "DbContext" is the type
@@ -46,14 +55,17 @@ internal class FindErrorsToIgnore
     /// <param name="errorString">A string containing an error created during  </param>
     /// <param name="beforeString">NOTE: If the beforeString is null/empty it will start at the first letter</param>
     /// <param name="afterString">NOTE: If the beforeString is null/empty it will end it will go to the end </param>
+    /// <param name="ignoreCase">The 'found = ' can be 'found = ' or 'found = ', set this </param>
     /// <returns>Returns the string between the two start/end strings.
     /// NOTE: If either the beforeString or afterString aren't found it will return null, i.e. not found</returns>
-    private static string GetStringInError(string errorString, string beforeString, string afterString)
+    private static string GetStringInError(string errorString, string beforeString, string afterString, bool ignoreCase = false)
     {
         var typeStart = 0;
         if (!String.IsNullOrEmpty(beforeString))
         {
-            typeStart = errorString.IndexOf(beforeString) + beforeString.Length;
+            typeStart = errorString.IndexOf(beforeString,
+                            ignoreCase ? StringComparison.OrdinalIgnoreCase : StringComparison.Ordinal)
+                        + beforeString.Length;
             if (errorString.IndexOf(beforeString, StringComparison.Ordinal) == -1)
                 return null; //Could not find the beforeString
         }

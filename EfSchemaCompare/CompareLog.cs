@@ -175,69 +175,6 @@ namespace EfSchemaCompare
         //-------------------------------------------------------
         //internal
 
-        internal static CompareLog DecodeCompareTextToCompareLog(string str)
-        {
-            str = str.Trim();
-            var indexOfColon = str.IndexOf(':');
-            var indexOfArrow = str.IndexOf("->", StringComparison.Ordinal);
-            if (indexOfArrow < 0)
-                indexOfArrow = indexOfColon - 1;
-            var indexOfFirstQuote = str.IndexOf('\'');
-            var indexOfSecondQuote = str.Substring(indexOfFirstQuote + 1).IndexOf('\'') + indexOfFirstQuote + 1;
-
-            var state = (CompareState)Enum.Parse(typeof(CompareState), str.Substring(0, indexOfColon).Replace(" ", ""), true);
-            var type = (CompareType)Enum.Parse(typeof(CompareType), str.Substring(indexOfArrow + 2, indexOfFirstQuote - indexOfArrow - 3));
-            var name = str.Substring(indexOfFirstQuote + 1, indexOfSecondQuote - indexOfFirstQuote - 1);
-
-            var attribute = CompareAttributes.NotSet;
-            string expected = null;
-            string found = null;
-            if (str.Length - 1 > indexOfSecondQuote)
-            {
-                var charIndex = indexOfSecondQuote + 1;
-                //we have more information
-                if (str[charIndex] == ',')
-                {
-                    var indexFullStop = str.Substring(charIndex).IndexOf('.') + charIndex; //warning, dot can be in name
-                    attribute = (CompareAttributes)Enum.Parse(typeof(CompareAttributes), 
-                        str.Substring(charIndex + 1, indexFullStop - charIndex - 1).Replace(" ",""), true);
-                    charIndex = indexFullStop;
-                }
-                if (str.StartsWith("EXTRA IN DATABASE"))
-                {
-                    //Errors that have extra data
-
-                    var foundIndex = str.IndexOf("Found = ");
-                    if (foundIndex != -1)
-                    {
-                        //There is a found part
-                        //EXAMPLE1: "EXTRA IN DATABASE: Table 'Customers', column name. Found = Contact"
-
-                        type = CompareType.Column;
-                        var startOfString = foundIndex + nameof(Expected).Length;
-                        found = str.Substring(startOfString);
-                    }
-                    else
-                    {
-                        //EXAMPLE2: "EXTRA IN DATABASE: Database 'MyDatabase'"
-                        type = CompareType.Table;
-                    }
-                    
-                }
-                else if (str.Substring(charIndex).StartsWith(". Expected"))
-                {
-                    //errors that expected something
-
-                    var endCharIndex = str.Substring(charIndex + 3).IndexOf(", f");
-                    endCharIndex = endCharIndex < 0 ? str.Length : endCharIndex + charIndex + 3;
-                    var startOfString = charIndex + nameof(Expected).Length + 5;
-                    expected = ReplaceNullTokenWithNull(str.Substring(startOfString, endCharIndex - startOfString));
-                }
-            }
-
-            return new CompareLog(type, state, name, attribute, expected, found);
-        }
-
         internal bool ShouldIgnoreThisLog(IReadOnlyList<CompareLog> ignoreList)
         {
             return ignoreList.Any() && ignoreList.Any(ShouldBeIgnored);
@@ -254,8 +191,8 @@ namespace EfSchemaCompare
             var result = (ignoreItem.Type == CompareType.MatchAnything || ignoreItem.Type == Type)
                 && (ignoreItem.Attribute == CompareAttributes.MatchAnything || ignoreItem.Attribute == Attribute)
                 && (ignoreItem.Name == null || ignoreItem.Name == Name)
-                && (ignoreItem.Expected == null || ignoreItem.Expected == Expected)
-                && (ignoreItem.Found == null || ignoreItem.Found == Found);
+                && (ignoreItem.Expected == null || ignoreItem.Expected == Expected || ignoreItem.Expected == "<null>")
+                && (ignoreItem.Found == null || ignoreItem.Found == Found || ignoreItem.Found == "<null>");
 
             return result;
         }
@@ -268,10 +205,7 @@ namespace EfSchemaCompare
         private string ToStringDifferentStart(string start)
         {
             //Typical output would be: Column 'Id', column type is Different : Expected = varchar(20), Found = nvarchar(20)
-            var type = Type == CompareType.Column && State == CompareState.ExtraInDatabase
-                ? CompareType.Table
-                : Type;
-            var result = $"{start}{type} '{Name}'";
+            var result = $"{start}{Type} '{Name}'";
             if (Attribute != CompareAttributes.NotSet)
                 result += $", {Attribute.SplitCamelCaseToLower()}";
             if (State == CompareState.Ok)

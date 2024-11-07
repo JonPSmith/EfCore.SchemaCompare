@@ -94,7 +94,7 @@ namespace Test.UnitTests
             //VERIFY
             hasErrors.ShouldBeTrue();
             CompareLog.ListAllErrors(handler.Logs).Single().ShouldEqual(
-                "EXTRA IN DATABASE: Table 'MyEntites', column name. Found = MyEntityId");
+                "EXTRA IN DATABASE: Column 'MyEntites', column name. Found = MyEntityId");
         }
 
         [Fact]

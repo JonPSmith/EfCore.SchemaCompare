@@ -20,28 +20,6 @@ namespace Test.UnitTests
             _output = output;
         }
 
-
-        [Fact]
-        public void Old_DecodeStringToCompareLog()
-        {
-            //SETUP
-            const string logOk = @"OK: DbContext 'BookContext'";
-            const string logStr1 =
-                @"NOT IN DATABASE: BookDetail->ForeignKey 'FK_Books_Books_BookSummaryId', constraint name. Expected = FK_Books_Books_BookSummaryId";
-            const string logStr2 =
-                @"DIFFERENT: BookSummary->Property 'BookSummaryId', value generated. Expected = OnAdd, found = Never";
-            const string logStr3 =
-                @"NOT IN DATABASE: BookDetail->ForeignKey 'FK_Books_Books_BookSummaryId', constraint name. Expected = FK_Books_Books_BookSummaryId";
-
-            //ATTEMPT
-
-            //VERIFY
-            CompareLog.DecodeCompareTextToCompareLog(logOk).ToString().ShouldEqual(logOk);
-            CompareLog.DecodeCompareTextToCompareLog(logStr1).ToString().ShouldEqual(logStr1.Replace("BookDetail->", ""));
-            CompareLog.DecodeCompareTextToCompareLog(logStr2).ToString().ShouldEqual(logStr2.Replace("BookSummary->", ""));
-            CompareLog.DecodeCompareTextToCompareLog(logStr3).ToString().ShouldEqual(logStr3.Replace("BookDetail->", ""));
-        }
-
         [Fact]
         public void DecodeCompareTextToCompareLog()
         {
@@ -50,7 +28,8 @@ namespace Test.UnitTests
             const string logStr1 =
                 @"NOT IN DATABASE: BookDetail->ForeignKey 'FK_Books_Books_BookSummaryId', constraint name. Expected = FK_Books_Books_BookSummaryId";
             const string logStr2 =
-                @"DIFFERENT: BookSummary->Property 'BookSummaryId', value generated. Expected = OnAdd, found = Never";
+                @"DIFFERENT: MyEntity->Property 'MyEntityId', value generated. Expected = Never, found = OnAdd";
+                //@"DIFFERENT: BookSummary->Property 'BookSummaryId', value generated. Expected = OnAdd, found = Never";
             const string logStr3 =
                 @"NOT IN DATABASE: BookDetail->ForeignKey 'FK_Books_Books_BookSummaryId', constraint name. Expected = FK_Books_Books_BookSummaryId";
 
@@ -62,9 +41,8 @@ namespace Test.UnitTests
 
             //VERIFY
             resultOk.ShouldEqual(logOk);
-            result1.ShouldEqual(logStr1.Replace("BookDetail->",""));
-            result2.ShouldEqual(
-                "DIFFERENT: Property 'BookSummaryId', value generated. Expected = OnAdd, found = <null>");
+            result1.ShouldEqual(logStr1.Replace("BookDetail->", ""));
+            result2.ShouldEqual(logStr2.Replace("MyEntity->", ""));
             result3.ShouldEqual(logStr3.Replace("BookDetail->", ""));
         }
 

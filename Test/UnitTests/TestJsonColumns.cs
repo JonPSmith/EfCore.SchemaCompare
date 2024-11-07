@@ -204,7 +204,7 @@ public class TestJsonColumns
 
         var config = new CompareEfSqlConfig();
         //EXTRA IN DATABASE: Table 'HeadEntries', column name. Found = DifferentColumnName
-        config.IgnoreTheseErrors("EXTRA IN DATABASE: Table 'HeadEntries', column name. Found = DifferentColumnName");
+        config.IgnoreTheseErrors("EXTRA IN DATABASE: Column 'HeadEntries', column name. Found = DifferentColumnName");
 
         var comparer = new CompareEfSql(config);
 
@@ -236,7 +236,7 @@ public class TestJsonColumns
         //VERIFY
         //Just print errors
         hasErrors.ShouldBeTrue();
-        comparer.GetAllErrors.ShouldEqual("EXTRA IN DATABASE: Table 'HeadEntries', column name. Found = DifferentColumnName");
+        comparer.GetAllErrors.ShouldEqual("EXTRA IN DATABASE: Column 'HeadEntries', column name. Found = DifferentColumnName");
         _output.WriteLine(comparer.GetAllErrors);
     }
 }

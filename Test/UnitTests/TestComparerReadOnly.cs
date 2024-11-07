@@ -120,7 +120,7 @@ namespace Test.UnitTests
             hasErrors.ShouldBeTrue();
             var errors = CompareLog.ListAllErrors(comparer.Logs).ToList();
             (errors.Count == 1).ShouldBeTrue(comparer.GetAllErrors);
-            errors[0].ShouldEqual("EXTRA IN DATABASE: Table 'MyView', column name. Found = MyInt");
+            errors[0].ShouldEqual("EXTRA IN DATABASE: Column 'MyView', column name. Found = MyInt");
         }
 
 

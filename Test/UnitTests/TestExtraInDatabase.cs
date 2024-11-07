@@ -3,6 +3,7 @@
 
 using DataLayer.BookApp.EfCode;
 using EfSchemaCompare;
+using EfSchemaCompare.Internal;
 using TestSupport.EfHelpers;
 using TestSupport.Helpers;
 using Xunit;
@@ -24,7 +25,7 @@ public class TestExtraInDatabase
     public void DecodeCompareTextToCompareLog_ExtraIndexInDatabase_Test()
     {
         var str = "EXTRA IN DATABASE: Index 'tenants', index constraint name. Found = ix_tenants_belongs_to_database_instance_id";
-        var compareLog = CompareLog.DecodeCompareTextToCompareLog(str);
+        var compareLog = FindErrorsToIgnore.DecodeCompareTextToCompareLog(str);
         compareLog.Type.ShouldEqual(CompareType.Index);
     }
 
@@ -103,7 +104,7 @@ public class TestExtraInDatabase
         //VERIFY
         hasErrors.ShouldBeTrue();
         comparer.GetAllErrors.ShouldEqual(
-            "EXTRA IN DATABASE: Table 'Books', column name. Found = ExtraColumn");
+            "EXTRA IN DATABASE: Column 'Books', column name. Found = ExtraColumn");
     }
 
     [Fact]
@@ -124,7 +125,7 @@ public class TestExtraInDatabase
             TablesToIgnoreCommaDelimited = "",
         };
         config.IgnoreTheseErrors(
-            "EXTRA IN DATABASE: Table 'Books', column name. Found = ExtraColumn");
+            "EXTRA IN DATABASE: Column 'Books', column name. Found = ExtraColumn");
         var comparer = new CompareEfSql(config);
         var hasErrors = comparer.CompareEfWithDb(context);
 
