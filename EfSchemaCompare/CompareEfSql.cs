@@ -89,7 +89,10 @@ namespace EfSchemaCompare
                 hasErrors |= stage1Comparer.CompareModelToDatabase(databaseModel);
             }
 
-            if (hasErrors) return true;
+            //Normally stage 2 isn't run if there were errors that haven't ignored,
+            //but if AlwaysRunStage2 is true, then stage 2 will run even there are non-ignored errors
+            if (!_config.AlwaysRunStage2 && hasErrors)
+                return true;
 
             //No errors, so its worth running the second phase
             var stage2Comparer = new Stage2Comparer(databaseModel, _config);

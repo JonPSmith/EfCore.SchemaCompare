@@ -1,5 +1,12 @@
 # Release notes
 
+## 8.2.0
+
+- The ExtraInDatabase errors didn't correctly say what part of the database (e.g. "Table", "Column") was extra. This is fixed. 
+- NOTE: If you have ignored some ExtraInDatabase errors you our old ignored ExtraInDatabase might need updating to the new (correct format) pattern.  
+- New boolean 'AlwaysRunStage2' in the CompareEfSqlConfig. If set to 'true', then Stage 2 will always run, even if there are non-ignored errors. See issue #38, which made me add this new feature.
+
+
 ## 8.1.0
 
 - New feature: Checks Json Mapping data, see README for more. Limitation that only works with the default column name

@@ -72,8 +72,12 @@ namespace Test.UnitTests
             var bTags = books.Select(x => new {
                 x.BookId, 
                 tagsNames = string.Join(" | ", x.Tags.Select(y => y.TagId))
-
-            });
+            }).ToArray();
+            bTags.Length.ShouldEqual(4);
+            bTags[0].tagsNames.ShouldEqual("Editor's Choice | Refactoring");
+            bTags[1].tagsNames.ShouldEqual("Architecture");
+            bTags[2].tagsNames.ShouldEqual("Architecture | Editor's Choice");
+            bTags[3].tagsNames.ShouldEqual("Quantum Entanglement");
         }
 
         [Fact]
@@ -112,7 +116,6 @@ namespace Test.UnitTests
             var options = this.CreateUniqueClassOptions<BookContext>();
             using var context = new BookContext(options);
             context.Database.EnsureClean();
-            context.Database.EnsureCreated();
 
             //ATTEMPT 
             var factory = context.GetDatabaseModelFactory();

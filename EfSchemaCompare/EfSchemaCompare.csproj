@@ -20,16 +20,15 @@
 	
   <PropertyGroup>
     <PackageId>EfCore.SchemaCompare</PackageId>
-    <PackageVersion>8.1.0</PackageVersion>
-    <Version>8.1.0</Version>
+    <PackageVersion>8.2.0</PackageVersion>
+    <Version>8.2.0</Version>
     <Authors>Jon P Smith</Authors>
     <Description>Useful tool if you  are changing the schema of your database's schema outside of EF Core' migrations, say by using SQL change scripts. See readme file on github.</Description>
     <PackageRequireLicenseAcceptance>false</PackageRequireLicenseAcceptance>
     <PackageReleaseNotes>
-		- New feature: Checks Json Mapping data, see README for more. Limitation that only works with the default column name
-		- Fixed issue #18. i.e "columns that are extra in db are not excluded" is fixed
-		- IEntityType is obsolete, moved to ITypeBase - see https://github.com/dotnet/efcore/issues/34594
-		- Updated vunables NuGets System.Text.Json and Microsoft.Extensions.Caching.Memory
+	    - The ExtraInDatabase errors didn't correctly say what part of the database (e.g. "Table", "Column") was extra. This is fixed.
+	    - NOTE: If you have ignored some ExtraInDatabase errors you our old ignored ExtraInDatabase might need updating to the new (correct format) pattern.
+	    - New boolean 'AlwaysRunStage2' in the CompareEfSqlConfig. If set to 'true', then Stage 2 will always run, even if there are non-ignored errors.
 	</PackageReleaseNotes>
     <Copyright>Copyright (c) 2020 Jon P Smith. Licenced under MIT licence</Copyright>
     <PackageTags>Entity Framework Core, Database</PackageTags>

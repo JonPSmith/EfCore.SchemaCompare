@@ -24,6 +24,7 @@ public class TestExtraInDatabase
     [Fact]
     public void DecodeCompareTextToCompareLog_ExtraIndexInDatabase_Test()
     {
+        //See issue #39
         var str = "EXTRA IN DATABASE: Index 'tenants', index constraint name. Found = ix_tenants_belongs_to_database_instance_id";
         var compareLog = FindErrorsToIgnore.DecodeCompareTextToCompareLog(str);
         compareLog.Type.ShouldEqual(CompareType.Index);

@@ -15,12 +15,14 @@ namespace EfSchemaCompare
     {
         private readonly List<CompareLog> _logsToIgnore = new List<CompareLog>();
 
-        ///// <summary>
-        ///// Set this to StringComparer.CurrentCultureIgnoreCase to change the 
-        ///// This effects the table, schema, column, primary/index/foreignKey constraint names
-        ///// </summary>
-        //NOTE Turned off CaseComparer as doesn't work with EF Core 5
-        //public StringComparer CaseComparer { get; set; } = StringComparer.CurrentCulture;
+        /// <summary>
+        /// By default, Stage 2 only runs if: either there were no errors in Stage 1, or if you
+        /// have suppressed all the errors in the first stage. But Stage 2 can be forced to run by either:
+        /// 1. Set <see cref="AlwaysRunStage2"/> to true
+        /// 2. Set <see cref="TablesToIgnoreCommaDelimited"/>  to "", which says you want to check all tables
+        /// in the database against your DbContext(s).
+        /// </summary>
+        public bool AlwaysRunStage2 { get; set; } = false;
 
         /// <summary>
         /// This allows you to ignore tables that your EF Core context doesn't use. There are three settings

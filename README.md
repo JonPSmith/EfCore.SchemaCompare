@@ -32,9 +32,9 @@ The EfCore.SchemaCompare library (shortened to EfSchemaCompare in the documentat
 _Thanks to GitHub @bgrauer-atacom and @lweberprb for suggesting that this library could support extra database providers. See the [issue #26](https://github.com/JonPSmith/EfCore.SchemaCompare/pull/26) to see the code that these two people provided to add this feature._
 
 - Versions below 8 support:
-   - SqlServer
-   - Sqlite
-   - Npgsql.EntityFrameworkCore.PostgreSQL
+  - SqlServer
+  - Sqlite
+  - Npgsql.EntityFrameworkCore.PostgreSQL
 
 ## What does EfSchemaCompare check?
 
@@ -91,6 +91,8 @@ The fun part is comparing these two sources, especially with all the different t
 
 ![EfSchemaCompare diagram](https://github.com/JonPSmith/EfCore.SchemaCompare/blob/master/EfSchemaCompare.png)
 
+The EfSchemaCompare uses two stages: Stage 1 checks your EF Core DbContext matches your database. Stage 2 checks your database for extra tables, columns, etc. that your EF Core DbContext doesn't use.
+
 ## How to use EfSchemaCompare
 
 I usually run the EfSchemaCompare code in my unit tests, but that is up to you.
@@ -127,6 +129,7 @@ public void CompareViaContext()
    - If no connection string is found in the `appsetting.json` file, or there is no `appsetting.json`, then it assumes the string is a connection string.
 
 See below for an example of both of of these options:
+
 ```c#
 [Fact]
 public void CompareBookThenOrderAgainstBookOrderDatabaseViaAppSettings()
@@ -168,7 +171,7 @@ The error above says
 Here is another error coming from stage 2 where it checks the database side, i.e., Unused Tables, Columns and Indexes
 
 ```text
-EXTRA IN DATABASE: Table 'MyEntites', column name. Found = MyEntityId
+EXTRA IN DATABASE: Table 'HeadEntries', column name. Found = DifferentColumnName
 ```
 
 This says that there is a column called `MyEntityId` in the table `MyEntites` that hasn't got a property in the entity class mapped to the `MyEntites` table.
@@ -178,8 +181,6 @@ This says that there is a column called `MyEntityId` in the table `MyEntites` th
 ## How to suppress certain error messages
 
 In a few cases you will get errors that aren't correct (see limitations) or not relevant. In these cases you might want to suppress those errors. There are two way to do this, with the first being the easiest. Both use the `CompareEfSqlConfig` class.
-
-_NOTE: The stage 2 check only runs if: either there was no errors in the first stage, or if you have suppressed all the errors in the first stage._
 
 ### Suppress errors via `IgnoreTheseErrors`
 
@@ -240,10 +241,13 @@ public void CompareSuppressViaViaAddIgnoreCompareLog()
     //VERIFY
     hasErrors.ShouldBeFalse(comparer.GetAllErrors);
 }
-
 ```
 
 ## Other configuration options
+
+You have already seen the class called `CompareEfSqlConfig` for suppressing errors, but there are two other configrations. 
+
+### `TablesToIgnoreCommaDelimited` string property
 
 You have already seen the class called `CompareEfSqlConfig` for suppressing errors. There is one other configuration property called `TablesToIgnoreCommaDelimited`, which allows you to control what table/views in the database are considered. 
 
@@ -268,3 +272,10 @@ var config = new CompareEfSqlConfig
     TablesToIgnoreCommaDelimited = "Orders,LineItem"
 };
 var comparer = new CompareEfSql(config);
+```
+
+### `AlwaysRunStage2` boolean property (v8.2.0 or later)
+
+Getting all the errors in one go can be useful, for instance when you are creating a EF Core DbContext to match a given database. But by default, Stage 2 isn't run if Stage 1 found errors that haven't been register in `config.IgnoreTheseErrors(... your error strings ...)`. 
+
+In version 8.2.0 a new boolean property called `AlwaysRunStage2` in `CompareEfSqlConfig` and if you you set this to `true` then Stage 2 will always run, even if there are non-ignored errors. See [issue #38](https://github.com/JonPSmith/EfCore.SchemaCompare/issues/38) which made me add this new feature.
