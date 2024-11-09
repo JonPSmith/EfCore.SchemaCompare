@@ -30,6 +30,42 @@ public class TestExtraInDatabase
         compareLog.Type.ShouldEqual(CompareType.Index);
     }
 
+    [Theory]
+    [InlineData(false, 1)]
+    [InlineData(true, 3)]
+    public void TestAlwaysRunStage2(bool runStage, int numErrors)
+    {
+        //SETUP
+        var options = this.CreateUniqueClassOptions<BookContext>();
+        using var context = new BookContext(options);
+        context.Database.EnsureClean();
+
+        //Stage 1 error: Change Column on existing table 
+        var filepath1 = TestData.GetFilePath("RenameColumn.sql");
+        context.ExecuteScriptFileInTransaction(filepath1);
+        //Stage 2 error: Add new table
+        var filepath2 = TestData.GetFilePath("AddExtraTable.sql");
+        context.ExecuteScriptFileInTransaction(filepath2);
+
+        //ATTEMPT
+        var config = new CompareEfSqlConfig
+        {
+            TablesToIgnoreCommaDelimited = "",
+            AlwaysRunStage2 = runStage
+        };
+        var comparer = new CompareEfSql(config);
+        var hasErrors = comparer.CompareEfWithDb(context);
+
+        //VERIFY
+        hasErrors.ShouldBeTrue();
+        var errors = comparer.GetAllErrors.Split("\r\n");
+        foreach (var error in errors)
+        {
+            _output.WriteLine(error);
+        }
+        errors.Length.ShouldEqual(numErrors);
+    }
+
     [Fact]
     public void TestExtraTable()
     {
