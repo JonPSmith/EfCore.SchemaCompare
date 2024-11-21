@@ -1,5 +1,9 @@
 # Release notes
 
+## 9.0.0
+
+- .NET 9 version
+
 ## 8.2.0
 
 - The ExtraInDatabase errors didn't correctly say what part of the database (e.g. "Table", "Column") was extra. This is fixed. 
