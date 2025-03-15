@@ -4,10 +4,10 @@ If you are changing the schema of your database's schema outside of EF Core' mig
 
 The first number in the version number of this library defines what version of NET framework it works for. e.g. 
 
-- EfCore.SchemaCompare version 8.?.? works with to NET 9. 
-- EfCore.SchemaCompare version 7.?.? works with to NET 8 ... an so 
+- EfCore.SchemaCompare version 8.?.? works with to NET 8. 
+- EfCore.SchemaCompare version 7.?.? works with to NET 7 ... an so 
 
-**WARNING**: Version 8 contains a **BREAKING CHANGE**. You need to add the Microsoft.EntityFrameworkCore.Design NuGet to your application when using this library. This is needed as the EfCore.SchemaCompare library now supports multiple database providers does - see [What database providers does it support](https://github.com/JonPSmith/EfCore.SchemaCompare/blob/master/README.md#what-database-providers-does-it-support).
+**WARNING**: Version 8 any above contains a **BREAKING CHANGE**. You need to add the Microsoft.EntityFrameworkCore.Design NuGet to your application when using this library. This is needed as the EfCore.SchemaCompare library now supports multiple database providers does - see [What database providers does it support](https://github.com/JonPSmith/EfCore.SchemaCompare/blob/master/README.md#what-database-providers-does-it-support).
 
 The EfCore.SchemaCompare library (shortened to EfSchemaCompare in the documentations) is available on [NuGet as EfCore.SchemaCompare](https://www.nuget.org/packages/EfCore.SchemaCompare/) and is an open-source library under the MIT licence. See [ReleaseNotes](https://github.com/JonPSmith/EfCore.SchemaCompare/blob/master/ReleaseNotes.md) for details of changes and information on versions from EF Core 5 onwards.
 
