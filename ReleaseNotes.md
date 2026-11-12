@@ -1,5 +1,10 @@
 # Release notes
 
+## 11.0.0
+
+- .NET 11 version
+- Supports EF Core 11 indexes that contain a property of a complex type
+
 ## 10.0.0
 
 - .NET 10 version

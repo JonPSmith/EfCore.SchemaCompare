@@ -1,0 +1,36 @@
+name: Build and test
+
+on:
+  push:
+  pull_request:
+
+jobs:
+  build-and-test:
+    # The tests use SQL Server LocalDB, which is only on the Windows runners
+    runs-on: windows-latest
+
+    steps:
+      - uses: actions/checkout@v7
+
+      - uses: actions/setup-dotnet@v6
+        with:
+          dotnet-version: 11.0.x
+
+      - name: Start SQL Server LocalDB
+        run: sqllocaldb start MSSQLLocalDB
+
+      # The password must match PostgreSqlConnection in Test/appsettings.json
+      - name: Start PostgreSQL
+        run: |
+          $service = Get-Service -Name 'postgresql*'
+          Set-Service -InputObject $service -StartupType Manual
+          Start-Service -InputObject $service
+          & "$env:PGBIN\psql" --command "ALTER USER postgres PASSWORD 'LetMeIn'"
+          if ($LASTEXITCODE -ne 0) { exit $LASTEXITCODE }
+
+      - name: Build
+        run: dotnet build EfCore.SchemaCompare.sln --configuration Release
+
+      # CompareTptContext_WILL_FAIL fails on purpose. It shows that Table-Per-Type is not handled.
+      - name: Test
+        run: dotnet test Test/Test.csproj --configuration Release --no-build --filter "FullyQualifiedName!~WILL_FAIL"

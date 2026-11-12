@@ -4,6 +4,7 @@ If you are changing the schema of your database's schema outside of EF Core' mig
 
 The first number in the version number of this library defines what version of NET framework it works for. e.g. 
 
+- EfCore.SchemaCompare version 11.?.? works with to NET 11. 
 - EfCore.SchemaCompare version 10.?.? works with to NET 10. 
 - EfCore.SchemaCompare version  9.?.? works with to NET 9. 
 - EfCore.SchemaCompare version  8.?.? works with to NET 8. 

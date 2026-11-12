@@ -21,7 +21,7 @@ using Xunit.Extensions.AssertExtensions;
 #pragma warning disable EF1001 // Internal EF Core API usage.
 namespace Test.UnitTests
 {
-    public class TestScaffolder 
+    public class TestScaffolder : IClassFixture<PostgresFixture> 
     {
 
         [Fact]

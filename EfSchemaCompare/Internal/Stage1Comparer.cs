@@ -186,19 +186,22 @@ namespace EfSchemaCompare.Internal
             var indexDict = DatabaseIndexData.GetIndexesAndUniqueConstraints(table).ToDictionary(x => x.Name, _caseComparer);
             foreach (var entityIdx in entityType.ContainingEntityType.GetIndexes())
             {
-                var entityIdxprops = entityIdx.Properties;
-                var allColumnNames = string.Join(",", entityIdxprops
-                    .Select(x => GetColumnNameTakingIntoAccountSchema(x, table)));
+                //From EF Core 11 an index can contain a property inside a complex type.
+                //If that complex type is mapped to JSON, then the property has no column of its own
+                var entityIdxColumnNames = entityIdx.Properties
+                    .Select(x => x is IProperty property ? GetColumnNameTakingIntoAccountSchema(property, table) : null)
+                    .ToList();
+                var allColumnNames = string.Join(",", entityIdxColumnNames);
                 var logger = new CompareLogger2(CompareType.Index, allColumnNames, log.SubLogs, _ignoreList, () => _hasErrors = true);
-                var indexName = entityIdx.GetDatabaseName();
+                //The table-specific name is needed because the default name of an index is built from the column names
+                var indexName = entityIdx.GetDatabaseName(TableIdentifier(table)) ?? entityIdx.GetDatabaseName();
                 if (indexName != null && indexDict.ContainsKey(indexName))
                 {
                     //Now check every column in an index
                     var error = false;
                     var thisIdxCols = indexDict[indexName].Columns.ToDictionary(x => x.Name, _caseComparer);
-                    foreach (var idxProp in entityIdxprops)
+                    foreach (var columnName in entityIdxColumnNames.Where(x => x != null))
                     {
-                        var columnName = GetColumnNameTakingIntoAccountSchema(idxProp, table);
                         if (!thisIdxCols.ContainsKey(columnName))
                         {
                             logger.NotInDatabase(columnName);
@@ -399,12 +402,16 @@ namespace EfSchemaCompare.Internal
         private string GetColumnNameTakingIntoAccountSchema(IProperty property, DatabaseTable table,
             bool isView = false)
         {
-            var modelSchema = table.Schema == _defaultSchema ? null : table.Schema;
             var columnName = isView
-                ? property.GetColumnName(StoreObjectIdentifier.View(table.Name, modelSchema))
-                : property.GetColumnName(StoreObjectIdentifier.Table(table.Name, modelSchema));
+                ? property.GetColumnName(StoreObjectIdentifier.View(table.Name, ModelSchema(table)))
+                : property.GetColumnName(TableIdentifier(table));
             return columnName;
         }
+
+        private string ModelSchema(DatabaseTable table) => table.Schema == _defaultSchema ? null : table.Schema;
+
+        private StoreObjectIdentifier TableIdentifier(DatabaseTable table) =>
+            StoreObjectIdentifier.Table(table.Name, ModelSchema(table));
 
     }
 }
