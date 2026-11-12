@@ -15,7 +15,7 @@ using Xunit.Extensions.AssertExtensions;
 #pragma warning disable EF1001 // Internal EF Core API usage.
 namespace Test.UnitTests
 {
-    public class TestDesignTimeServiceProvider
+    public class TestDesignTimeServiceProvider : IClassFixture<PostgresFixture>
     {
         private readonly ITestOutputHelper _output;
 

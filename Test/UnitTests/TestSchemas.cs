@@ -7,13 +7,14 @@ using EfSchemaCompare;
 using Microsoft.EntityFrameworkCore;
 using TestSupport.EfHelpers;
 using TestSupport.Helpers;
+using Test.Helpers;
 using Xunit;
 using Xunit.Abstractions;
 using Xunit.Extensions.AssertExtensions;
 
 namespace Test.UnitTests;
 
-public class TestSchemas
+public class TestSchemas : IClassFixture<PostgresFixture>
 {
     private readonly ITestOutputHelper _output;
 

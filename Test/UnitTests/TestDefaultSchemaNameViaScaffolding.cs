@@ -10,13 +10,14 @@ using Microsoft.EntityFrameworkCore.Scaffolding;
 using System.Linq;
 using TestSupport.EfHelpers;
 using TestSupport.Helpers;
+using Test.Helpers;
 using Xunit;
 using Xunit.Abstractions;
 using Xunit.Extensions.AssertExtensions;
 
 namespace Test.UnitTests;
 
-public class TestDefaultSchemaNameViaScaffolding
+public class TestDefaultSchemaNameViaScaffolding : IClassFixture<PostgresFixture>
 {
     private readonly ITestOutputHelper _output;
 
